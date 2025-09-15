@@ -1,0 +1,30 @@
+{
+  "name": "vanilla-graphics",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/commands/entry",
+    "dev": "npm run build && npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siriusmart/vanilla-graphics.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/siriusmart/vanilla-graphics/issues"
+  },
+  "homepage": "https://github.com/siriusmart/vanilla-graphics#readme",
+  "devDependencies": {
+    "@types/node": "^24.4.0",
+    "@types/yargs": "^17.0.33"
+  },
+  "dependencies": {
+    "yargs": "^18.0.0"
+  }
+}
