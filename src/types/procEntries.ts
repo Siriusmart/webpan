@@ -4,3 +4,4 @@ export interface DependencyEntry {
 }
 
 export type DiffType = "changed" | "removed" | "created";
+export type DiffEntries<K> = Map<K, DiffType>;
