@@ -36,7 +36,8 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     // this does not specify whether the changed item is a file or a directory
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
-    const hashedDiff = calcDiff.calcDiffByExtractor(cachedHashedEntries, hashedEntries, entry => entry.hash);
+    const hashedDiff = calcDiff.calcDiff(cachedHashedEntries, hashedEntries);
+    console.log(hashedDiff);
 }
 
 export = cmdBuild;

@@ -45,9 +45,9 @@ async function readDirRecursive(dir) {
                 });
             }
             else if (fileInfo.isDirectory()) {
-                dirContents.set(childPath, {
-                    fullPath,
-                    childPath,
+                dirContents.set(childPath + "/", {
+                    fullPath: fullPath + "/",
+                    childPath: childPath + "/",
                     content: ["dir"]
                 });
             }

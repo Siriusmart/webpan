@@ -48,9 +48,9 @@ async function readDirRecursive(dir: string): Promise<fsEntries.FsContentEntries
                     content: ["file", fileContent]
                 });
             } else if (fileInfo.isDirectory()) {
-                dirContents.set(childPath, {
-                    fullPath,
-                    childPath,
+                dirContents.set(childPath + "/", {
+                    fullPath: fullPath + "/",
+                    childPath: childPath + "/",
                     content: ["dir"]
                 });
             } else {
