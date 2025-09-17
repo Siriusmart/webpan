@@ -1,5 +1,11 @@
 import Processor = require("./processor");
+export interface ProcessorOutput {
+    files: Map<string, Buffer>;
+    prop: any;
+}
 export interface ProcessorResult {
+    files: Set<string>;
+    prop: any;
 }
 export interface ResultOnlyProcessorState {
     status: "resultonly";
@@ -10,7 +16,7 @@ export interface EmptyProcessorState {
 }
 export interface ErrorProcessorState {
     status: "error";
-    err: Error;
+    err: any;
 }
 export interface BuildingProcessorState {
     status: "building";

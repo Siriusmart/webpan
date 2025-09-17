@@ -1,6 +1,14 @@
 import Processor = require("./processor");
 
-export interface ProcessorResult {}
+export interface ProcessorOutput {
+    files: Map<string, Buffer>,
+    prop: any
+}
+
+export interface ProcessorResult {
+    files: Set<string>,
+    prop: any
+}
 
 export interface ResultOnlyProcessorState {
     status: "resultonly";

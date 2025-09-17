@@ -1,7 +1,7 @@
 export interface HashedEntry {
     fullPath: string,
     childPath: string,
-    hash: string | null,
+    hash?: string,
 }
 
 export interface OutputEntry {

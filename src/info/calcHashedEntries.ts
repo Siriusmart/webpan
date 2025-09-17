@@ -22,7 +22,6 @@ function calcHashedEntries(fsEntries: fsEntries.FsContentEntries): fsEntries.Has
                 hashedEntries.set(childPath, {
                     childPath: fsContent.childPath,
                     fullPath: fsContent.fullPath,
-                    hash: null
                 })
             }
         }

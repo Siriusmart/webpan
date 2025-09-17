@@ -19,7 +19,6 @@ function calcHashedEntries(fsEntries) {
                 hashedEntries.set(childPath, {
                     childPath: fsContent.childPath,
                     fullPath: fsContent.fullPath,
-                    hash: null
                 });
             }
         }

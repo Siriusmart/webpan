@@ -29,19 +29,20 @@ class ProcessorHandle {
                         };
                         res(result);
                     }
-                    catch (e) {
-                        rej(e);
+                    catch (err) {
+                        this.state = {
+                            status: "error",
+                            err
+                        };
+                        rej(err);
                     }
-                    // set status to built
-                    // res(result)
                 });
                 this.state = {
                     status: "building",
                     processor: this.processor,
                     pendingResult: pendingResult
                 };
-                throw new Error();
-                break;
+                return await pendingResult;
             case "error":
                 throw this.state.err;
             case "building":
@@ -49,7 +50,40 @@ class ProcessorHandle {
         }
     }
     async getProcessor() {
-        throw new Error();
+        switch (this.state.status) {
+            case "building":
+            case "resultonly":
+            case "empty":
+                const pendingResult = new Promise(async (res, rej) => {
+                    try {
+                        let result = await this.processor.build();
+                        this.state = {
+                            status: "built",
+                            processor: this.processor,
+                            result
+                        };
+                        res(result);
+                    }
+                    catch (err) {
+                        this.state = {
+                            status: "error",
+                            err
+                        };
+                        rej(err);
+                    }
+                });
+                this.state = {
+                    status: "building",
+                    processor: this.processor,
+                    pendingResult: pendingResult
+                };
+                await pendingResult;
+                return this.processor;
+            case "error":
+                throw this.state.err;
+            case "built":
+                return this.processor;
+        }
     }
 }
 module.exports = ProcessorHandle;
