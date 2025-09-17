@@ -1,22 +1,26 @@
-import processor = require("./processor");
+import Processor = require("./processor");
 export interface ProcessorResult {
 }
 export interface ResultOnlyProcessorState {
     status: "resultonly";
-    results: ProcessorResult;
+    result: ProcessorResult;
 }
 export interface EmptyProcessorState {
     status: "empty";
 }
+export interface ErrorProcessorState {
+    status: "error";
+    err: Error;
+}
 export interface BuildingProcessorState {
     status: "building";
+    processor: Processor;
+    pendingResult: Promise<ProcessorResult>;
 }
 export interface BuiltProcessorState {
     status: "built";
-    processor: processor;
-    results: ProcessorResult;
+    processor: Processor;
+    result: ProcessorResult;
 }
-export interface ProcessorState {
-    status: "resultonly" | "empty" | "building" | "built";
-}
+export type ProcessorState = ResultOnlyProcessorState | EmptyProcessorState | BuildingProcessorState | BuiltProcessorState | ErrorProcessorState;
 //# sourceMappingURL=processorStates.d.ts.map

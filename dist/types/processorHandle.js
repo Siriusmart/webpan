@@ -1,12 +1,56 @@
 "use strict";
 const Processor = require("./processor");
-module.exports = class ProcessorHandle {
+class ProcessorHandle {
     state;
-    getResult() {
+    meta;
+    processor;
+    handles;
+    constructor(handles, meta, processor) {
+        this.state = {
+            status: "empty"
+        };
+        this.meta = meta;
+        this.handles = handles;
+        this.processor = processor;
+    }
+    async getResult() {
+        switch (this.state.status) {
+            case "resultonly":
+            case "built":
+                return this.state.result;
+            case "empty":
+                const pendingResult = new Promise(async (res, rej) => {
+                    try {
+                        let result = await this.processor.build();
+                        this.state = {
+                            status: "built",
+                            processor: this.processor,
+                            result
+                        };
+                        res(result);
+                    }
+                    catch (e) {
+                        rej(e);
+                    }
+                    // set status to built
+                    // res(result)
+                });
+                this.state = {
+                    status: "building",
+                    processor: this.processor,
+                    pendingResult: pendingResult
+                };
+                throw new Error();
+                break;
+            case "error":
+                throw this.state.err;
+            case "building":
+                return await this.state.pendingResult;
+        }
+    }
+    async getProcessor() {
         throw new Error();
     }
-    getProcessor() {
-        throw new Error();
-    }
-};
+}
+module.exports = ProcessorHandle;
 //# sourceMappingURL=processorHandle.js.map

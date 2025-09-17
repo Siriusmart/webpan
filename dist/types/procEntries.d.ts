@@ -1,6 +1,3 @@
-export interface DependencyEntry {
-    priority: number;
-}
 export interface ProcessorMetaEntry {
     fullPath: string;
     childPath: string;
