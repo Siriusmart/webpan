@@ -1,8 +1,12 @@
 export type ProcessorType = string | string[] | Map<string, Map<string, any>>;
 export interface RuleEntryRaw {
-    processors?: Map<string, ProcessorType>;
+    processors?: Map<string, Map<string, any>>;
+}
+export interface ProcessorSettings {
+    procName: string;
+    settings: Map<string, any>;
 }
 export interface RuleEntryNormalised {
-    processors: Map<string, Map<string, any>>;
+    processors: Map<string, ProcessorSettings>;
 }
 //# sourceMappingURL=ruleEntry.d.ts.map

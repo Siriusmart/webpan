@@ -2,7 +2,8 @@ import yargs = require("yargs");
 import yargsHelpers = require('yargs/helpers');
 import cmdInit = require("./cmdInit");
 import cmdBuild = require("./cmdBuild");
-import requiresArg = require("yargs");
+
+console.log(__dirname)
 
 async function main(): Promise<void> {
     yargs()

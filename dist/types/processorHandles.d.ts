@@ -1,11 +1,8 @@
-import Processor = require("./processor");
 import ProcessorHandle = require("./processorHandle");
-import type processorStates = require("./processorStates");
 declare const _default: {
-    new (handles: Map<string, Map<string, ProcessorHandle>>): {
+    new ([filePath, procIdent]: [string, string], handles: Map<string, Map<string, ProcessorHandle>>): {
         handles: Map<string, Map<string, ProcessorHandle>>;
-        getResult(file: string, processorName: string): Promise<processorStates.ProcessorResult | undefined>;
-        getProcessor(file: string, processorName: string): Promise<Processor | undefined>;
+        handle: ProcessorHandle;
     };
 };
 export = _default;

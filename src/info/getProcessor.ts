@@ -1,0 +1,28 @@
+import path = require("path");
+import Processor = require("../types/processor");
+import fsUtils = require("../utils/fsUtils");
+
+let cachedProcessorClasses: Map<string, { new(): Processor }> = new Map();
+
+async function getProcessor(root: string, ident: string): Promise<{ new(): Processor }> {
+    const cachedProcessor = cachedProcessorClasses.get(ident);
+
+    if(cachedProcessor !== undefined) {
+        return cachedProcessor
+    }
+
+    const procPath = path.join(root, "node_modules", ident);
+    if(!await fsUtils.existsFile(procPath)) {
+        throw new Error(`Processor not found: no file at ${procPath}`)
+    }
+
+    const procClass = require(ident);
+    if(typeof procClass.new !== "function") {
+        throw new Error(`Package ${ident} doesn't seem to be a webpan processor`)
+    }
+
+    cachedProcessorClasses.set(ident, procClass);
+    return procClass;
+}
+
+export = getProcessor;

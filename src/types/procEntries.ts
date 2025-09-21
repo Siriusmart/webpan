@@ -1,6 +1,8 @@
 export interface ProcessorMetaEntry {
     fullPath: string,
     childPath: string,
+    procName: string,
+    relativePath: string,
     settings: any,
 }
 

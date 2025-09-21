@@ -6,9 +6,16 @@ declare class ProcessorHandle {
     state: processorStates.ProcessorState;
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
-    handles: Map<string, Map<string, ProcessorHandle>>;
-    constructor(handles: Map<string, Map<string, ProcessorHandle>>, meta: procEntries.ProcessorMetaEntry, processor: Processor);
-    getResult(): Promise<processorStates.ProcessorResult>;
-    getProcessor(): Promise<Processor>;
+    handles: Map<string, Map<string, Set<ProcessorHandle>>>;
+    dependents: Set<ProcessorHandle>;
+    dependencies: Set<ProcessorHandle>;
+    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor);
+    reset(): void;
+    getIdent(): [string, string];
+    hasResult(): boolean;
+    hasProcessor(): boolean;
+    buildWithBuffer(): Promise<processorStates.ProcessorResult>;
+    getResult(requester: ProcessorHandle): Promise<processorStates.ProcessorResult>;
+    getProcessor(requester: ProcessorHandle): Promise<Processor>;
 }
 //# sourceMappingURL=processorHandle.d.ts.map

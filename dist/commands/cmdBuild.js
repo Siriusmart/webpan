@@ -8,6 +8,7 @@ const fs = require("fs/promises");
 const calcHashedEntries = require("../info/calcHashedEntries");
 const hashedEntriesCache = require("../info/hashedEntriesCache");
 const calcDiff = require("../utils/calcDiff");
+const buildDiff = require("../actions/buildDiff");
 async function cmdBuild(args) {
     const argPath = args.path;
     const root = await findRoot(argPath);
@@ -30,7 +31,7 @@ async function cmdBuild(args) {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(cachedHashedEntries, hashedEntries);
-    console.log(hashedDiff);
+    await buildDiff(root, srcContents, hashedDiff);
 }
 module.exports = cmdBuild;
 //# sourceMappingURL=cmdBuild.js.map

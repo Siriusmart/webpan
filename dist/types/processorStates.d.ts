@@ -1,6 +1,7 @@
+import type fsEntries = require("./fsEntries");
 import Processor = require("./processor");
 export interface ProcessorOutput {
-    files: Map<string, Buffer>;
+    files: Map<string, fsEntries.BufferLike>;
     prop: any;
 }
 export interface ProcessorResult {
@@ -13,6 +14,9 @@ export interface ResultOnlyProcessorState {
 }
 export interface EmptyProcessorState {
     status: "empty";
+    pendingResult: Promise<ProcessorResult>;
+    resolve: (value: ProcessorResult) => void;
+    reject: (reason?: any) => void;
 }
 export interface ErrorProcessorState {
     status: "error";
@@ -22,6 +26,8 @@ export interface BuildingProcessorState {
     status: "building";
     processor: Processor;
     pendingResult: Promise<ProcessorResult>;
+    resolve?: (value: ProcessorResult) => void;
+    reject?: (reason?: any) => void;
 }
 export interface BuiltProcessorState {
     status: "built";

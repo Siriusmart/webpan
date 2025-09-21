@@ -7,7 +7,7 @@ module.exports = class Processor {
         this.allHandles = allHandles;
         this.handle = new ProcessorHandle(allHandles, meta, this);
     }
-    async build() {
+    async build(content) {
         throw new Error();
     }
 };

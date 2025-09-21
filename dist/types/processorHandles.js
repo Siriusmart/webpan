@@ -3,22 +3,12 @@ const Processor = require("./processor");
 const ProcessorHandle = require("./processorHandle");
 module.exports = class ProcessorHandles {
     handles;
-    constructor(handles) {
+    handle;
+    // ident is the identifier of the processor this is passed to
+    // a unique ProcessorHandles is passed to each processor
+    constructor([filePath, procIdent], handles) {
         this.handles = handles;
-    }
-    async getResult(file, processorName) {
-        const fileHandles = this.handles.get(file);
-        if (fileHandles === undefined || !fileHandles.has(processorName)) {
-            return undefined;
-        }
-        return await fileHandles.get(processorName)?.getResult();
-    }
-    async getProcessor(file, processorName) {
-        const fileHandles = this.handles.get(file);
-        if (fileHandles === undefined || !fileHandles.has(processorName)) {
-            return undefined;
-        }
-        return await fileHandles.get(processorName)?.getProcessor();
+        this.handle = handles.get(filePath)?.get(procIdent);
     }
 };
 //# sourceMappingURL=processorHandles.js.map

@@ -7,6 +7,7 @@ import fs = require("fs/promises");
 import calcHashedEntries = require("../info/calcHashedEntries");
 import hashedEntriesCache = require("../info/hashedEntriesCache");
 import calcDiff = require("../utils/calcDiff");
+import buildDiff = require("../actions/buildDiff");
 
 async function cmdBuild(args: yargs.Arguments): Promise<void> {
     const argPath = args.path as string;
@@ -37,7 +38,8 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(cachedHashedEntries, hashedEntries);
-    console.log(hashedDiff);
+
+    await buildDiff(root, srcContents, hashedDiff);
 }
 
 export = cmdBuild;

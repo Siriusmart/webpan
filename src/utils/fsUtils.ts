@@ -1,7 +1,6 @@
 import fs = require("fs/promises");
 import type fsEntries = require("../types/fsEntries");
 import path = require("path");
-import Stream = require("stream");
 
 async function exists(path: string): Promise<boolean> {
     try {
@@ -36,6 +35,7 @@ async function readDirRecursive(dir: string): Promise<fsEntries.FsContentEntries
     let dirContents: fsEntries.FsContentEntries = new Map();
 
     const readTasks = dirItems.map(async childPath => {
+        childPath = "/" + childPath;
         const fullPath = path.join(dir, childPath);
         try {
             const fileInfo = await fs.stat(fullPath);
@@ -66,7 +66,7 @@ async function readDirRecursive(dir: string): Promise<fsEntries.FsContentEntries
     return dirContents;
 }
 
-async function writeCreate(target: string, data: string | NodeJS.ArrayBufferView| Iterable<string | NodeJS.ArrayBufferView>| AsyncIterable<string | NodeJS.ArrayBufferView>| Stream): Promise<void> {
+async function writeCreate(target: string, data: fsEntries.BufferLike): Promise<void> {
     const parentDir = path.join(target, "..");
 
     if(!await exists(parentDir)) {

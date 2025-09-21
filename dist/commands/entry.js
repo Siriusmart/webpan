@@ -4,7 +4,7 @@ const yargs = require("yargs");
 const yargsHelpers = require("yargs/helpers");
 const cmdInit = require("./cmdInit");
 const cmdBuild = require("./cmdBuild");
-const requiresArg = require("yargs");
+console.log(__dirname);
 async function main() {
     yargs()
         .scriptName("vanillagraphics")

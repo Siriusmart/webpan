@@ -1,7 +1,6 @@
 "use strict";
 const fs = require("fs/promises");
 const path = require("path");
-const Stream = require("stream");
 async function exists(path) {
     try {
         await fs.stat(path);
@@ -33,6 +32,7 @@ async function readDirRecursive(dir) {
     const dirItems = await fs.readdir(dir, { recursive: true });
     let dirContents = new Map();
     const readTasks = dirItems.map(async (childPath) => {
+        childPath = "/" + childPath;
         const fullPath = path.join(dir, childPath);
         try {
             const fileInfo = await fs.stat(fullPath);
