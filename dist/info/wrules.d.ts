@@ -12,6 +12,8 @@ interface FoundProcessorEntry {
     settings: Map<string, any>;
     procDir: string;
     relativePath: string;
+    ruleLocation: string;
+    pattern: string;
     procName: string;
 }
 declare function resolveProcessors(root: string, dirCursor: string, fileName?: string): Promise<Set<FoundProcessorEntry>>;

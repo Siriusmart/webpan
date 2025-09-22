@@ -5,7 +5,7 @@ const fsUtils = require("../utils/fsUtils");
 async function cleanBuild(root) {
     const distPath = path.join(root, "dist");
     if (await fsUtils.exists(distPath)) {
-        await fs.rmdir(distPath);
+        await fs.rm(distPath, { recursive: true });
     }
 }
 module.exports = cleanBuild;

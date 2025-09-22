@@ -67,6 +67,8 @@ interface FoundProcessorEntry {
     settings: Map<string, any>,
     procDir: string,
     relativePath: string,
+    ruleLocation: string,
+    pattern: string,
     procName: string
 }
 
@@ -84,6 +86,8 @@ async function resolveProcessors(root: string, dirCursor: string, fileName: stri
                         settings: proc.settings,
                         procDir: path.join(dirCursor, "/"),
                         relativePath: fileName,
+                        ruleLocation: dirCursor,
+                        pattern: pattern,
                         procName: proc.procName
                     })
                 }

@@ -3,6 +3,8 @@ export interface ProcessorMetaEntry {
     childPath: string,
     procName: string,
     relativePath: string,
+    ruleLocation: string,
+    pattern: string,
     settings: any,
 }
 

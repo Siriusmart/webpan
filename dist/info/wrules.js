@@ -64,6 +64,8 @@ async function resolveProcessors(root, dirCursor, fileName = dirCursor.endsWith(
                         settings: proc.settings,
                         procDir: path.join(dirCursor, "/"),
                         relativePath: fileName,
+                        ruleLocation: dirCursor,
+                        pattern: pattern,
                         procName: proc.procName
                     });
                 }

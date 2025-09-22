@@ -64,7 +64,9 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
                         fullPath: path.join(root, "src", filePath),
                         procName: procEntry.procName,
                         relativePath: procEntry.relativePath,
-                        settings: procEntry.settings
+                        ruleLocation: procEntry.ruleLocation,
+                        pattern: procEntry.pattern,
+                        settings: procEntry.settings,
                     }
                     let proc = new procEntry.processorClass(cachedProcessors, meta);
 
