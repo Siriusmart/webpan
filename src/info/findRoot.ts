@@ -4,7 +4,7 @@ import fsUtils = require("../utils/fsUtils");
 
 async function findRoot(pathHint: string = "."): Promise<string | null> {
     if(await fsUtils.existsDir(pathHint)) {
-        if(await fsUtils.existsFile(path.join(pathHint, "vanilla.json"))) {
+        if(await fsUtils.existsFile(path.join(pathHint, "wproject.json"))) {
             return pathHint;
         }
 

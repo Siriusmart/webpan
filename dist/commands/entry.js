@@ -7,7 +7,7 @@ const cmdBuild = require("./cmdBuild");
 console.log(__dirname);
 async function main() {
     yargs()
-        .scriptName("vanillagraphics")
+        .scriptName("webpan")
         .usage('$0 <cmd> [args]')
         .command('init [path]', 'Initialise a project', async (yargs) => {
         yargs.positional('path', {
