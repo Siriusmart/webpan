@@ -2,11 +2,11 @@ import type fsEntries = require("./fsEntries");
 import Processor = require("./processor");
 export interface ProcessorOutput {
     files: Map<string, fsEntries.BufferLike>;
-    prop: any;
+    result: any;
 }
 export interface ProcessorResult {
     files: Set<string>;
-    prop: any;
+    result: any;
 }
 export interface ResultOnlyProcessorState {
     status: "resultonly";

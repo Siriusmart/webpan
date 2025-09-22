@@ -65,7 +65,7 @@ class ProcessorHandle {
                     status: "built",
                     processor: this.processor,
                     result: {
-                        prop: output.prop,
+                        result: output.result,
                         files: new Set(output.files.keys())
                     }
                 };
@@ -108,7 +108,6 @@ class ProcessorHandle {
             case "resultonly":
                 await this.buildWithBuffer();
                 return this.processor;
-                break;
             case "building":
             case "empty":
                 await this.state.pendingResult;

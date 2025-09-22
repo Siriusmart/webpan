@@ -1,6 +1,6 @@
 import assert = require("assert");
 import wrules = require("../info/wrules");
-import type fsEntries = require("../types/fsEntries");
+import fsEntries = require("../types/fsEntries");
 import type procEntries = require("../types/procEntries");
 import ProcessorHandle = require("../types/processorHandle");
 import type processorStates = require("../types/processorStates");

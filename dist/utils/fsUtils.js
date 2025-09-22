@@ -31,8 +31,13 @@ async function existsDir(path) {
 async function readDirRecursive(dir) {
     const dirItems = await fs.readdir(dir, { recursive: true });
     let dirContents = new Map();
+    dirContents.set("/", {
+        fullPath: dir,
+        childPath: "/",
+        content: ["dir"]
+    });
     const readTasks = dirItems.map(async (childPath) => {
-        childPath = "/" + childPath;
+        childPath = path.join("/", childPath);
         const fullPath = path.join(dir, childPath);
         try {
             const fileInfo = await fs.stat(fullPath);
@@ -45,9 +50,10 @@ async function readDirRecursive(dir) {
                 });
             }
             else if (fileInfo.isDirectory()) {
-                dirContents.set(path.join(childPath, "/"), {
-                    fullPath: path.join(fullPath, "/"),
-                    childPath: path.join(childPath, "/"),
+                childPath = path.join(childPath, "/");
+                dirContents.set(childPath, {
+                    fullPath,
+                    childPath,
                     content: ["dir"]
                 });
             }
@@ -68,7 +74,7 @@ async function readDirRecursive(dir) {
 async function writeCreate(target, data) {
     const parentDir = path.join(target, "..");
     if (!await exists(parentDir)) {
-        fs.mkdir(parentDir, { recursive: true });
+        await fs.mkdir(parentDir, { recursive: true });
     }
     await fs.writeFile(target, data);
 }

@@ -96,7 +96,7 @@ async function resolveProcessors(root: string, dirCursor: string, fileName: stri
     }
 
     if(dirCursor !== "/") {
-        const parentProcessors = await resolveProcessors(root, path.join(path.dirname(dirCursor), "/"), path.join(path.basename(dirCursor), fileName))
+        const parentProcessors = await resolveProcessors(root, path.join(path.dirname(dirCursor), "/"), path.join("/", path.basename(dirCursor), fileName))
         parentProcessors.forEach(foundEntries.add, foundEntries)
     }
 

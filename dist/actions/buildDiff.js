@@ -1,6 +1,7 @@
 "use strict";
 const assert = require("assert");
 const wrules = require("../info/wrules");
+const fsEntries = require("../types/fsEntries");
 const ProcessorHandle = require("../types/processorHandle");
 const calcDiff = require("../utils/calcDiff");
 const path = require("path");
