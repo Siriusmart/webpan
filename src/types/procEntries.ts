@@ -5,7 +5,7 @@ export interface ProcessorMetaEntry {
     relativePath: string,
     ruleLocation: string,
     pattern: string,
-    settings: any,
+    settings: Map<string, any>,
 }
 
 export type DiffType = "changed" | "removed" | "created";
