@@ -3,8 +3,6 @@ import yargsHelpers = require('yargs/helpers');
 import cmdInit = require("./cmdInit");
 import cmdBuild = require("./cmdBuild");
 
-console.log(__dirname)
-
 async function main(): Promise<void> {
     yargs()
     .scriptName("webpan")

@@ -1,11 +1,5 @@
-import calcHashedEntries = require("./info/calcHashedEntries");
-import fsUtils = require("./utils/fsUtils");
+import processor = require("./types/processor")
 
-async function main(): Promise<void> {
-    const dirContent = await fsUtils.readDirRecursive("./src");
-    const hashes = await calcHashedEntries(dirContent);
-
-    console.log(hashes);
+export = {
+    Processor: processor
 }
-
-main();

@@ -48,16 +48,19 @@ async function readDirRecursive(dir: string): Promise<fsEntries.FsContentEntries
                     content: ["file", fileContent]
                 });
             } else if (fileInfo.isDirectory()) {
-                dirContents.set(childPath + "/", {
-                    fullPath: fullPath + "/",
-                    childPath: childPath + "/",
+                dirContents.set(path.join(childPath, "/"), {
+                    fullPath: path.join(fullPath, "/"),
+                    childPath: path.join(childPath, "/"),
                     content: ["dir"]
                 });
             } else {
                 console.warn(`${fullPath} is nether a file or a directory.`)
             }
         } catch(e) {
-            console.error(`Read task for ${fullPath} failed because ${e}.`)
+            if(typeof e === "object" && e !== null && "stack" in e) {
+                e = e.stack
+            }
+            throw new Error(`Read task for ${fullPath} failed because ${e}.`)
         }
     });
 

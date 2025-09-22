@@ -12,12 +12,12 @@ async function getProcessor(root: string, ident: string): Promise<{ new(): Proce
     }
 
     const procPath = path.join(root, "node_modules", ident);
-    if(!await fsUtils.existsFile(procPath)) {
-        throw new Error(`Processor not found: no file at ${procPath}`)
+    if(!await fsUtils.existsDir(procPath)) {
+        throw new Error(`Processor not found: no directory at ${procPath}`)
     }
 
     const procClass = require(ident);
-    if(typeof procClass.new !== "function") {
+    if(typeof procClass !== "function") {
         throw new Error(`Package ${ident} doesn't seem to be a webpan processor`)
     }
 

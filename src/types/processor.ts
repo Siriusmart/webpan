@@ -2,7 +2,7 @@ import type procEntries = require("./procEntries");
 import ProcessorHandle = require("./processorHandle");
 import type processorStates = require("./processorStates");
 
-export = class Processor {
+abstract class Processor {
     handle: ProcessorHandle;
     allHandles: Map<string, Map<string, Set<ProcessorHandle>>>
 
@@ -11,7 +11,7 @@ export = class Processor {
         this.handle = new ProcessorHandle(allHandles, meta, this);
     }
 
-    async build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutput> {
-        throw new Error()
-    }
+    abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutput>;
 }
+
+export = Processor

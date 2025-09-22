@@ -29,7 +29,6 @@ async function existsDir(path) {
 }
 async function readFilesRecursive(dir) {
     let dirItems = await fs.readdir(dir, { recursive: true });
-    console.log(dirItems);
     return new Map();
 }
 module.exports = {

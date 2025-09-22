@@ -102,7 +102,7 @@ async function buildDiffInternal(root, fsContent, diff) {
     });
     const writeTasks = Array.from(writeEntries.entries()).map(async ([childPath, writeEntry]) => {
         try {
-            const fullPath = path.join(root, childPath);
+            const fullPath = path.join(root, "dist", childPath);
             if (writeEntry.content == "remove") {
                 await fs.unlink(fullPath);
             }
@@ -111,7 +111,10 @@ async function buildDiffInternal(root, fsContent, diff) {
             }
         }
         catch (e) {
-            console.error(`An error occured when writing changes to ${childPath} because ${e}`);
+            if (typeof e === "object" && e !== null && "stack" in e) {
+                e = e.stack;
+            }
+            throw new Error(`An error occured when writing changes to ${childPath} because ${e}`);
         }
     });
     await Promise.all(writeTasks);

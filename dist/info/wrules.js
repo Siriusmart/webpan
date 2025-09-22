@@ -20,9 +20,11 @@ function normaliseRawProcessor(proc) {
     }
 }
 function rawToNormalised(raw) {
+    if (raw.processors === undefined) {
+        raw.processors = new Map();
+    }
     return {
-        processors: new Map((raw.processors ?? new Map())
-            .entries()
+        processors: new Map(Object.entries(raw.processors)
             .map(([fileName, procs]) => [fileName, new Set(normaliseRawProcessor(procs))]))
     };
 }
@@ -35,11 +37,14 @@ function initRules(fsEntries) {
             assert(entry.content[0] === "file");
             const rulesRaw = JSON.parse(entry.content[1].toString("utf8"));
             const rulesNormalised = rawToNormalised(rulesRaw);
-            assert(cachedRules !== undefined);
-            const rulesDirName = path.dirname(entryPath) + "/";
+            cachedRules = new Map();
+            const rulesDirName = path.join(path.dirname(entryPath), "/");
             cachedRules.set(rulesDirName, rulesNormalised);
         }
         catch (e) {
+            if (typeof e === "object" && e !== null && "stack" in e) {
+                e = e.stack;
+            }
             throw new Error(`Failed to read ${entryPath} because ${e}.`);
         }
     }
@@ -65,7 +70,7 @@ async function resolveProcessors(root, dirCursor, fileName = dirCursor.endsWith(
             }
         }
     }
-    if (dirCursor !== ".") {
+    if (dirCursor !== "/") {
         const parentProcessors = await resolveProcessors(root, path.join(path.dirname(dirCursor), "/"), path.join(path.basename(dirCursor), fileName));
         parentProcessors.forEach(foundEntries.add, foundEntries);
     }

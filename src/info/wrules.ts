@@ -24,9 +24,12 @@ function normaliseRawProcessor(proc: ruleEntry.ProcessorType): ruleEntry.Process
 }
 
 function rawToNormalised(raw: ruleEntry.RuleEntryRaw): ruleEntry.RuleEntryNormalised {
+    if(raw.processors === undefined) {
+        raw.processors = new Map();
+    }
+
     return {
-        processors: new Map((raw.processors ?? new Map())
-                            .entries()
+        processors: new Map(Object.entries(raw.processors)
                             .map(([fileName, procs]) => [fileName, new Set(normaliseRawProcessor(procs))]))
     }
 }
@@ -42,11 +45,14 @@ function initRules(fsEntries: fsEntries.FsContentEntries) {
             const rulesRaw = JSON.parse(entry.content[1].toString("utf8")) as ruleEntry.RuleEntryRaw;
             const rulesNormalised = rawToNormalised(rulesRaw);
 
-            assert(cachedRules !== undefined);
+            cachedRules = new Map();
 
-            const rulesDirName = path.dirname(entryPath) + "/"
+            const rulesDirName = path.join(path.dirname(entryPath), "/")
             cachedRules.set(rulesDirName, rulesNormalised);
         } catch (e) {
+            if(typeof e === "object" && e !== null && "stack" in e) {
+                e = e.stack
+            }
             throw new Error(`Failed to read ${entryPath} because ${e}.`)
         }
     }
@@ -85,7 +91,7 @@ async function resolveProcessors(root: string, dirCursor: string, fileName: stri
         }
     }
 
-    if(dirCursor !== ".") {
+    if(dirCursor !== "/") {
         const parentProcessors = await resolveProcessors(root, path.join(path.dirname(dirCursor), "/"), path.join(path.basename(dirCursor), fileName))
         parentProcessors.forEach(foundEntries.add, foundEntries)
     }

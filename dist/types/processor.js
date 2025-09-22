@@ -1,14 +1,12 @@
 "use strict";
 const ProcessorHandle = require("./processorHandle");
-module.exports = class Processor {
+class Processor {
     handle;
     allHandles;
     constructor(allHandles, meta) {
         this.allHandles = allHandles;
         this.handle = new ProcessorHandle(allHandles, meta, this);
     }
-    async build(content) {
-        throw new Error();
-    }
-};
+}
+module.exports = Processor;
 //# sourceMappingURL=processor.js.map
