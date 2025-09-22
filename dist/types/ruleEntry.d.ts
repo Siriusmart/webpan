@@ -7,6 +7,6 @@ export interface ProcessorSettings {
     settings: Map<string, any>;
 }
 export interface RuleEntryNormalised {
-    processors: Map<string, ProcessorSettings>;
+    processors: Map<string, Set<ProcessorSettings>>;
 }
 //# sourceMappingURL=ruleEntry.d.ts.map

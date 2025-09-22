@@ -6,14 +6,15 @@ const calcDiff = require("../utils/calcDiff");
 const path = require("path");
 const fs = require("fs/promises");
 const fsUtils = require("../utils/fsUtils");
-const resolveProcessors = require("../info/wrules");
 const Processor = require("../types/processor");
+const fsContentCache = require("../info/fsContentCache");
 let cachedProcessors = new Map();
 let currentlyBuilding = null;
 let nextBuilding = null;
 async function buildDiffInternal(root, fsContent, diff) {
     // TODO change to only feed in updated rules files
     wrules.initRules(fsContent);
+    fsContentCache.setFsContentCache(fsContent);
     let toBuild = [];
     let writeEntries = new Map();
     for (const [filePath, diffType] of diff.entries()) {
@@ -53,12 +54,12 @@ async function buildDiffInternal(root, fsContent, diff) {
                         cachedProcessors.set(filePath, new Map());
                     }
                     if (!cachedProcessors.get(filePath)?.has(procEntry.procName)) {
-                        cachedProcessors.get(filePath)?.set(procEntry.procName, new Set([proc.handle]));
+                        cachedProcessors.get(filePath)?.set(procEntry.procName, new Set());
                     }
-                    else {
-                        cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.handle);
-                    }
-                    // still havent specify the await resolve
+                    cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.handle);
+                    const content = fsContent.get(filePath)?.content;
+                    assert(content !== undefined);
+                    toBuild.push((async () => [proc.handle, await proc.build(content[0] === "file" ? content[1] : "dir")])());
                 });
             // get processors
             // insert each task into cachedProcessors (flat)
@@ -67,6 +68,7 @@ async function buildDiffInternal(root, fsContent, diff) {
         }
     }
     const res = await Promise.all(toBuild);
+    fsContentCache.clearFsContentCache();
     res.forEach(([handle, output]) => {
         const previousOutput = "result" in handle.state ? handle.state.result.files : new Set();
         const previousOutputMap = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));

@@ -10,15 +10,15 @@ import ProcessorHandle = require("../types/processorHandle");
 
 let cachedRules: Map<string, ruleEntry.RuleEntryNormalised> | undefined = undefined;
 
-function normaliseRawProcessor(proc: ruleEntry.ProcessorType): [string, ruleEntry.ProcessorSettings][] {
+function normaliseRawProcessor(proc: ruleEntry.ProcessorType): ruleEntry.ProcessorSettings[] {
     switch(typeof proc) {
         case "string":
-            return [[proc, { procName: proc, settings: new Map() }]];
+            return [{ procName: proc, settings: new Map() }];
         case "object":
             if(Array.isArray(proc)) {
-                return proc.map(ident => [ident, { procName: ident, settings: new Map() }])
+                return proc.map(ident => ({ procName: ident, settings: new Map() }))
             } else {
-                return Array.from(proc.entries().map(([ident, settings]) => [ident, { procName: ident, settings }]));
+                return Array.from(proc.entries().map(([ident, settings]) => ({ procName: ident, settings })));
             }
     }
 }
@@ -27,7 +27,7 @@ function rawToNormalised(raw: ruleEntry.RuleEntryRaw): ruleEntry.RuleEntryNormal
     return {
         processors: new Map((raw.processors ?? new Map())
                             .entries()
-                            .flatMap(([fileName, procs]) => [fileName, normaliseRawProcessor(procs)]))
+                            .map(([fileName, procs]) => [fileName, new Set(normaliseRawProcessor(procs))]))
     }
 }
 
@@ -70,19 +70,21 @@ async function resolveProcessors(root: string, dirCursor: string, fileName: stri
     let foundEntries: Set<FoundProcessorEntry> = new Set();
 
     if(dirRule !== undefined) {
-        for(const [pattern, procInfo] of dirRule.processors.entries()) {
+        for(const [pattern, procs] of dirRule.processors.entries()) {
             if(micromatch.isMatch(fileName, pattern)) {
-                foundEntries.add({
-                    processorClass: await getProcessor(root, procInfo.procName),
-                    settings: procInfo.settings,
-                    procDir: path.join(dirCursor, "/"),
-                    relativePath: fileName,
-                    procName: procInfo.procName
-                })
+                for(const proc of procs) {
+                    foundEntries.add({
+                        processorClass: await getProcessor(root, proc.procName),
+                        settings: proc.settings,
+                        procDir: path.join(dirCursor, "/"),
+                        relativePath: fileName,
+                        procName: proc.procName
+                    })
+                }
             }
         }
     }
-    
+
     if(dirCursor !== ".") {
         const parentProcessors = await resolveProcessors(root, path.join(path.dirname(dirCursor), "/"), path.join(path.basename(dirCursor), fileName))
         parentProcessors.forEach(foundEntries.add, foundEntries)

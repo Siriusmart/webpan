@@ -8,8 +8,8 @@ import calcDiff = require("../utils/calcDiff");
 import path = require("path");
 import fs = require("fs/promises");
 import fsUtils = require("../utils/fsUtils");
-import resolveProcessors = require("../info/wrules");
 import Processor = require("../types/processor");
+import fsContentCache = require("../info/fsContentCache");
 
 let cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> = new Map();
 
@@ -24,6 +24,8 @@ interface WriteEntry {
 async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>): Promise<void> {
     // TODO change to only feed in updated rules files
     wrules.initRules(fsContent);
+
+    fsContentCache.setFsContentCache(fsContent);
 
     let toBuild: Promise<[ProcessorHandle, processorStates.ProcessorOutput]>[] = [];
     let writeEntries: Map<string, WriteEntry> = new Map();
@@ -71,12 +73,15 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
                     }
 
                     if(!cachedProcessors.get(filePath)?.has(procEntry.procName)) {
-                        cachedProcessors.get(filePath)?.set(procEntry.procName, new Set([proc.handle]))
-                    } else {
-                        cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.handle)
+                        cachedProcessors.get(filePath)?.set(procEntry.procName, new Set())
                     }
 
-                    // still havent specify the await resolve
+                    cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.handle)
+
+
+                    const content = fsContent.get(filePath)?.content;
+                    assert(content !== undefined);
+                    toBuild.push((async() => [proc.handle, await proc.build(content[0] === "file" ? content[1] : "dir")])())
                 })
                 // get processors
                 // insert each task into cachedProcessors (flat)
@@ -86,6 +91,8 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
     }
 
     const res = await Promise.all(toBuild)
+
+    fsContentCache.clearFsContentCache();
 
     res.forEach(([handle, output]) => {
         const previousOutput: Set<string> = "result" in handle.state ? handle.state.result.files : new Set();
