@@ -45,7 +45,7 @@ function initRules(fsEntries: fsEntries.FsContentEntries) {
             const rulesRaw = JSON.parse(entry.content[1].toString("utf8")) as ruleEntry.RuleEntryRaw;
             const rulesNormalised = rawToNormalised(rulesRaw);
 
-            cachedRules = new Map();
+            cachedRules ??= new Map();
 
             const rulesDirName = path.join(path.dirname(entryPath), "/")
             cachedRules.set(rulesDirName, rulesNormalised);

@@ -3,7 +3,7 @@ import wrules = require("../info/wrules");
 import fsEntries = require("../types/fsEntries");
 import type procEntries = require("../types/procEntries");
 import ProcessorHandle = require("../types/processorHandle");
-import type processorStates = require("../types/processorStates");
+import processorStates = require("../types/processorStates");
 import calcDiff = require("../utils/calcDiff");
 import path = require("path");
 import fs = require("fs/promises");
@@ -27,7 +27,7 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
 
     fsContentCache.setFsContentCache(fsContent);
 
-    let toBuild: Promise<[ProcessorHandle, processorStates.ProcessorOutput]>[] = [];
+    let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
     let writeEntries: Map<string, WriteEntry> = new Map();
 
     for(const [filePath, diffType] of diff.entries()) {
@@ -46,7 +46,7 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
                         if(diffType === "changed") {
                             const content = fsContent.get(filePath)?.content;
                             assert(content !== undefined);
-                            toBuild.push((async() => [handle, await handle.processor.build(content[0] === "file" ? content[1] : "dir")])())
+                            toBuild.push([handle, content[0] === "file" ? content[1] : "dir"])
                         }
                     }))
 
@@ -83,7 +83,7 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
 
                     const content = fsContent.get(filePath)?.content;
                     assert(content !== undefined);
-                    toBuild.push((async() => [proc.handle, await proc.build(content[0] === "file" ? content[1] : "dir")])())
+                    toBuild.push([proc.handle, content[0] === "file" ? content[1] : "dir"])
                 })
                 // get processors
                 // insert each task into cachedProcessors (flat)
@@ -92,7 +92,54 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
         }
     }
 
-    const res = await Promise.all(toBuild)
+    for(const [handleToBuild, _] of toBuild.values()) {
+        assert(handleToBuild.state.status === "empty")
+
+        handleToBuild.state = {
+            status: "building",
+            pendingResult: handleToBuild.state.pendingResult,
+            resolve: handleToBuild.state.resolve,
+            reject: handleToBuild.state.reject,
+        }
+    }
+
+    const res: Set<[ProcessorHandle, processorStates.ProcessorOutput]> = new Set()
+
+    await Promise.all(toBuild.map(async ([handle, content]) => {
+        assert(handle.state.status === "building")
+        let output: processorStates.ProcessorOutput;
+        try {
+            output = await handle.processor.build(content)
+        } catch(err) {
+            const reject = handle.state.reject;
+            assert(reject !== undefined)
+            handle.state = {
+                status: "error",
+                err
+            }
+            reject(err);
+
+            err = typeof err === "object" && err !== null && "stack" in err ? err.stack : err
+            console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`)
+            return null;
+        }
+
+        res.add([handle, output])
+        const resolve = handle.state.resolve;
+        assert(resolve !== undefined)
+        handle.state = {
+            status: "built",
+            processor: handle.processor,
+            result: {
+                result: output.result,
+                files: new Set(output.files.keys())
+            }
+        }
+        resolve({
+            result: output.result,
+            files: new Set(output.files.keys())
+        })
+    }))
 
     fsContentCache.clearFsContentCache();
 
@@ -102,10 +149,6 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
         const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files)
 
         for(let [filePath, difftype] of outputDiff.entries()) {
-            if(!filePath.startsWith('/')) {
-                filePath = path.join(handle.meta.childPath, filePath)
-            }
-            filePath = path.normalize(filePath);
             if(writeEntries.has(filePath)) {
                 console.warn(`${handle.getIdent().join('.')} is trying to write to ${filePath}, but it is already modified by ${writeEntries.get(filePath)}!`)
             }
@@ -153,7 +196,8 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
 async function buildDiff(root: string, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>): Promise<void> {
     if(currentlyBuilding === null) {
         currentlyBuilding = buildDiffInternal(root, fsContent, diff);
-        return await currentlyBuilding;
+        await currentlyBuilding;
+        return;
     }
 
     if(nextBuilding === null) {

@@ -5,6 +5,19 @@ import fsContentCache = require("../info/fsContentCache");
 import type procEntries = require("./procEntries");
 import Processor = require("./processor");
 import type processorStates = require("./processorStates");
+import path = require("path");
+
+function normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry) {
+    output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
+        if(!filePath.startsWith('/')) {
+            filePath = path.normalize(path.join(meta.childPath, filePath))
+        } else {
+            filePath = path.normalize(filePath)
+        }
+
+        return [filePath, buffer]
+    }))
+}
 
 class ProcessorHandle {
     state: processorStates.ProcessorState;
@@ -27,6 +40,14 @@ class ProcessorHandle {
         this.processor = processor;
         this.dependents = new Set();
         this.dependencies = new Set();
+    }
+
+    dependsOn(needle: ProcessorHandle): boolean {
+        return Array.from(this.dependents).some((dependent) => dependent.dependsOn(needle))
+    }
+
+    isOrDependsOn(needle: ProcessorHandle): boolean {
+        return needle === this || this.dependsOn(needle);
     }
 
     reset(): void {
@@ -65,15 +86,16 @@ class ProcessorHandle {
         switch(contentEntry.content[0]) {
             case "file":
                 content = contentEntry.content[1]
-                break
+            break
             case "dir":
                 content = "dir"
-                break
+            break
         }
 
         const pendingResult: Promise<processorStates.ProcessorResult> = new Promise(async (res, rej) => {
             try {
-                const output = await this.processor.build(content);
+                let output = await this.processor.build(content);
+                normaliseOutput(output, this.meta);
 
                 this.state = {
                     status: "built",
@@ -95,7 +117,6 @@ class ProcessorHandle {
         this.reset();
         this.state = {
             status: "building",
-            processor: this.processor,
             pendingResult: pendingResult
         }
         return await pendingResult;
@@ -103,30 +124,39 @@ class ProcessorHandle {
 
     // need mechanism to detect dead locks
     async getResult(requester: ProcessorHandle): Promise<processorStates.ProcessorResult> {
+        if(this.isOrDependsOn(requester)) {
+            throw new Error("There is a cycle in dependency.")
+        }
         this.dependents.add(requester);
+        requester.dependencies.add(this);
         switch(this.state.status) {
             case "resultonly":
             case "built":
                 return this.state.result;
             case "empty":
+                throw new Error("processor is not being built and will not be resolved")
+            case "building":
                 return await this.state.pendingResult;
             case "error":
                 throw this.state.err;
-            case "building":
-                return await this.state.pendingResult;
         }
     }
 
     async getProcessor(requester: ProcessorHandle): Promise<Processor> {
+        if(this.isOrDependsOn(requester)) {
+            throw new Error("There is a cycle in dependency.")
+        }
         this.dependents.add(requester);
+        requester.dependencies.add(this);
         switch(this.state.status) {
             case "resultonly":
                 await this.buildWithBuffer();
                 return this.processor;
-            case "building":
             case "empty":
+                throw new Error("processor is not being built and will not be resolved")
+            case "building":
                 await this.state.pendingResult;
-                return this.processor;
+            return this.processor;
             case "error":
                 throw this.state.err;
             case "built":

@@ -10,6 +10,8 @@ declare class ProcessorHandle {
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
     constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor);
+    dependsOn(needle: ProcessorHandle): boolean;
+    isOrDependsOn(needle: ProcessorHandle): boolean;
     reset(): void;
     getIdent(): [string, string];
     hasResult(): boolean;

@@ -30,7 +30,6 @@ export interface ErrorProcessorState {
 
 export interface BuildingProcessorState {
     status: "building";
-    processor: Processor,
     pendingResult: Promise<ProcessorResult>
     resolve?: (value: ProcessorResult) => void,
     reject?: (reason?: any) => void,

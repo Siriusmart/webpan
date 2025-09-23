@@ -2,6 +2,18 @@
 const assert = require("assert");
 const fsContentCache = require("../info/fsContentCache");
 const Processor = require("./processor");
+const path = require("path");
+function normaliseOutput(output, meta) {
+    output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
+        if (!filePath.startsWith('/')) {
+            filePath = path.normalize(path.join(meta.childPath, filePath));
+        }
+        else {
+            filePath = path.normalize(filePath);
+        }
+        return [filePath, buffer];
+    }));
+}
 class ProcessorHandle {
     state;
     meta;
@@ -22,6 +34,12 @@ class ProcessorHandle {
         this.processor = processor;
         this.dependents = new Set();
         this.dependencies = new Set();
+    }
+    dependsOn(needle) {
+        return Array.from(this.dependents).some((dependent) => dependent.dependsOn(needle));
+    }
+    isOrDependsOn(needle) {
+        return needle === this || this.dependsOn(needle);
     }
     reset() {
         if (this.state.status === "empty") {
@@ -60,7 +78,8 @@ class ProcessorHandle {
         }
         const pendingResult = new Promise(async (res, rej) => {
             try {
-                const output = await this.processor.build(content);
+                let output = await this.processor.build(content);
+                normaliseOutput(output, this.meta);
                 this.state = {
                     status: "built",
                     processor: this.processor,
@@ -82,34 +101,42 @@ class ProcessorHandle {
         this.reset();
         this.state = {
             status: "building",
-            processor: this.processor,
             pendingResult: pendingResult
         };
         return await pendingResult;
     }
     // need mechanism to detect dead locks
     async getResult(requester) {
+        if (this.isOrDependsOn(requester)) {
+            throw new Error("There is a cycle in dependency.");
+        }
         this.dependents.add(requester);
+        requester.dependencies.add(this);
         switch (this.state.status) {
             case "resultonly":
             case "built":
                 return this.state.result;
             case "empty":
+                throw new Error("processor is not being built and will not be resolved");
+            case "building":
                 return await this.state.pendingResult;
             case "error":
                 throw this.state.err;
-            case "building":
-                return await this.state.pendingResult;
         }
     }
     async getProcessor(requester) {
+        if (this.isOrDependsOn(requester)) {
+            throw new Error("There is a cycle in dependency.");
+        }
         this.dependents.add(requester);
+        requester.dependencies.add(this);
         switch (this.state.status) {
             case "resultonly":
                 await this.buildWithBuffer();
                 return this.processor;
-            case "building":
             case "empty":
+                throw new Error("processor is not being built and will not be resolved");
+            case "building":
                 await this.state.pendingResult;
                 return this.processor;
             case "error":
