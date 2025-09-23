@@ -22,12 +22,8 @@ class ProcessorHandle {
     dependents;
     dependencies;
     constructor(handles, meta, processor) {
-        const { promise, resolve, reject } = Promise.withResolvers();
         this.state = {
             status: "empty",
-            pendingResult: promise,
-            resolve,
-            reject
         };
         this.meta = meta;
         this.handles = handles;
@@ -45,12 +41,8 @@ class ProcessorHandle {
         if (this.state.status === "empty") {
             return;
         }
-        const { promise, resolve, reject } = Promise.withResolvers();
         this.state = {
             status: "empty",
-            pendingResult: promise,
-            resolve,
-            reject
         };
         this.dependencies.forEach((handle) => handle.dependents.delete(this));
         this.dependents.forEach((handle) => handle.reset());
@@ -64,6 +56,34 @@ class ProcessorHandle {
     hasProcessor() {
         return this.state.status === "built";
     }
+    pendingResultPromise() {
+        const { promise, resolve } = Promise.withResolvers();
+        const wrappedResolve = (result) => {
+            resolve(["ok", result]);
+        };
+        const wrappedReject = (err) => {
+            resolve(["err", err]);
+        };
+        this.state = {
+            status: "building",
+            pendingResult: promise,
+            reject: wrappedReject,
+            resolve: wrappedResolve
+        };
+        return {
+            promise,
+            reject: wrappedReject,
+            resolve: wrappedResolve
+        };
+    }
+    unwrapPendingResult(res) {
+        switch (res[0]) {
+            case "ok":
+                return res[1];
+            case "err":
+                throw res[1];
+        }
+    }
     async buildWithBuffer() {
         const contentEntry = fsContentCache.getFsContentCache().get(this.meta.childPath);
         assert(contentEntry !== undefined);
@@ -76,34 +96,35 @@ class ProcessorHandle {
                 content = "dir";
                 break;
         }
-        const pendingResult = new Promise(async (res, rej) => {
-            try {
-                let output = await this.processor.build(content);
-                normaliseOutput(output, this.meta);
-                this.state = {
-                    status: "built",
-                    processor: this.processor,
-                    result: {
-                        result: output.result,
-                        files: new Set(output.files.keys())
-                    }
-                };
-                res(this.state.result);
-            }
-            catch (err) {
-                this.state = {
-                    status: "error",
-                    err
-                };
-                rej(err);
-            }
-        });
         this.reset();
+        const { promise, resolve, reject } = this.pendingResultPromise();
         this.state = {
             status: "building",
-            pendingResult: pendingResult
+            pendingResult: promise,
+            reject,
+            resolve
         };
-        return await pendingResult;
+        try {
+            let output = await this.processor.build(content);
+            normaliseOutput(output, this.meta);
+            this.state = {
+                status: "built",
+                processor: this.processor,
+                result: {
+                    result: output.result,
+                    files: new Set(output.files.keys())
+                }
+            };
+            resolve(this.state.result);
+        }
+        catch (err) {
+            this.state = {
+                status: "error",
+                err
+            };
+            reject(err);
+        }
+        return this.unwrapPendingResult(await promise);
     }
     // need mechanism to detect dead locks
     async getResult(requester) {
@@ -119,7 +140,7 @@ class ProcessorHandle {
             case "empty":
                 throw new Error("processor is not being built and will not be resolved");
             case "building":
-                return await this.state.pendingResult;
+                return this.unwrapPendingResult(await this.state.pendingResult);
             case "error":
                 throw this.state.err;
         }

@@ -16,6 +16,12 @@ declare class ProcessorHandle {
     getIdent(): [string, string];
     hasResult(): boolean;
     hasProcessor(): boolean;
+    pendingResultPromise(): {
+        promise: Promise<["ok", processorStates.ProcessorResult] | ["err", any]>;
+        resolve: (result: processorStates.ProcessorResult) => void;
+        reject: (err: any) => void;
+    };
+    unwrapPendingResult(res: ["ok", processorStates.ProcessorResult] | ["err", any]): processorStates.ProcessorResult;
     buildWithBuffer(): Promise<processorStates.ProcessorResult>;
     getResult(requester: ProcessorHandle): Promise<processorStates.ProcessorResult>;
     getProcessor(requester: ProcessorHandle): Promise<Processor>;

@@ -18,9 +18,6 @@ export interface ResultOnlyProcessorState {
 
 export interface EmptyProcessorState {
     status: "empty";
-    pendingResult: Promise<ProcessorResult> // as no processors are left unbuilt
-    resolve: (value: ProcessorResult) => void,
-    reject: (reason?: any) => void,
 }
 
 export interface ErrorProcessorState {
@@ -30,9 +27,9 @@ export interface ErrorProcessorState {
 
 export interface BuildingProcessorState {
     status: "building";
-    pendingResult: Promise<ProcessorResult>
-    resolve?: (value: ProcessorResult) => void,
-    reject?: (reason?: any) => void,
+    pendingResult: Promise<["ok", ProcessorResult] | ["err", any]>
+    resolve: (value: ProcessorResult) => void,
+    reject: (reason?: any) => void,
 }
 
 export interface BuiltProcessorState {

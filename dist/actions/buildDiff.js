@@ -73,11 +73,12 @@ async function buildDiffInternal(root, fsContent, diff) {
     }
     for (const [handleToBuild, _] of toBuild.values()) {
         assert(handleToBuild.state.status === "empty");
+        const { promise, resolve, reject } = handleToBuild.pendingResultPromise();
         handleToBuild.state = {
             status: "building",
-            pendingResult: handleToBuild.state.pendingResult,
-            resolve: handleToBuild.state.resolve,
-            reject: handleToBuild.state.reject,
+            pendingResult: promise,
+            reject,
+            resolve
         };
     }
     const res = new Set();
@@ -97,7 +98,7 @@ async function buildDiffInternal(root, fsContent, diff) {
             reject(err);
             err = typeof err === "object" && err !== null && "stack" in err ? err.stack : err;
             console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`);
-            return null;
+            return;
         }
         res.add([handle, output]);
         const resolve = handle.state.resolve;
@@ -166,6 +167,7 @@ async function buildDiff(root, fsContent, diff) {
     if (currentlyBuilding === null) {
         currentlyBuilding = buildDiffInternal(root, fsContent, diff);
         await currentlyBuilding;
+        currentlyBuilding = null;
         return;
     }
     if (nextBuilding === null) {
