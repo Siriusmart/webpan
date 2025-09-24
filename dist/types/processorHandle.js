@@ -3,6 +3,9 @@ const assert = require("assert");
 const fsContentCache = require("../info/fsContentCache");
 const Processor = require("./processor");
 const path = require("path");
+const writeEntry = require("../types/writeEntry");
+const calcDiff = require("../utils/calcDiff");
+const writeEntriesManager = require("../info/writeEntriesManager");
 function normaliseOutput(output, meta) {
     output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
         if (!filePath.startsWith('/')) {
@@ -56,6 +59,34 @@ class ProcessorHandle {
     hasProcessor() {
         return this.state.status === "built";
     }
+    updateWithOutput(output, writeEntries) {
+        normaliseOutput(output, this.meta);
+        const previousOutput = "result" in this.state ? this.state.result.files : new Set();
+        const previousOutputMap = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));
+        const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files);
+        for (let [filePath, difftype] of outputDiff.entries()) {
+            if (writeEntries.has(filePath)) {
+                console.warn(`${this.getIdent().join('.')} is trying to write to ${filePath}, but it is already modified by ${writeEntries.get(filePath)}!`);
+            }
+            let content;
+            switch (difftype) {
+                case "changed":
+                case "created":
+                    content = output.files.get(filePath);
+                    break;
+                case "removed":
+                    if (writeEntries.has(filePath)) {
+                        continue;
+                    }
+                    content = "remove";
+            }
+            const writeEntry = {
+                content,
+                processor: this
+            };
+            writeEntries.set(filePath, writeEntry);
+        }
+    }
     pendingResultPromise() {
         const { promise, resolve } = Promise.withResolvers();
         const wrappedResolve = (result) => {
@@ -106,7 +137,7 @@ class ProcessorHandle {
         };
         try {
             let output = await this.processor.build(content);
-            normaliseOutput(output, this.meta);
+            this.updateWithOutput(output, writeEntriesManager.getGlobalWriteEntries());
             this.state = {
                 status: "built",
                 processor: this.processor,

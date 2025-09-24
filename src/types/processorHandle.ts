@@ -6,6 +6,9 @@ import type procEntries = require("./procEntries");
 import Processor = require("./processor");
 import type processorStates = require("./processorStates");
 import path = require("path");
+import writeEntry = require("../types/writeEntry")
+import calcDiff = require("../utils/calcDiff");
+import writeEntriesManager = require("../info/writeEntriesManager")
 
 function normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry) {
     output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
@@ -70,6 +73,38 @@ class ProcessorHandle {
         return this.state.status === "built"
     }
 
+    updateWithOutput(output: processorStates.ProcessorOutput, writeEntries: Map<string, writeEntry.WriteEntry>) {
+        normaliseOutput(output, this.meta);
+        const previousOutput: Set<string> = "result" in this.state ? this.state.result.files : new Set();
+        const previousOutputMap: Map<string, any> = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));
+        const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files)
+
+        for(let [filePath, difftype] of outputDiff.entries()) {
+            if(writeEntries.has(filePath)) {
+                console.warn(`${this.getIdent().join('.')} is trying to write to ${filePath}, but it is already modified by ${writeEntries.get(filePath)}!`)
+            }
+
+            let content: Buffer | "remove";
+            switch(difftype) {
+                case "changed":
+                    case "created":
+                    content = output.files.get(filePath) as Buffer;
+                break;
+                case "removed":
+                    if(writeEntries.has(filePath)) {
+                    continue;
+                }
+                content = "remove"
+            }
+
+            const writeEntry: writeEntry.WriteEntry = {
+                content,
+                processor: this
+            }
+            writeEntries.set(filePath, writeEntry);
+        }
+    }
+
     pendingResultPromise(): {
         promise: Promise<["ok", processorStates.ProcessorResult] | ["err", any]>,
         resolve: (result: processorStates.ProcessorResult) => void,
@@ -131,7 +166,7 @@ class ProcessorHandle {
 
         try {
             let output = await this.processor.build(content);
-            normaliseOutput(output, this.meta);
+            this.updateWithOutput(output, writeEntriesManager.getGlobalWriteEntries())
 
             this.state = {
                 status: "built",

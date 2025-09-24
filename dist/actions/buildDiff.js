@@ -10,6 +10,7 @@ const fs = require("fs/promises");
 const fsUtils = require("../utils/fsUtils");
 const Processor = require("../types/processor");
 const fsContentCache = require("../info/fsContentCache");
+const writeEntriesManager = require("../info/writeEntriesManager");
 let cachedProcessors = new Map();
 let currentlyBuilding = null;
 let nextBuilding = null;
@@ -18,7 +19,8 @@ async function buildDiffInternal(root, fsContent, diff) {
     wrules.initRules(fsContent);
     fsContentCache.setFsContentCache(fsContent);
     let toBuild = [];
-    let writeEntries = new Map();
+    writeEntriesManager.initGlobalWriteEntries();
+    let writeEntries = writeEntriesManager.getGlobalWriteEntries();
     for (const [filePath, diffType] of diff.entries()) {
         // IMPORTANT! update cachedProcessors
         switch (diffType) {
@@ -27,7 +29,7 @@ async function buildDiffInternal(root, fsContent, diff) {
                 cachedProcessors.get(filePath)?.values()
                     .forEach(handles => handles.forEach(handle => {
                     if ("result" in handle.state) {
-                        handle.state.result.files.forEach(toDelete => writeEntries.set(toDelete, { processor: handle.processor, content: "remove" }));
+                        handle.state.result.files.forEach(toDelete => writeEntries.set(toDelete, { processor: handle, content: "remove" }));
                     }
                     handle.reset();
                     if (diffType === "changed") {
@@ -118,31 +120,7 @@ async function buildDiffInternal(root, fsContent, diff) {
     }));
     fsContentCache.clearFsContentCache();
     res.forEach(([handle, output]) => {
-        const previousOutput = "result" in handle.state ? handle.state.result.files : new Set();
-        const previousOutputMap = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));
-        const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files);
-        for (let [filePath, difftype] of outputDiff.entries()) {
-            if (writeEntries.has(filePath)) {
-                console.warn(`${handle.getIdent().join('.')} is trying to write to ${filePath}, but it is already modified by ${writeEntries.get(filePath)}!`);
-            }
-            let content;
-            switch (difftype) {
-                case "changed":
-                case "created":
-                    content = output.files.get(filePath);
-                    break;
-                case "removed":
-                    if (writeEntries.has(filePath)) {
-                        continue;
-                    }
-                    content = "remove";
-            }
-            const writeEntry = {
-                content,
-                processor: handle.processor
-            };
-            writeEntries.set(filePath, writeEntry);
-        }
+        handle.updateWithOutput(output, writeEntries);
     });
     const writeTasks = Array.from(writeEntries.entries()).map(async ([childPath, writeEntry]) => {
         try {
@@ -162,6 +140,7 @@ async function buildDiffInternal(root, fsContent, diff) {
         }
     });
     await Promise.all(writeTasks);
+    writeEntriesManager.clearGlobalWriteEntries();
 }
 async function buildDiff(root, fsContent, diff) {
     if (currentlyBuilding === null) {

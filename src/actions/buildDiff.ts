@@ -10,16 +10,12 @@ import fs = require("fs/promises");
 import fsUtils = require("../utils/fsUtils");
 import Processor = require("../types/processor");
 import fsContentCache = require("../info/fsContentCache");
+import writeEntriesManager = require("../info/writeEntriesManager")
 
 let cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> = new Map();
 
 let currentlyBuilding: Promise<void> | null = null;
 let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>] | null = null;
-
-interface WriteEntry {
-    processor: Processor,
-    content: Buffer | "remove"
-}
 
 async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>): Promise<void> {
     // TODO change to only feed in updated rules files
@@ -28,7 +24,8 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
     fsContentCache.setFsContentCache(fsContent);
 
     let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
-    let writeEntries: Map<string, WriteEntry> = new Map();
+    writeEntriesManager.initGlobalWriteEntries();
+    let writeEntries = writeEntriesManager.getGlobalWriteEntries();
 
     for(const [filePath, diffType] of diff.entries()) {
         // IMPORTANT! update cachedProcessors
@@ -39,7 +36,7 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
                     .forEach(handles => handles.forEach(handle => {
 
                         if("result" in handle.state) {
-                            handle.state.result.files.forEach(toDelete => writeEntries.set(toDelete, { processor: handle.processor, content: "remove"}))
+                            handle.state.result.files.forEach(toDelete => writeEntries.set(toDelete, { processor: handle, content: "remove"}))
                         }
                         handle.reset()
 
@@ -146,34 +143,7 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
     fsContentCache.clearFsContentCache();
 
     res.forEach(([handle, output]) => {
-        const previousOutput: Set<string> = "result" in handle.state ? handle.state.result.files : new Set();
-        const previousOutputMap: Map<string, any> = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));
-        const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files)
-
-        for(let [filePath, difftype] of outputDiff.entries()) {
-            if(writeEntries.has(filePath)) {
-                console.warn(`${handle.getIdent().join('.')} is trying to write to ${filePath}, but it is already modified by ${writeEntries.get(filePath)}!`)
-            }
-
-            let content: Buffer | "remove";
-            switch(difftype) {
-                case "changed":
-                    case "created":
-                    content = output.files.get(filePath) as Buffer;
-                break;
-                case "removed":
-                    if(writeEntries.has(filePath)) {
-                    continue;
-                }
-                content = "remove"
-            }
-
-            const writeEntry: WriteEntry = {
-                content,
-                processor: handle.processor
-            }
-            writeEntries.set(filePath, writeEntry);
-        }
+        handle.updateWithOutput(output, writeEntries)
     })
 
     const writeTasks = Array.from(writeEntries.entries()).map(async ([childPath, writeEntry]) => {
@@ -193,6 +163,7 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
     })
 
     await Promise.all(writeTasks)
+    writeEntriesManager.clearGlobalWriteEntries();
 }
 
 async function buildDiff(root: string, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>): Promise<void> {

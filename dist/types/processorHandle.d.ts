@@ -2,6 +2,7 @@ export = ProcessorHandle;
 import type procEntries = require("./procEntries");
 import Processor = require("./processor");
 import type processorStates = require("./processorStates");
+import writeEntry = require("../types/writeEntry");
 declare class ProcessorHandle {
     state: processorStates.ProcessorState;
     meta: procEntries.ProcessorMetaEntry;
@@ -16,6 +17,7 @@ declare class ProcessorHandle {
     getIdent(): [string, string];
     hasResult(): boolean;
     hasProcessor(): boolean;
+    updateWithOutput(output: processorStates.ProcessorOutput, writeEntries: Map<string, writeEntry.WriteEntry>): void;
     pendingResultPromise(): {
         promise: Promise<["ok", processorStates.ProcessorResult] | ["err", any]>;
         resolve: (result: processorStates.ProcessorResult) => void;
