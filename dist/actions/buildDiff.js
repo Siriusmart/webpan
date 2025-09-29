@@ -3,18 +3,18 @@ const assert = require("assert");
 const wrules = require("../info/wrules");
 const fsEntries = require("../types/fsEntries");
 const ProcessorHandle = require("../types/processorHandle");
+const ProcessorHandles = require("../types/processorHandles");
 const processorStates = require("../types/processorStates");
-const calcDiff = require("../utils/calcDiff");
 const path = require("path");
 const fs = require("fs/promises");
 const fsUtils = require("../utils/fsUtils");
-const Processor = require("../types/processor");
 const fsContentCache = require("../info/fsContentCache");
 const writeEntriesManager = require("../info/writeEntriesManager");
-let cachedProcessors = new Map();
+const buildInfo = require("../info/buildInfo");
 let currentlyBuilding = null;
 let nextBuilding = null;
-async function buildDiffInternal(root, fsContent, diff) {
+async function buildDiffInternal(root, fsContent, diff, hashedEntries) {
+    let cachedProcessors = ProcessorHandles.getCache();
     // TODO change to only feed in updated rules files
     wrules.initRules(fsContent);
     fsContentCache.setFsContentCache(fsContent);
@@ -36,6 +36,9 @@ async function buildDiffInternal(root, fsContent, diff) {
                         const content = fsContent.get(filePath)?.content;
                         assert(content !== undefined);
                         toBuild.push([handle, content[0] === "file" ? content[1] : "dir"]);
+                    }
+                    if (diffType === "removed") {
+                        handle.drop();
                     }
                 }));
                 if (diffType === "removed") {
@@ -141,10 +144,11 @@ async function buildDiffInternal(root, fsContent, diff) {
     });
     await Promise.all(writeTasks);
     writeEntriesManager.clearGlobalWriteEntries();
+    await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors));
 }
-async function buildDiff(root, fsContent, diff) {
+async function buildDiff(root, fsContent, diff, hashedEntries) {
     if (currentlyBuilding === null) {
-        currentlyBuilding = buildDiffInternal(root, fsContent, diff);
+        currentlyBuilding = buildDiffInternal(root, fsContent, diff, hashedEntries);
         await currentlyBuilding;
         currentlyBuilding = null;
         return;
@@ -169,12 +173,12 @@ async function buildDiff(root, fsContent, diff) {
                     }
                 }
                 await currentlyBuilding;
-                currentlyBuilding = buildDiffInternal(root, fsContent, nextBuilding[1]);
+                currentlyBuilding = buildDiffInternal(root, fsContent, nextBuilding[1], nextBuilding[2]);
                 nextBuilding = null;
                 await currentlyBuilding;
                 currentlyBuilding = null;
                 res();
-            }), new Map()];
+            }), new Map(), hashedEntries];
     }
     else {
         await nextBuilding[0];

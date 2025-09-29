@@ -7,6 +7,10 @@ async function cleanBuild(root) {
     if (await fsUtils.exists(distPath)) {
         await fs.rm(distPath, { recursive: true });
     }
+    const buildInfoPath = path.join(root, "meta", "buildInfo.json");
+    if (await fsUtils.exists(buildInfoPath)) {
+        await fs.rm(buildInfoPath);
+    }
 }
 module.exports = cleanBuild;
 //# sourceMappingURL=cleanBuild.js.map

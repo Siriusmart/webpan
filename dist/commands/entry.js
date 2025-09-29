@@ -2,21 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const yargs = require("yargs");
 const yargsHelpers = require("yargs/helpers");
-const cmdInit = require("./cmdInit");
 const cmdBuild = require("./cmdBuild");
 async function main() {
+    await new Promise(res => setTimeout(res, 100));
     yargs()
         .scriptName("webpan")
         .usage('$0 <cmd> [args]')
-        .command('init [path]', 'Initialise a project', async (yargs) => {
-        yargs.positional('path', {
-            type: 'string',
-            default: '.',
-            describe: 'path to initialise the project at'
-        });
-    }, async (argv) => {
-        await cmdInit(argv);
-    })
         .command('build [path]', 'Builds a project', async (yargs) => {
         yargs.positional('path', {
             type: 'string',
@@ -24,7 +15,7 @@ async function main() {
             describe: 'path to initialise the project at'
         });
         yargs.options({
-            clear: {
+            clean: {
                 alias: 'c',
                 description: "Delete artifacts and rebuild all files",
                 requiresArg: false,

@@ -1,11 +1,12 @@
 "use strict";
 const assert = require("assert");
 const fsContentCache = require("../info/fsContentCache");
-const Processor = require("./processor");
 const path = require("path");
 const writeEntry = require("../types/writeEntry");
 const calcDiff = require("../utils/calcDiff");
 const writeEntriesManager = require("../info/writeEntriesManager");
+const random = require("../utils/random");
+let handlesMap = new Map();
 function normaliseOutput(output, meta) {
     output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
         if (!filePath.startsWith('/')) {
@@ -18,13 +19,22 @@ function normaliseOutput(output, meta) {
     }));
 }
 class ProcessorHandle {
+    id;
     state;
     meta;
     processor;
     handles;
     dependents;
     dependencies;
-    constructor(handles, meta, processor) {
+    static getHandle(id) {
+        return handlesMap.get(id) ?? null;
+    }
+    static getHandlesIdMap() {
+        return handlesMap;
+    }
+    constructor(handles, meta, processor, id) {
+        this.id = id ?? random.hexString(8, (id) => !handlesMap.has(id));
+        handlesMap.set(this.id, this);
         this.state = {
             status: "empty",
         };
@@ -33,6 +43,11 @@ class ProcessorHandle {
         this.processor = processor;
         this.dependents = new Set();
         this.dependencies = new Set();
+    }
+    drop() {
+        if (!handlesMap.delete(this.id)) {
+            throw new Error("You called drop twice!");
+        }
     }
     dependsOn(needle) {
         return Array.from(this.dependents).some((dependent) => dependent.dependsOn(needle));
@@ -66,7 +81,10 @@ class ProcessorHandle {
         const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files);
         for (let [filePath, difftype] of outputDiff.entries()) {
             if (writeEntries.has(filePath)) {
-                console.warn(`${this.getIdent().join('.')} is trying to write to ${filePath}, but it is already modified by ${writeEntries.get(filePath)}!`);
+                const previousWriter = writeEntries.get(filePath);
+                if (previousWriter?.content !== "remove") {
+                    console.warn(`${this.getIdent().join('#')} is trying to write to ${filePath}, but it is already modified by ${previousWriter?.processor.meta.childPath}#${previousWriter?.processor.meta.procName}!`);
+                }
             }
             let content;
             switch (difftype) {

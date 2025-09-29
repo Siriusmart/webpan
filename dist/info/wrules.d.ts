@@ -7,7 +7,7 @@ declare function initRules(fsEntries: fsEntries.FsContentEntries): void;
 declare function getRule(dirName: string): ruleEntry.RuleEntryNormalised | undefined;
 interface FoundProcessorEntry {
     processorClass: {
-        new (allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry): Processor;
+        new (allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, id?: string): Processor;
     };
     settings: Map<string, any>;
     procDir: string;

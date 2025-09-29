@@ -1,7 +1,9 @@
 import yargs = require("yargs");
 import findRoot = require("../info/findRoot");
+import buildInfo = require("../info/buildInfo");
 import cleanBuild = require("../actions/cleanBuild");
 import fsUtils = require("../utils/fsUtils");
+import ProcessorHandles = require("../types/processorHandles");
 import path = require("path");
 import fs = require("fs/promises");
 import calcHashedEntries = require("../info/calcHashedEntries");
@@ -18,11 +20,17 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
         return;
     }
 
-    const doClean: boolean = (args.clear ?? false) as boolean;
+    const doClean: boolean = (args.clean ?? false) as boolean;
 
     if(doClean) {
         await cleanBuild(root);
     }
+
+    const gotBuildInfo = await buildInfo.readBuildInfo(root)
+    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(root, gotBuildInfo)
+
+    ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors)
+    hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries)
 
     const srcPath = path.join(root, "src");
 
@@ -32,14 +40,13 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
 
     const srcContents = await fsUtils.readDirRecursive(srcPath);
     const hashedEntries = calcHashedEntries(srcContents);
-    const cachedHashedEntries = await hashedEntriesCache.getHashedEntriesCache(root);
 
     // this does not specify whether the changed item is a file or a directory
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
-    const hashedDiff = calcDiff.calcDiff(cachedHashedEntries, hashedEntries);
+    const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
 
-    await buildDiff(root, srcContents, hashedDiff);
+    await buildDiff(root, srcContents, hashedDiff, hashedEntries);
 }
 
 export = cmdBuild;

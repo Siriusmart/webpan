@@ -63,7 +63,7 @@ function getRule(dirName: string): ruleEntry.RuleEntryNormalised | undefined {
 }
 
 interface FoundProcessorEntry {
-    processorClass: { new(allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry): Processor }
+    processorClass: { new(allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, id?: string): Processor }
     settings: Map<string, any>,
     procDir: string,
     relativePath: string,

@@ -8,18 +8,11 @@ function calcHashedEntries(fsEntries) {
                 let hash = crypto.createHmac("md5", "")
                     .update(fsContent.content[1])
                     .digest("hex");
-                hashedEntries.set(childPath, {
-                    childPath: fsContent.childPath,
-                    fullPath: fsContent.fullPath,
-                    hash
-                });
+                hashedEntries.set(childPath, hash);
                 break;
             }
             case "dir": {
-                hashedEntries.set(childPath, {
-                    childPath: fsContent.childPath,
-                    fullPath: fsContent.fullPath,
-                });
+                hashedEntries.set(childPath, null);
             }
         }
     }

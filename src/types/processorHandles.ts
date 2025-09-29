@@ -2,8 +2,18 @@ import Processor = require("./processor");
 import ProcessorHandle = require("./processorHandle");
 import type processorStates = require("./processorStates");
 
+let cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> = new Map();
+
 export = class ProcessorHandles {
-    handles: Map<string, Map<string, ProcessorHandle>>;
+    static getCache(): Map<string, Map<string, Set<ProcessorHandle>>> {
+        return cachedProcessors
+    }
+
+    static setCache(value: Map<string, Map<string, Set<ProcessorHandle>>>): void {
+        cachedProcessors = value
+    }
+    // handles: Map<string, Map<string, ProcessorHandle>>; // wrong
+    /*
     handle: ProcessorHandle;
 
     // ident is the identifier of the processor this is passed to
@@ -12,6 +22,7 @@ export = class ProcessorHandles {
         this.handles = handles;
         this.handle = handles.get(filePath)?.get(procIdent)!;
     }
+    */
 
     /*
     async getResult(file: string, processorName: string): Promise<processorStates.ProcessorResult | undefined> {

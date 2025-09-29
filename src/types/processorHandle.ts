@@ -1,14 +1,17 @@
-export = ProcessorHandle;
-
 import assert = require("assert");
 import fsContentCache = require("../info/fsContentCache");
 import type procEntries = require("./procEntries");
-import Processor = require("./processor");
+import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
 import path = require("path");
 import writeEntry = require("../types/writeEntry")
 import calcDiff = require("../utils/calcDiff");
 import writeEntriesManager = require("../info/writeEntriesManager")
+import random = require("../utils/random")
+
+export = ProcessorHandle
+
+let handlesMap: Map<string, ProcessorHandle> = new Map()
 
 function normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry) {
     output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
@@ -23,6 +26,7 @@ function normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntr
 }
 
 class ProcessorHandle {
+    id: string;
     state: processorStates.ProcessorState;
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
@@ -30,7 +34,17 @@ class ProcessorHandle {
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
 
-    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor) {
+    static getHandle(id: string): ProcessorHandle | null {
+        return handlesMap.get(id) ?? null
+    }
+
+    static getHandlesIdMap(): Map<string, ProcessorHandle> {
+        return handlesMap
+    }
+
+    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string) {
+        this.id = id ?? random.hexString(8, (id) => !handlesMap.has(id))
+        handlesMap.set(this.id, this)
         this.state = {
             status: "empty",
         };
@@ -39,6 +53,12 @@ class ProcessorHandle {
         this.processor = processor;
         this.dependents = new Set();
         this.dependencies = new Set();
+    }
+
+    drop(): void {
+        if(!handlesMap.delete(this.id)) {
+            throw new Error("You called drop twice!")
+        }
     }
 
     dependsOn(needle: ProcessorHandle): boolean {
@@ -81,7 +101,10 @@ class ProcessorHandle {
 
         for(let [filePath, difftype] of outputDiff.entries()) {
             if(writeEntries.has(filePath)) {
-                console.warn(`${this.getIdent().join('.')} is trying to write to ${filePath}, but it is already modified by ${writeEntries.get(filePath)}!`)
+                const previousWriter = writeEntries.get(filePath);
+                if(previousWriter?.content !== "remove") {
+                    console.warn(`${this.getIdent().join('#')} is trying to write to ${filePath}, but it is already modified by ${previousWriter?.processor.meta.childPath}#${previousWriter?.processor.meta.procName}!`)
+                }
             }
 
             let content: Buffer | "remove";
@@ -230,3 +253,4 @@ class ProcessorHandle {
         }
     }
 }
+

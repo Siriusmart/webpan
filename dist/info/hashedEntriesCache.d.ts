@@ -1,6 +1,6 @@
 import type fsEntries = require("../types/fsEntries");
-declare function setHashedEntriesCache(root: string, entries: fsEntries.HashedEntries): Promise<void>;
-declare function getHashedEntriesCache(root: string): Promise<fsEntries.HashedEntries>;
+declare function setHashedEntriesCache(entries: fsEntries.HashedEntries): void;
+declare function getHashedEntriesCache(): fsEntries.HashedEntries;
 declare const _default: {
     getHashedEntriesCache: typeof getHashedEntriesCache;
     setHashedEntriesCache: typeof setHashedEntriesCache;

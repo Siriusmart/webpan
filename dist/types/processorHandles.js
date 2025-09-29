@@ -1,14 +1,13 @@
 "use strict";
 const Processor = require("./processor");
 const ProcessorHandle = require("./processorHandle");
+let cachedProcessors = new Map();
 module.exports = class ProcessorHandles {
-    handles;
-    handle;
-    // ident is the identifier of the processor this is passed to
-    // a unique ProcessorHandles is passed to each processor
-    constructor([filePath, procIdent], handles) {
-        this.handles = handles;
-        this.handle = handles.get(filePath)?.get(procIdent);
+    static getCache() {
+        return cachedProcessors;
+    }
+    static setCache(value) {
+        cachedProcessors = value;
     }
 };
 //# sourceMappingURL=processorHandles.js.map

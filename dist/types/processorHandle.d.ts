@@ -1,16 +1,20 @@
-export = ProcessorHandle;
 import type procEntries = require("./procEntries");
-import Processor = require("./processor");
+import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
 import writeEntry = require("../types/writeEntry");
+export = ProcessorHandle;
 declare class ProcessorHandle {
+    id: string;
     state: processorStates.ProcessorState;
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
     handles: Map<string, Map<string, Set<ProcessorHandle>>>;
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
-    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor);
+    static getHandle(id: string): ProcessorHandle | null;
+    static getHandlesIdMap(): Map<string, ProcessorHandle>;
+    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string);
+    drop(): void;
     dependsOn(needle: ProcessorHandle): boolean;
     isOrDependsOn(needle: ProcessorHandle): boolean;
     reset(): void;
