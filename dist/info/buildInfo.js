@@ -6,6 +6,7 @@ const fsEntries = require("../types/fsEntries");
 const procEntries = require("../types/procEntries");
 const ProcessorHandle = require("../types/processorHandle");
 const Processor = require("../types/processor");
+const writeEntry = require("../types/writeEntry");
 const assert = require("assert");
 function replacer(_, value) {
     if (value instanceof Map) {
@@ -91,7 +92,7 @@ function wrapBuildInfo(hashedEntries, cachedProcessors) {
         }))))))
     };
 }
-function unwrapBuildInfo(root, buildInfo) {
+function unwrapBuildInfo(writeEntries, buildInfo) {
     let cachedProcessors = new Map();
     let relationsMap = new Map();
     for (const resultEntry of buildInfo.buildCache) {
@@ -102,7 +103,7 @@ function unwrapBuildInfo(root, buildInfo) {
         catch (e) {
             throw new Error("Could not load proccessor with name " + resultEntry.meta.procName + " because " + e);
         }
-        let procObject = new foundClass(cachedProcessors, resultEntry.meta, resultEntry.id);
+        let procObject = new foundClass(cachedProcessors, writeEntries, resultEntry.meta, resultEntry.id);
         relationsMap.set(resultEntry.id, { dependencies: resultEntry.dependencies, dependents: resultEntry.dependents });
         if (!cachedProcessors.has(resultEntry.meta.childPath)) {
             cachedProcessors.set(resultEntry.meta.childPath, new Map());

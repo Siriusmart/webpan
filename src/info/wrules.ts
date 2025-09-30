@@ -3,6 +3,7 @@ import type fsEntries = require("../types/fsEntries");
 import type procEntries = require("../types/procEntries");
 import assert = require("assert");
 import type ruleEntry = require("../types/ruleEntry");
+import type writeEntry = require("../types/writeEntry");
 import Processor = require("../types/processor");
 import micromatch = require("micromatch")
 import getProcessor = require("./getProcessor");
@@ -63,7 +64,7 @@ function getRule(dirName: string): ruleEntry.RuleEntryNormalised | undefined {
 }
 
 interface FoundProcessorEntry {
-    processorClass: { new(allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, id?: string): Processor }
+    processorClass: procEntries.ProcClass,
     settings: Map<string, any>,
     procDir: string,
     relativePath: string,

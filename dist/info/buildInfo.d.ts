@@ -1,6 +1,7 @@
 import fsEntries = require("../types/fsEntries");
 import procEntries = require("../types/procEntries");
 import ProcessorHandle = require("../types/processorHandle");
+import type WriteEntriesManager = require("../info/writeEntriesManager");
 interface BuildResultEntry {
     id: string;
     meta: procEntries.ProcessorMetaEntry;
@@ -18,7 +19,7 @@ interface BuildInfo {
 declare function readBuildInfo(root: string): Promise<BuildInfo>;
 declare function writeBuildInfo(root: string, data: BuildInfo): Promise<void>;
 declare function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>): BuildInfo;
-declare function unwrapBuildInfo(root: string, buildInfo: BuildInfo): {
+declare function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo): {
     hashedEntries: fsEntries.HashedEntries;
     cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>;
 };

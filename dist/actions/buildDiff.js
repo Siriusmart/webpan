@@ -9,18 +9,18 @@ const path = require("path");
 const fs = require("fs/promises");
 const fsUtils = require("../utils/fsUtils");
 const fsContentCache = require("../info/fsContentCache");
-const writeEntriesManager = require("../info/writeEntriesManager");
+const WriteEntriesManager = require("../info/writeEntriesManager");
 const buildInfo = require("../info/buildInfo");
 let currentlyBuilding = null;
 let nextBuilding = null;
-async function buildDiffInternal(root, fsContent, diff, hashedEntries) {
+async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntries) {
     let cachedProcessors = ProcessorHandles.getCache();
     // TODO change to only feed in updated rules files
     wrules.initRules(fsContent);
     fsContentCache.setFsContentCache(fsContent);
     let toBuild = [];
-    writeEntriesManager.initGlobalWriteEntries();
-    let writeEntries = writeEntriesManager.getGlobalWriteEntries();
+    writeEntries.setState("writable");
+    let writableBuffer = writeEntries.getBuffer();
     for (const [filePath, diffType] of diff.entries()) {
         // IMPORTANT! update cachedProcessors
         switch (diffType) {
@@ -28,15 +28,12 @@ async function buildDiffInternal(root, fsContent, diff, hashedEntries) {
             case "changed":
                 cachedProcessors.get(filePath)?.values()
                     .forEach(handles => handles.forEach(handle => {
-                    if ("result" in handle.state) {
-                        handle.state.result.files.forEach(toDelete => writeEntries.set(toDelete, { processor: handle, content: "remove" }));
-                    }
-                    handle.reset();
                     if (diffType === "changed") {
                         const content = fsContent.get(filePath)?.content;
                         assert(content !== undefined);
                         toBuild.push([handle, content[0] === "file" ? content[1] : "dir"]);
                     }
+                    handle.reset();
                     if (diffType === "removed") {
                         handle.drop();
                     }
@@ -58,7 +55,7 @@ async function buildDiffInternal(root, fsContent, diff, hashedEntries) {
                         pattern: procEntry.pattern,
                         settings: procEntry.settings,
                     };
-                    let proc = new procEntry.processorClass(cachedProcessors, meta);
+                    let proc = new procEntry.processorClass(cachedProcessors, writeEntries, meta);
                     if (!cachedProcessors.has(filePath)) {
                         cachedProcessors.set(filePath, new Map());
                     }
@@ -121,11 +118,12 @@ async function buildDiffInternal(root, fsContent, diff, hashedEntries) {
             files: new Set(output.files.keys())
         });
     }));
+    writeEntries.setState("readonly");
     fsContentCache.clearFsContentCache();
     res.forEach(([handle, output]) => {
-        handle.updateWithOutput(output, writeEntries);
+        handle.updateWithOutput(output, writableBuffer);
     });
-    const writeTasks = Array.from(writeEntries.entries()).map(async ([childPath, writeEntry]) => {
+    const writeTasks = Array.from(writableBuffer.entries()).map(async ([childPath, writeEntry]) => {
         try {
             const fullPath = path.join(root, "dist", childPath);
             if (writeEntry.content == "remove") {
@@ -143,12 +141,12 @@ async function buildDiffInternal(root, fsContent, diff, hashedEntries) {
         }
     });
     await Promise.all(writeTasks);
-    writeEntriesManager.clearGlobalWriteEntries();
+    writeEntries.setState("disabled");
     await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors));
 }
-async function buildDiff(root, fsContent, diff, hashedEntries) {
+async function buildDiff(root, writeEntries, fsContent, diff, hashedEntries) {
     if (currentlyBuilding === null) {
-        currentlyBuilding = buildDiffInternal(root, fsContent, diff, hashedEntries);
+        currentlyBuilding = buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntries);
         await currentlyBuilding;
         currentlyBuilding = null;
         return;
@@ -173,7 +171,7 @@ async function buildDiff(root, fsContent, diff, hashedEntries) {
                     }
                 }
                 await currentlyBuilding;
-                currentlyBuilding = buildDiffInternal(root, fsContent, nextBuilding[1], nextBuilding[2]);
+                currentlyBuilding = buildDiffInternal(root, writeEntries, fsContent, nextBuilding[1], nextBuilding[2]);
                 nextBuilding = null;
                 await currentlyBuilding;
                 currentlyBuilding = null;

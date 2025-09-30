@@ -4,7 +4,7 @@ const fsContentCache = require("../info/fsContentCache");
 const path = require("path");
 const writeEntry = require("../types/writeEntry");
 const calcDiff = require("../utils/calcDiff");
-const writeEntriesManager = require("../info/writeEntriesManager");
+const WriteEntriesManager = require("../info/writeEntriesManager");
 const random = require("../utils/random");
 let handlesMap = new Map();
 function normaliseOutput(output, meta) {
@@ -24,6 +24,7 @@ class ProcessorHandle {
     meta;
     processor;
     handles;
+    writeEntries;
     dependents;
     dependencies;
     static getHandle(id) {
@@ -32,12 +33,13 @@ class ProcessorHandle {
     static getHandlesIdMap() {
         return handlesMap;
     }
-    constructor(handles, meta, processor, id) {
+    constructor(handles, meta, processor, writeEntries, id) {
         this.id = id ?? random.hexString(8, (id) => !handlesMap.has(id));
         handlesMap.set(this.id, this);
         this.state = {
             status: "empty",
         };
+        this.writeEntries = writeEntries;
         this.meta = meta;
         this.handles = handles;
         this.processor = processor;
@@ -56,6 +58,9 @@ class ProcessorHandle {
         return needle === this || this.dependsOn(needle);
     }
     reset() {
+        if ("result" in this.state) {
+            this.state.result.files.forEach(toDelete => this.writeEntries.set(toDelete, { processor: this, content: "remove" }));
+        }
         if (this.state.status === "empty") {
             return;
         }
@@ -155,7 +160,7 @@ class ProcessorHandle {
         };
         try {
             let output = await this.processor.build(content);
-            this.updateWithOutput(output, writeEntriesManager.getGlobalWriteEntries());
+            this.updateWithOutput(output, this.writeEntries.getBuffer());
             this.state = {
                 status: "built",
                 processor: this.processor,

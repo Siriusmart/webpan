@@ -2,6 +2,7 @@ import type procEntries = require("./procEntries");
 import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
 import writeEntry = require("../types/writeEntry");
+import WriteEntriesManager = require("../info/writeEntriesManager");
 export = ProcessorHandle;
 declare class ProcessorHandle {
     id: string;
@@ -9,11 +10,12 @@ declare class ProcessorHandle {
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
     handles: Map<string, Map<string, Set<ProcessorHandle>>>;
+    writeEntries: WriteEntriesManager;
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
     static getHandle(id: string): ProcessorHandle | null;
     static getHandlesIdMap(): Map<string, ProcessorHandle>;
-    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string);
+    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, writeEntries: WriteEntriesManager, id?: string);
     drop(): void;
     dependsOn(needle: ProcessorHandle): boolean;
     isOrDependsOn(needle: ProcessorHandle): boolean;

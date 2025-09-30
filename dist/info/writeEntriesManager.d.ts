@@ -1,11 +1,12 @@
 import type writeEntry = require("../types/writeEntry");
-declare function getGlobalWriteEntries(): Map<string, writeEntry.WriteEntry>;
-declare function clearGlobalWriteEntries(): void;
-declare function initGlobalWriteEntries(): void;
-declare const _default: {
-    clearGlobalWriteEntries: typeof clearGlobalWriteEntries;
-    initGlobalWriteEntries: typeof initGlobalWriteEntries;
-    getGlobalWriteEntries: typeof getGlobalWriteEntries;
-};
-export = _default;
+type WriteEntryManagerState = "writable" | "readonly" | "disabled";
+declare class WriteEntriesManager {
+    bufferedContent: Map<string, writeEntry.WriteEntry>;
+    state: WriteEntryManagerState;
+    set(path: string, content: writeEntry.WriteEntry): void;
+    get(path: string): undefined | writeEntry.WriteEntry;
+    setState(state: WriteEntryManagerState): void;
+    getBuffer(): Map<string, writeEntry.WriteEntry>;
+}
+export = WriteEntriesManager;
 //# sourceMappingURL=writeEntriesManager.d.ts.map

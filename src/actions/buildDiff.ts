@@ -9,13 +9,13 @@ import path = require("path");
 import fs = require("fs/promises");
 import fsUtils = require("../utils/fsUtils");
 import fsContentCache = require("../info/fsContentCache");
-import writeEntriesManager = require("../info/writeEntriesManager")
+import WriteEntriesManager = require("../info/writeEntriesManager")
 import buildInfo = require("../info/buildInfo")
 
 let currentlyBuilding: Promise<void> | null = null;
 let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.HashedEntries] | null = null;
 
-async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
+async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
     let cachedProcessors = ProcessorHandles.getCache()
     // TODO change to only feed in updated rules files
     wrules.initRules(fsContent);
@@ -23,8 +23,8 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
     fsContentCache.setFsContentCache(fsContent);
 
     let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
-    writeEntriesManager.initGlobalWriteEntries();
-    let writeEntries = writeEntriesManager.getGlobalWriteEntries();
+    writeEntries.setState("writable")
+    let writableBuffer = writeEntries.getBuffer()
 
     for(const [filePath, diffType] of diff.entries()) {
         // IMPORTANT! update cachedProcessors
@@ -34,16 +34,13 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
                 cachedProcessors.get(filePath)?.values()
                     .forEach(handles => handles.forEach(handle => {
 
-                        if("result" in handle.state) {
-                            handle.state.result.files.forEach(toDelete => writeEntries.set(toDelete, { processor: handle, content: "remove"}))
-                        }
-                        handle.reset()
-
                         if(diffType === "changed") {
                             const content = fsContent.get(filePath)?.content;
                             assert(content !== undefined);
                             toBuild.push([handle, content[0] === "file" ? content[1] : "dir"])
                         }
+
+                        handle.reset()
 
                         if(diffType === "removed") {
                             handle.drop()
@@ -68,7 +65,7 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
                         pattern: procEntry.pattern,
                         settings: procEntry.settings,
                     }
-                    let proc = new procEntry.processorClass(cachedProcessors, meta);
+                    let proc = new procEntry.processorClass(cachedProcessors, writeEntries, meta);
 
                     if(!cachedProcessors.has(filePath)) {
                         cachedProcessors.set(filePath, new Map())
@@ -143,13 +140,14 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
         })
     }))
 
+    writeEntries.setState("readonly")
     fsContentCache.clearFsContentCache();
 
     res.forEach(([handle, output]) => {
-        handle.updateWithOutput(output, writeEntries)
+        handle.updateWithOutput(output, writableBuffer)
     })
 
-    const writeTasks = Array.from(writeEntries.entries()).map(async ([childPath, writeEntry]) => {
+    const writeTasks = Array.from(writableBuffer.entries()).map(async ([childPath, writeEntry]) => {
         try {
             const fullPath = path.join(root, "dist", childPath);
             if(writeEntry.content == "remove") {
@@ -166,14 +164,14 @@ async function buildDiffInternal(root: string, fsContent: fsEntries.FsContentEnt
     })
 
     await Promise.all(writeTasks)
-    writeEntriesManager.clearGlobalWriteEntries();
+    writeEntries.setState("disabled")
 
     await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors))
 }
 
-async function buildDiff(root: string, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
+async function buildDiff(root: string, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
     if(currentlyBuilding === null) {
-        currentlyBuilding = buildDiffInternal(root, fsContent, diff, hashedEntries);
+        currentlyBuilding = buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntries);
         await currentlyBuilding;
         currentlyBuilding = null;
         return;
@@ -200,7 +198,7 @@ async function buildDiff(root: string, fsContent: fsEntries.FsContentEntries, di
             }
 
             await currentlyBuilding;
-            currentlyBuilding = buildDiffInternal(root, fsContent, nextBuilding[1], nextBuilding[2]);
+            currentlyBuilding = buildDiffInternal(root, writeEntries, fsContent, nextBuilding[1], nextBuilding[2]);
             nextBuilding = null;
             await currentlyBuilding;
             currentlyBuilding = null;

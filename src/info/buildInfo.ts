@@ -5,6 +5,8 @@ import fsEntries = require("../types/fsEntries")
 import procEntries = require("../types/procEntries")
 import ProcessorHandle = require("../types/processorHandle")
 import Processor = require("../types/processor")
+import writeEntry = require("../types/writeEntry")
+import type WriteEntriesManager = require("../info/writeEntriesManager")
 import assert = require("assert")
 
 function replacer(_: string, value: any) {
@@ -114,21 +116,21 @@ function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors:
     }
 }
 
-function unwrapBuildInfo(root: string, buildInfo: BuildInfo):
+function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo):
     { hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> }
 {
     let cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> = new Map()
     let relationsMap: Map<string, { dependents: string[], dependencies: string[] }> = new Map();
 
     for(const resultEntry of buildInfo.buildCache) {
-        let foundClass: { new(allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, id?: string): Processor };
+        let foundClass: procEntries.ProcClass;
         try {
             foundClass = require(resultEntry.meta.procName)
         } catch(e) {
             throw new Error("Could not load proccessor with name " + resultEntry.meta.procName + " because " + e)
         }
 
-        let procObject = new foundClass(cachedProcessors, resultEntry.meta, resultEntry.id)
+        let procObject = new foundClass(cachedProcessors, writeEntries, resultEntry.meta, resultEntry.id)
         relationsMap.set(resultEntry.id, { dependencies: resultEntry.dependencies, dependents: resultEntry.dependents })
 
         if(!cachedProcessors.has(resultEntry.meta.childPath)) {

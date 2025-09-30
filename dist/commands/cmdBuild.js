@@ -1,5 +1,4 @@
 "use strict";
-const yargs = require("yargs");
 const findRoot = require("../info/findRoot");
 const buildInfo = require("../info/buildInfo");
 const cleanBuild = require("../actions/cleanBuild");
@@ -11,6 +10,7 @@ const calcHashedEntries = require("../info/calcHashedEntries");
 const hashedEntriesCache = require("../info/hashedEntriesCache");
 const calcDiff = require("../utils/calcDiff");
 const buildDiff = require("../actions/buildDiff");
+const WriteEntriesManager = require("../info/writeEntriesManager");
 async function cmdBuild(args) {
     const argPath = args.path;
     const root = await findRoot(argPath);
@@ -22,8 +22,9 @@ async function cmdBuild(args) {
     if (doClean) {
         await cleanBuild(root);
     }
+    let writeEntries = new WriteEntriesManager();
     const gotBuildInfo = await buildInfo.readBuildInfo(root);
-    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(root, gotBuildInfo);
+    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(writeEntries, gotBuildInfo);
     ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors);
     hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries);
     const srcPath = path.join(root, "src");
@@ -36,7 +37,7 @@ async function cmdBuild(args) {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
-    await buildDiff(root, srcContents, hashedDiff, hashedEntries);
+    await buildDiff(root, writeEntries, srcContents, hashedDiff, hashedEntries);
 }
 module.exports = cmdBuild;
 //# sourceMappingURL=cmdBuild.js.map

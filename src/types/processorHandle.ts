@@ -6,7 +6,7 @@ import type processorStates = require("./processorStates");
 import path = require("path");
 import writeEntry = require("../types/writeEntry")
 import calcDiff = require("../utils/calcDiff");
-import writeEntriesManager = require("../info/writeEntriesManager")
+import WriteEntriesManager = require("../info/writeEntriesManager")
 import random = require("../utils/random")
 
 export = ProcessorHandle
@@ -31,6 +31,7 @@ class ProcessorHandle {
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
     handles: Map<string, Map<string, Set<ProcessorHandle>>>;
+    writeEntries: WriteEntriesManager;
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
 
@@ -42,12 +43,13 @@ class ProcessorHandle {
         return handlesMap
     }
 
-    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string) {
+    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, writeEntries: WriteEntriesManager, id?: string) {
         this.id = id ?? random.hexString(8, (id) => !handlesMap.has(id))
         handlesMap.set(this.id, this)
         this.state = {
             status: "empty",
         };
+        this.writeEntries = writeEntries;
         this.meta = meta;
         this.handles = handles;
         this.processor = processor;
@@ -70,6 +72,10 @@ class ProcessorHandle {
     }
 
     reset(): void {
+        if("result" in this.state) {
+            this.state.result.files.forEach(toDelete => this.writeEntries.set(toDelete, { processor: this, content: "remove"}))
+        }
+
         if(this.state.status === "empty") {
             return
         }
@@ -189,7 +195,7 @@ class ProcessorHandle {
 
         try {
             let output = await this.processor.build(content);
-            this.updateWithOutput(output, writeEntriesManager.getGlobalWriteEntries())
+            this.updateWithOutput(output, this.writeEntries.getBuffer())
 
             this.state = {
                 status: "built",

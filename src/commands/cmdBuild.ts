@@ -1,4 +1,4 @@
-import yargs = require("yargs");
+import type yargs = require("yargs");
 import findRoot = require("../info/findRoot");
 import buildInfo = require("../info/buildInfo");
 import cleanBuild = require("../actions/cleanBuild");
@@ -10,6 +10,7 @@ import calcHashedEntries = require("../info/calcHashedEntries");
 import hashedEntriesCache = require("../info/hashedEntriesCache");
 import calcDiff = require("../utils/calcDiff");
 import buildDiff = require("../actions/buildDiff");
+import WriteEntriesManager = require("../info/writeEntriesManager");
 
 async function cmdBuild(args: yargs.Arguments): Promise<void> {
     const argPath = args.path as string;
@@ -26,8 +27,10 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
         await cleanBuild(root);
     }
 
+    let writeEntries = new WriteEntriesManager();
+
     const gotBuildInfo = await buildInfo.readBuildInfo(root)
-    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(root, gotBuildInfo)
+    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(writeEntries, gotBuildInfo)
 
     ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors)
     hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries)
@@ -46,7 +49,7 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
 
-    await buildDiff(root, srcContents, hashedDiff, hashedEntries);
+    await buildDiff(root, writeEntries, srcContents, hashedDiff, hashedEntries);
 }
 
 export = cmdBuild;
