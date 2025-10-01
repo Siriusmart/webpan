@@ -95,12 +95,12 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
                 continue;
             }
             // console.log(`file=${absFileName} rulesDir=${rulesDirName} diff=${diff.get(absFileName)}`)
-            const relFileName = absFileName.substring(0, rulesDirName.length);
+            const relFileName = absFileName.substring(rulesDirName.length - 1);
             let removedProcs = new Set();
             let fileProcsBefore = new Set();
             if (previousRules !== undefined) {
                 for (const [pattern, procs] of previousRules.processors.entries()) {
-                    if (!micromatch.isMatch(relFileName, pattern)) {
+                    if (micromatch.isMatch(relFileName, pattern)) {
                         procs.forEach(setting => fileProcsBefore.add(setting));
                     }
                 }
@@ -108,7 +108,7 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
             let fileProcsAfter = new Set();
             if (newRules !== undefined) {
                 for (const [pattern, procs] of newRules.processors.entries()) {
-                    if (!micromatch.isMatch(relFileName, pattern)) {
+                    if (micromatch.isMatch(relFileName, pattern)) {
                         procs.forEach(setting => fileProcsAfter.add(setting));
                     }
                 }
@@ -138,10 +138,13 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
                     if (potentialTarget.meta.ruleLocation === rulesDirName && deepEq(potentialTarget.meta.settings, toRemove.settings)) {
                         potentialTarget.drop();
                         setWithProcName.delete(potentialTarget);
+                        if (setWithProcName.size === 0) {
+                            fileProcsEditable.delete(toRemove.procName);
+                        }
                         continue nextProc;
                     }
-                    throw new Error(`Cannot find processor ${toRemove} for removal`);
                 }
+                throw new Error(`Cannot find processor ${toRemove} for removal`);
             }
             for (const toAdd of fileProcsAfter.values()) {
                 const procClass = await getProcessor(root, toAdd.procName);
@@ -160,6 +163,9 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
                     fileProcsEditable.set(toAdd.procName, procNamedSet);
                 }
                 procNamedSet.add(procObj.handle);
+            }
+            if (fileProcsEditable.size === 0) {
+                procCache.delete(absFileName);
             }
         }
     }
