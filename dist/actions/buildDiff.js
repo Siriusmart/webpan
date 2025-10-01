@@ -16,10 +16,10 @@ let nextBuilding = null;
 async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntries) {
     let cachedProcessors = ProcessorHandles.getCache();
     // TODO change to only feed in updated rules files
-    wrules.initRules(fsContent);
-    fsContentCache.setFsContentCache(fsContent);
-    let toBuild = [];
     writeEntries.setState("writable");
+    fsContentCache.setFsContentCache(fsContent);
+    await wrules.updateRules(root, fsContent, writeEntries, diff);
+    // let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
     let writableBuffer = writeEntries.getBuffer();
     for (const [filePath, diffType] of diff.entries()) {
         // IMPORTANT! update cachedProcessors
@@ -31,7 +31,7 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
                     if (diffType === "changed") {
                         const content = fsContent.get(filePath)?.content;
                         assert(content !== undefined);
-                        toBuild.push([handle, content[0] === "file" ? content[1] : "dir"]);
+                        // toBuild.push([handle, content[0] === "file" ? content[1] : "dir"])
                     }
                     handle.reset();
                     if (diffType === "removed") {
@@ -52,7 +52,7 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
                         procName: procEntry.procName,
                         relativePath: procEntry.relativePath,
                         ruleLocation: procEntry.ruleLocation,
-                        pattern: procEntry.pattern,
+                        // pattern: procEntry.pattern,
                         settings: procEntry.settings,
                     };
                     let proc = new procEntry.processorClass(cachedProcessors, writeEntries, meta);
@@ -65,7 +65,7 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
                     cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.handle);
                     const content = fsContent.get(filePath)?.content;
                     assert(content !== undefined);
-                    toBuild.push([proc.handle, content[0] === "file" ? content[1] : "dir"]);
+                    // toBuild.push([proc.handle, content[0] === "file" ? content[1] : "dir"])
                 });
             // get processors
             // insert each task into cachedProcessors (flat)
@@ -73,38 +73,44 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
             // remember to try catch each build so one failed build dont spoil everything
         }
     }
-    for (const [handleToBuild, _] of toBuild.values()) {
-        assert(handleToBuild.state.status === "empty");
+    /*
+    for(const [handleToBuild, _] of toBuild.values()) {
+        assert(handleToBuild.state.status === "empty")
+
         const { promise, resolve, reject } = handleToBuild.pendingResultPromise();
         handleToBuild.state = {
             status: "building",
             pendingResult: promise,
             reject,
             resolve
-        };
-    }
-    const res = new Set();
-    await Promise.all(toBuild.map(async ([handle, content]) => {
-        assert(handle.state.status === "building");
-        let output;
-        try {
-            output = await handle.processor.build(content);
         }
-        catch (err) {
+    }
+    */
+    const res = await ProcessorHandles.buildOutputAll(fsContent);
+    /*
+    await Promise.all(toBuild.map(async ([handle, content]) => {
+        assert(handle.state.status === "building")
+        let output: processorStates.ProcessorOutput;
+        try {
+            output = await handle.processor.build(content)
+        } catch(err) {
             const reject = handle.state.reject;
-            assert(reject !== undefined);
+            assert(reject !== undefined)
             handle.state = {
                 status: "error",
                 err
-            };
-            reject(err);
-            err = typeof err === "object" && err !== null && "stack" in err ? err.stack : err;
-            console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`);
+            }
+
+            reject(err)
+
+            err = typeof err === "object" && err !== null && "stack" in err ? err.stack : err
+            console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`)
             return;
         }
-        res.add([handle, output]);
+
+        res.add([handle, output])
         const resolve = handle.state.resolve;
-        assert(resolve !== undefined);
+        assert(resolve !== undefined)
         handle.state = {
             status: "built",
             processor: handle.processor,
@@ -112,12 +118,13 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
                 result: output.result,
                 files: new Set(output.files.keys())
             }
-        };
+        }
         resolve({
             result: output.result,
             files: new Set(output.files.keys())
-        });
-    }));
+        })
+    }))
+    */
     writeEntries.setState("readonly");
     fsContentCache.clearFsContentCache();
     res.forEach(([handle, output]) => {
@@ -142,7 +149,7 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
     });
     await Promise.all(writeTasks);
     writeEntries.setState("disabled");
-    await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors));
+    await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors, wrules.getAllRules()));
 }
 async function buildDiff(root, writeEntries, fsContent, diff, hashedEntries) {
     if (currentlyBuilding === null) {

@@ -6,6 +6,7 @@ import procEntries = require("../types/procEntries")
 import ProcessorHandle = require("../types/processorHandle")
 import Processor = require("../types/processor")
 import writeEntry = require("../types/writeEntry")
+import ruleEntry = require("../types/ruleEntry")
 import type WriteEntriesManager = require("../info/writeEntriesManager")
 import assert = require("assert")
 
@@ -50,7 +51,8 @@ interface BuildResultEntry {
 
 interface BuildInfo {
     hashedEntries: Map<string, string | null>,
-    buildCache: BuildResultEntry[]
+    buildCache: BuildResultEntry[],
+    rules: Map<string, ruleEntry.RuleEntryNormalised>
 }
 
 async function readBuildInfo(root: string): Promise<BuildInfo> {
@@ -63,6 +65,7 @@ async function readBuildInfo(root: string): Promise<BuildInfo> {
         } else {
             return {
                 hashedEntries: new Map(),
+                rules: new Map(),
                 buildCache: []
             }
         }
@@ -76,12 +79,13 @@ async function readBuildInfo(root: string): Promise<BuildInfo> {
 
 async function writeBuildInfo(root: string, data: BuildInfo): Promise<void> {
     const buildInfoPath = path.join(root, "meta", "buildInfo.json");
-    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer))
+    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, 4))
 }
 
-function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>): BuildInfo {
+function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>, cachedRules: Map<string, ruleEntry.RuleEntryNormalised>): BuildInfo {
     return {
-        hashedEntries: new Map(hashedEntries.entries()),
+        hashedEntries,
+        rules: cachedRules,
         buildCache: (Array.from(cachedProcessors.values().flatMap((fileProcs) =>
                         fileProcs.values().flatMap((fileProcWithName) =>
                             Array.from(fileProcWithName.values().map((proc) => {
@@ -117,8 +121,11 @@ function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors:
 }
 
 function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo):
-    { hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> }
-{
+    {
+        hashedEntries: fsEntries.HashedEntries,
+        cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>,
+        cachedRules: Map<string, ruleEntry.RuleEntryNormalised>
+} {
     let cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> = new Map()
     let relationsMap: Map<string, { dependents: string[], dependencies: string[] }> = new Map();
 
@@ -184,6 +191,7 @@ function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo
 
     return {
         hashedEntries: buildInfo.hashedEntries,
+        cachedRules: buildInfo.rules,
         cachedProcessors
     }
 }

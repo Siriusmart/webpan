@@ -9,8 +9,8 @@ export interface ProcessorMetaEntry {
     procName: string,
     relativePath: string,
     ruleLocation: string,
-    pattern: string,
-    settings: Map<string, any>,
+    // pattern: string,
+    settings: any,
 }
 export type ProcClass = { new(allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, writeEntries: WriteEntriesManager, meta: ProcessorMetaEntry, id?: string): Processor }
 export type DiffType = "changed" | "removed" | "created";

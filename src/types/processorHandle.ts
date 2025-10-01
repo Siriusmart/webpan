@@ -8,10 +8,9 @@ import writeEntry = require("../types/writeEntry")
 import calcDiff = require("../utils/calcDiff");
 import WriteEntriesManager = require("../info/writeEntriesManager")
 import random = require("../utils/random")
+import ProcessorHandles = require("../types/processorHandles")
 
 export = ProcessorHandle
-
-let handlesMap: Map<string, ProcessorHandle> = new Map()
 
 function normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry) {
     output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
@@ -36,16 +35,16 @@ class ProcessorHandle {
     dependencies: Set<ProcessorHandle>;
 
     static getHandle(id: string): ProcessorHandle | null {
-        return handlesMap.get(id) ?? null
+        return ProcessorHandles.handlesMap.get(id) ?? null
     }
 
     static getHandlesIdMap(): Map<string, ProcessorHandle> {
-        return handlesMap
+        return ProcessorHandles.handlesMap
     }
 
     constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, writeEntries: WriteEntriesManager, id?: string) {
-        this.id = id ?? random.hexString(8, (id) => !handlesMap.has(id))
-        handlesMap.set(this.id, this)
+        this.id = id ?? random.hexString(8, (id) => !ProcessorHandles.handlesMap.has(id))
+        ProcessorHandles.handlesMap.set(this.id, this)
         this.state = {
             status: "empty",
         };
@@ -58,7 +57,8 @@ class ProcessorHandle {
     }
 
     drop(): void {
-        if(!handlesMap.delete(this.id)) {
+        this.reset()
+        if(!ProcessorHandles.handlesMap.delete(this.id)) {
             throw new Error("You called drop twice!")
         }
     }
@@ -85,6 +85,8 @@ class ProcessorHandle {
         };
         this.dependencies.forEach((handle) => handle.dependents.delete(this))
         this.dependents.forEach((handle) => handle.reset())
+        this.dependencies.clear()
+        this.dependents.clear()
     }
 
     getIdent(): [string, string] {

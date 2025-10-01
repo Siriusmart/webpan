@@ -6,7 +6,7 @@ const writeEntry = require("../types/writeEntry");
 const calcDiff = require("../utils/calcDiff");
 const WriteEntriesManager = require("../info/writeEntriesManager");
 const random = require("../utils/random");
-let handlesMap = new Map();
+const ProcessorHandles = require("../types/processorHandles");
 function normaliseOutput(output, meta) {
     output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
         if (!filePath.startsWith('/')) {
@@ -28,14 +28,14 @@ class ProcessorHandle {
     dependents;
     dependencies;
     static getHandle(id) {
-        return handlesMap.get(id) ?? null;
+        return ProcessorHandles.handlesMap.get(id) ?? null;
     }
     static getHandlesIdMap() {
-        return handlesMap;
+        return ProcessorHandles.handlesMap;
     }
     constructor(handles, meta, processor, writeEntries, id) {
-        this.id = id ?? random.hexString(8, (id) => !handlesMap.has(id));
-        handlesMap.set(this.id, this);
+        this.id = id ?? random.hexString(8, (id) => !ProcessorHandles.handlesMap.has(id));
+        ProcessorHandles.handlesMap.set(this.id, this);
         this.state = {
             status: "empty",
         };
@@ -47,7 +47,8 @@ class ProcessorHandle {
         this.dependencies = new Set();
     }
     drop() {
-        if (!handlesMap.delete(this.id)) {
+        this.reset();
+        if (!ProcessorHandles.handlesMap.delete(this.id)) {
             throw new Error("You called drop twice!");
         }
     }
@@ -69,6 +70,8 @@ class ProcessorHandle {
         };
         this.dependencies.forEach((handle) => handle.dependents.delete(this));
         this.dependents.forEach((handle) => handle.reset());
+        this.dependencies.clear();
+        this.dependents.clear();
     }
     getIdent() {
         return [this.meta.childPath, this.meta.procName];

@@ -7,19 +7,22 @@ import type writeEntry = require("../types/writeEntry");
 import Processor = require("../types/processor");
 import micromatch = require("micromatch")
 import getProcessor = require("./getProcessor");
-import ProcessorHandle = require("../types/processorHandle");
+import deepEq = require("../utils/deepEq");
+import ProcessorHandles = require("../types/processorHandles");
+import WriteEntriesManager = require("../info/writeEntriesManager");
+import type ProcessorHandle = require("../types/processorHandle");
 
-let cachedRules: Map<string, ruleEntry.RuleEntryNormalised> | undefined = undefined;
+let cachedRules: Map<string, ruleEntry.RuleEntryNormalised> = new Map();
 
 function normaliseRawProcessor(proc: ruleEntry.ProcessorType): ruleEntry.ProcessorSettings[] {
     switch(typeof proc) {
         case "string":
-            return [{ procName: proc, settings: new Map() }];
+            return [{ procName: proc, settings: undefined }];
         case "object":
             if(Array.isArray(proc)) {
-                return proc.map(ident => ({ procName: ident, settings: new Map() }))
+                return proc.map(ident => ({ procName: ident, settings: undefined }))
             } else {
-                return Array.from(proc.entries().map(([ident, settings]) => ({ procName: ident, settings })));
+                return Array.from(Object.entries(proc).map(([ident, settings]) => ({ procName: ident, settings })));
             }
     }
 }
@@ -35,6 +38,7 @@ function rawToNormalised(raw: ruleEntry.RuleEntryRaw): ruleEntry.RuleEntryNormal
     }
 }
 
+/*
 function initRules(fsEntries: fsEntries.FsContentEntries) {
     for(const [entryPath, entry] of fsEntries.entries()) {
         if(path.basename(entryPath) !== "wrules.json") {
@@ -58,15 +62,153 @@ function initRules(fsEntries: fsEntries.FsContentEntries) {
         }
     }
 }
+*/
+
+function setCachedRules(rules: Map<string, ruleEntry.RuleEntryNormalised>) {
+    cachedRules = rules
+}
+
+async function updateRules(root: string, fsEntries: fsEntries.FsContentEntries, writeEntries: WriteEntriesManager, diff: procEntries.DiffEntries<string>): Promise<void> {
+    let processors = ProcessorHandles.getCache();
+
+    for(const [filePath, diffType] of diff.entries()) {
+        if(path.basename(filePath) !== "wrules.json") {
+            continue;
+        }
+
+        const rulesDirName = path.join(path.dirname(filePath), "/")
+
+        let previousRules = cachedRules.get(rulesDirName);
+        let newRules: ruleEntry.RuleEntryNormalised | undefined;
+
+        switch(diffType) {
+            case "removed":
+                cachedRules?.delete(rulesDirName)
+                newRules = undefined;
+                break;
+            case "changed":
+            case "created":
+                let entry = fsEntries.get(filePath);
+                assert(entry !== undefined)
+                try {
+                    assert(entry.content[0] === "file");
+                    const rulesRaw = JSON.parse(entry.content[1].toString("utf8")) as ruleEntry.RuleEntryRaw;
+                    newRules = rawToNormalised(rulesRaw);
+
+                    assert(cachedRules !== undefined)
+                    cachedRules.set(rulesDirName, newRules);
+                } catch (e) {
+                    if(typeof e === "object" && e !== null && "stack" in e) {
+                        e = e.stack
+                    }
+                    throw new Error(`Failed to read ${filePath} because ${e}.`)
+                }
+        }
+
+
+        for(const absFileName of fsEntries.keys()) {
+            if(!absFileName.startsWith(rulesDirName) || (diff.has(absFileName) && diff.get(absFileName) !== "changed")) {
+                continue
+            }
+
+            // console.log(`file=${absFileName} rulesDir=${rulesDirName} diff=${diff.get(absFileName)}`)
+
+            const relFileName = absFileName.substring(0, rulesDirName.length)
+
+            let removedProcs: Set<ruleEntry.ProcessorSettings> = new Set()
+
+            let fileProcsBefore: Set<ruleEntry.ProcessorSettings> = new Set()
+            if(previousRules !== undefined) {
+                for(const [pattern, procs] of previousRules.processors.entries()) {
+                    if(!micromatch.isMatch(relFileName, pattern)) {
+                        procs.forEach(setting => fileProcsBefore.add(setting))
+                    }
+                }
+            }
+
+            let fileProcsAfter: Set<ruleEntry.ProcessorSettings> = new Set()
+            if(newRules !== undefined) {
+                for(const [pattern, procs] of newRules.processors.entries()) {
+                    if(!micromatch.isMatch(relFileName, pattern)) {
+                        procs.forEach(setting => fileProcsAfter.add(setting))
+                    }
+                }
+            }
+
+            // console.log(`file=${absFileName} before=${JSON.stringify(Array.from(fileProcsBefore.values()))} after=${JSON.stringify(Array.from(fileProcsAfter.values()))}`)
+
+            for(const procRule of fileProcsBefore.values()) {
+                let procRuleAfter = fileProcsAfter.values().find(procRuleAfter => deepEq(procRule, procRuleAfter))
+
+                if(procRuleAfter === undefined) {
+                    removedProcs.add(procRule)
+                } else {
+                    fileProcsAfter.delete(procRule)
+                }
+            }
+
+            let procCache = ProcessorHandles.getCache()
+            let fileProcsEditable = procCache.get(absFileName)
+            
+            if(fileProcsEditable === undefined) {
+                fileProcsEditable = new Map()
+                procCache.set(absFileName, fileProcsEditable)
+            }
+
+            // now removedProcs contains all procs removed
+            // and fileProcsAfter contains all added procs
+            // console.log(`${absFileName} toAdd=${Array.from(fileProcsAfter)} toRemove=${Array.from(removedProcs)}`)
+
+            nextProc: for(const toRemove of removedProcs) {
+                let setWithProcName = fileProcsEditable.get(toRemove.procName) ?? new Set();
+                for(const potentialTarget of setWithProcName) {
+                    if(potentialTarget.meta.ruleLocation === rulesDirName && deepEq(potentialTarget.meta.settings, toRemove.settings)) {
+                        potentialTarget.drop()
+                        setWithProcName.delete(potentialTarget)
+                        continue nextProc
+                    }
+
+                    throw new Error(`Cannot find processor ${toRemove} for removal`)
+                }
+            }
+
+            for(const toAdd of fileProcsAfter.values()) {
+                const procClass = await getProcessor(root, toAdd.procName)
+
+                const meta: procEntries.ProcessorMetaEntry = {
+                    childPath: absFileName,
+                    fullPath: path.join(root, "src", relFileName),
+                    procName: toAdd.procName,
+                    relativePath: relFileName,
+                    ruleLocation: rulesDirName,
+                    settings: toAdd.settings,
+                }
+
+                let procObj = new procClass(processors, writeEntries, meta);
+                let procNamedSet = fileProcsEditable.get(toAdd.procName)
+                if(procNamedSet === undefined) {
+                    procNamedSet = new Set()
+                    fileProcsEditable.set(toAdd.procName, procNamedSet)
+                }
+
+                procNamedSet.add(procObj.handle)
+            }
+        }
+    }
+}
 
 function getRule(dirName: string): ruleEntry.RuleEntryNormalised | undefined {
     return cachedRules?.get(dirName)
 }
 
+function getAllRules(): Map<string, ruleEntry.RuleEntryNormalised> {
+    return cachedRules
+}
+
 interface FoundProcessorEntry {
     processorClass: procEntries.ProcClass,
-    settings: Map<string, any>,
-    procDir: string,
+    settings: any,
+    // procDir: string, why is this a thing?
     relativePath: string,
     ruleLocation: string,
     pattern: string,
@@ -85,7 +227,7 @@ async function resolveProcessors(root: string, dirCursor: string, fileName: stri
                     foundEntries.add({
                         processorClass: await getProcessor(root, proc.procName),
                         settings: proc.settings,
-                        procDir: path.join(dirCursor, "/"),
+                        // procDir: path.join(dirCursor, "/"), why is this a thing?
                         relativePath: fileName,
                         ruleLocation: dirCursor,
                         pattern: pattern,
@@ -105,7 +247,10 @@ async function resolveProcessors(root: string, dirCursor: string, fileName: stri
 }
 
 export = {
-    initRules,
+    // initRules,
+    setCachedRules,
     getRule,
+    getAllRules,
+    updateRules,
     resolveProcessors
 }

@@ -11,6 +11,7 @@ import hashedEntriesCache = require("../info/hashedEntriesCache");
 import calcDiff = require("../utils/calcDiff");
 import buildDiff = require("../actions/buildDiff");
 import WriteEntriesManager = require("../info/writeEntriesManager");
+import wrules = require("../info/wrules");
 
 async function cmdBuild(args: yargs.Arguments): Promise<void> {
     const argPath = args.path as string;
@@ -48,6 +49,9 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
+
+    wrules.setCachedRules(unwrappedBuildInfo.cachedRules)
+    // wrules.initRules(srcContents)
 
     await buildDiff(root, writeEntries, srcContents, hashedDiff, hashedEntries);
 }

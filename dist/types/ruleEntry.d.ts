@@ -1,10 +1,10 @@
-export type ProcessorType = string | string[] | Map<string, Map<string, any>>;
+export type ProcessorType = string | string[] | Map<string, any>;
 export interface RuleEntryRaw {
-    processors?: Map<string, Map<string, any>>;
+    processors?: Map<string, ProcessorType>;
 }
 export interface ProcessorSettings {
     procName: string;
-    settings: Map<string, any>;
+    settings: any;
 }
 export interface RuleEntryNormalised {
     processors: Map<string, Set<ProcessorSettings>>;

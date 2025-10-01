@@ -7,6 +7,7 @@ const procEntries = require("../types/procEntries");
 const ProcessorHandle = require("../types/processorHandle");
 const Processor = require("../types/processor");
 const writeEntry = require("../types/writeEntry");
+const ruleEntry = require("../types/ruleEntry");
 const assert = require("assert");
 function replacer(_, value) {
     if (value instanceof Map) {
@@ -44,6 +45,7 @@ async function readBuildInfo(root) {
         else {
             return {
                 hashedEntries: new Map(),
+                rules: new Map(),
                 buildCache: []
             };
         }
@@ -57,11 +59,12 @@ async function readBuildInfo(root) {
 }
 async function writeBuildInfo(root, data) {
     const buildInfoPath = path.join(root, "meta", "buildInfo.json");
-    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer));
+    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, 4));
 }
-function wrapBuildInfo(hashedEntries, cachedProcessors) {
+function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules) {
     return {
-        hashedEntries: new Map(hashedEntries.entries()),
+        hashedEntries,
+        rules: cachedRules,
         buildCache: (Array.from(cachedProcessors.values().flatMap((fileProcs) => fileProcs.values().flatMap((fileProcWithName) => Array.from(fileProcWithName.values().map((proc) => {
             let state;
             switch (proc.state.status) {
@@ -149,6 +152,7 @@ function unwrapBuildInfo(writeEntries, buildInfo) {
     }
     return {
         hashedEntries: buildInfo.hashedEntries,
+        cachedRules: buildInfo.rules,
         cachedProcessors
     };
 }

@@ -1,6 +1,7 @@
 import fsEntries = require("../types/fsEntries");
 import procEntries = require("../types/procEntries");
 import ProcessorHandle = require("../types/processorHandle");
+import ruleEntry = require("../types/ruleEntry");
 import type WriteEntriesManager = require("../info/writeEntriesManager");
 interface BuildResultEntry {
     id: string;
@@ -15,13 +16,15 @@ interface BuildResultEntry {
 interface BuildInfo {
     hashedEntries: Map<string, string | null>;
     buildCache: BuildResultEntry[];
+    rules: Map<string, ruleEntry.RuleEntryNormalised>;
 }
 declare function readBuildInfo(root: string): Promise<BuildInfo>;
 declare function writeBuildInfo(root: string, data: BuildInfo): Promise<void>;
-declare function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>): BuildInfo;
+declare function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>, cachedRules: Map<string, ruleEntry.RuleEntryNormalised>): BuildInfo;
 declare function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo): {
     hashedEntries: fsEntries.HashedEntries;
     cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>;
+    cachedRules: Map<string, ruleEntry.RuleEntryNormalised>;
 };
 declare const _default: {
     readBuildInfo: typeof readBuildInfo;

@@ -18,12 +18,13 @@ let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.H
 async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
     let cachedProcessors = ProcessorHandles.getCache()
     // TODO change to only feed in updated rules files
-    wrules.initRules(fsContent);
+    
+    writeEntries.setState("writable")
 
     fsContentCache.setFsContentCache(fsContent);
+    await wrules.updateRules(root, fsContent, writeEntries, diff)
 
-    let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
-    writeEntries.setState("writable")
+    // let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
     let writableBuffer = writeEntries.getBuffer()
 
     for(const [filePath, diffType] of diff.entries()) {
@@ -37,7 +38,7 @@ async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager
                         if(diffType === "changed") {
                             const content = fsContent.get(filePath)?.content;
                             assert(content !== undefined);
-                            toBuild.push([handle, content[0] === "file" ? content[1] : "dir"])
+                            // toBuild.push([handle, content[0] === "file" ? content[1] : "dir"])
                         }
 
                         handle.reset()
@@ -62,7 +63,7 @@ async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager
                         procName: procEntry.procName,
                         relativePath: procEntry.relativePath,
                         ruleLocation: procEntry.ruleLocation,
-                        pattern: procEntry.pattern,
+                        // pattern: procEntry.pattern,
                         settings: procEntry.settings,
                     }
                     let proc = new procEntry.processorClass(cachedProcessors, writeEntries, meta);
@@ -80,7 +81,7 @@ async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager
 
                     const content = fsContent.get(filePath)?.content;
                     assert(content !== undefined);
-                    toBuild.push([proc.handle, content[0] === "file" ? content[1] : "dir"])
+                    // toBuild.push([proc.handle, content[0] === "file" ? content[1] : "dir"])
                 })
                 // get processors
                 // insert each task into cachedProcessors (flat)
@@ -89,6 +90,7 @@ async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager
         }
     }
 
+    /*
     for(const [handleToBuild, _] of toBuild.values()) {
         assert(handleToBuild.state.status === "empty")
 
@@ -100,9 +102,11 @@ async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager
             resolve
         }
     }
+    */
 
-    const res: Set<[ProcessorHandle, processorStates.ProcessorOutput]> = new Set()
+    const res = await ProcessorHandles.buildOutputAll(fsContent)
 
+    /*
     await Promise.all(toBuild.map(async ([handle, content]) => {
         assert(handle.state.status === "building")
         let output: processorStates.ProcessorOutput;
@@ -139,6 +143,7 @@ async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager
             files: new Set(output.files.keys())
         })
     }))
+    */
 
     writeEntries.setState("readonly")
     fsContentCache.clearFsContentCache();
@@ -166,7 +171,7 @@ async function buildDiffInternal(root: string, writeEntries: WriteEntriesManager
     await Promise.all(writeTasks)
     writeEntries.setState("disabled")
 
-    await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors))
+    await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors, wrules.getAllRules()))
 }
 
 async function buildDiff(root: string, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {

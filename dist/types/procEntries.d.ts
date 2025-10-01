@@ -7,8 +7,7 @@ export interface ProcessorMetaEntry {
     procName: string;
     relativePath: string;
     ruleLocation: string;
-    pattern: string;
-    settings: Map<string, any>;
+    settings: any;
 }
 export type ProcClass = {
     new (allHandles: Map<string, Map<string, Set<ProcessorHandle>>>, writeEntries: WriteEntriesManager, meta: ProcessorMetaEntry, id?: string): Processor;

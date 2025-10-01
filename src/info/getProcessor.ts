@@ -1,10 +1,11 @@
 import path = require("path");
 import Processor = require("../types/processor");
+import type procEntries = require("../types/procEntries")
 import fsUtils = require("../utils/fsUtils");
 
 let cachedProcessorClasses: Map<string, { new(): Processor }> = new Map();
 
-async function getProcessor(root: string, ident: string): Promise<{ new(): Processor }> {
+async function getProcessor(root: string, ident: string): Promise<procEntries.ProcClass> {
     const cachedProcessor = cachedProcessorClasses.get(ident);
 
     if(cachedProcessor !== undefined) {
