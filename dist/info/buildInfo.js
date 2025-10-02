@@ -57,9 +57,9 @@ async function readBuildInfo(root) {
         throw new Error("Could not read " + buildInfoPath + " because " + e);
     }
 }
-async function writeBuildInfo(root, data) {
+async function writeBuildInfo(root, manifest, data) {
     const buildInfoPath = path.join(root, "meta", "buildInfo.json");
-    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, 4));
+    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, manifest.format.buildInfo ? manifest.format.tabSpaces : 0));
 }
 function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules) {
     return {

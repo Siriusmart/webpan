@@ -13,7 +13,7 @@ const WriteEntriesManager = require("../info/writeEntriesManager");
 const buildInfo = require("../info/buildInfo");
 let currentlyBuilding = null;
 let nextBuilding = null;
-async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntries) {
+async function buildDiffInternal(root, manifest, writeEntries, fsContent, diff, hashedEntries) {
     let cachedProcessors = ProcessorHandles.getCache();
     // TODO change to only feed in updated rules files
     writeEntries.setState("writable");
@@ -48,7 +48,7 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
                 resolvedProcessors.values().forEach(procEntry => {
                     const meta = {
                         childPath: filePath,
-                        fullPath: path.join(root, "src", filePath),
+                        // fullPath: path.join(root, "src", filePath),
                         procName: procEntry.procName,
                         relativePath: procEntry.relativePath,
                         ruleLocation: procEntry.ruleLocation,
@@ -149,11 +149,11 @@ async function buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntr
     });
     await Promise.all(writeTasks);
     writeEntries.setState("disabled");
-    await buildInfo.writeBuildInfo(root, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors, wrules.getAllRules()));
+    await buildInfo.writeBuildInfo(root, manifest, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors, wrules.getAllRules()));
 }
-async function buildDiff(root, writeEntries, fsContent, diff, hashedEntries) {
+async function buildDiff(root, manifest, writeEntries, fsContent, diff, hashedEntries) {
     if (currentlyBuilding === null) {
-        currentlyBuilding = buildDiffInternal(root, writeEntries, fsContent, diff, hashedEntries);
+        currentlyBuilding = buildDiffInternal(root, manifest, writeEntries, fsContent, diff, hashedEntries);
         await currentlyBuilding;
         currentlyBuilding = null;
         return;
@@ -178,7 +178,7 @@ async function buildDiff(root, writeEntries, fsContent, diff, hashedEntries) {
                     }
                 }
                 await currentlyBuilding;
-                currentlyBuilding = buildDiffInternal(root, writeEntries, fsContent, nextBuilding[1], nextBuilding[2]);
+                currentlyBuilding = buildDiffInternal(root, manifest, writeEntries, fsContent, nextBuilding[1], nextBuilding[2]);
                 nextBuilding = null;
                 await currentlyBuilding;
                 currentlyBuilding = null;

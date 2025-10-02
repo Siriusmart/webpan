@@ -14,11 +14,29 @@ async function main(): Promise<void> {
             describe: 'path to initialise the project at'
         })
         yargs.options({
+            tabspaces: {
+                alias: 't',
+                description: "Tab width",
+                default: undefined,
+                required: false,
+                type: "count"
+            }
+        });
+        yargs.options({
+            formatbuildinfo: {
+                description: "Format buildInfo.json",
+                default: undefined,
+                required: false,
+                type: "boolean"
+            }
+        })
+        yargs.options({
             clean: {
                 alias: 'c',
                 description: "Delete artifacts and rebuild all files",
-                requiresArg: false,
-                required: false
+                default: undefined,
+                required: false,
+                type: "boolean"
             }
         });
     }, async (argv) => {

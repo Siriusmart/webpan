@@ -12,6 +12,7 @@ import calcDiff = require("../utils/calcDiff");
 import buildDiff = require("../actions/buildDiff");
 import WriteEntriesManager = require("../info/writeEntriesManager");
 import wrules = require("../info/wrules");
+import wproject = require("../info/wproject");
 
 async function cmdBuild(args: yargs.Arguments): Promise<void> {
     const argPath = args.path as string;
@@ -22,9 +23,9 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
         return;
     }
 
-    const doClean: boolean = (args.clean ?? false) as boolean;
+    const manifest = await wproject.createProjectManifest(root, args)
 
-    if(doClean) {
+    if(manifest.cmd.build.clean) {
         await cleanBuild(root);
     }
 
@@ -53,7 +54,8 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     wrules.setCachedRules(unwrappedBuildInfo.cachedRules)
     // wrules.initRules(srcContents)
 
-    await buildDiff(root, writeEntries, srcContents, hashedDiff, hashedEntries);
+    await fs.mkdir(path.join(root, "dist"), { recursive: true } )
+    await buildDiff(root, manifest, writeEntries, srcContents, hashedDiff, hashedEntries);
 }
 
 export = cmdBuild;

@@ -12,6 +12,7 @@ const calcDiff = require("../utils/calcDiff");
 const buildDiff = require("../actions/buildDiff");
 const WriteEntriesManager = require("../info/writeEntriesManager");
 const wrules = require("../info/wrules");
+const wproject = require("../info/wproject");
 async function cmdBuild(args) {
     const argPath = args.path;
     const root = await findRoot(argPath);
@@ -19,8 +20,8 @@ async function cmdBuild(args) {
         console.error("Project not initialised: no project root found.");
         return;
     }
-    const doClean = (args.clean ?? false);
-    if (doClean) {
+    const manifest = await wproject.createProjectManifest(root, args);
+    if (manifest.cmd.build.clean) {
         await cleanBuild(root);
     }
     let writeEntries = new WriteEntriesManager();
@@ -40,7 +41,8 @@ async function cmdBuild(args) {
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
     wrules.setCachedRules(unwrappedBuildInfo.cachedRules);
     // wrules.initRules(srcContents)
-    await buildDiff(root, writeEntries, srcContents, hashedDiff, hashedEntries);
+    await fs.mkdir(path.join(root, "dist"), { recursive: true });
+    await buildDiff(root, manifest, writeEntries, srcContents, hashedDiff, hashedEntries);
 }
 module.exports = cmdBuild;
 //# sourceMappingURL=cmdBuild.js.map

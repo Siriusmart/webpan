@@ -3,6 +3,7 @@ import procEntries = require("../types/procEntries");
 import ProcessorHandle = require("../types/processorHandle");
 import ruleEntry = require("../types/ruleEntry");
 import type WriteEntriesManager = require("../info/writeEntriesManager");
+import type wmanifest = require("../types/wmanifest");
 interface BuildResultEntry {
     id: string;
     meta: procEntries.ProcessorMetaEntry;
@@ -19,7 +20,7 @@ interface BuildInfo {
     rules: Map<string, ruleEntry.RuleEntryNormalised>;
 }
 declare function readBuildInfo(root: string): Promise<BuildInfo>;
-declare function writeBuildInfo(root: string, data: BuildInfo): Promise<void>;
+declare function writeBuildInfo(root: string, manifest: wmanifest.WManifest, data: BuildInfo): Promise<void>;
 declare function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>, cachedRules: Map<string, ruleEntry.RuleEntryNormalised>): BuildInfo;
 declare function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo): {
     hashedEntries: fsEntries.HashedEntries;

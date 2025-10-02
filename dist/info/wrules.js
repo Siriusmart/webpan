@@ -11,10 +11,10 @@ let cachedRules = new Map();
 function normaliseRawProcessor(proc) {
     switch (typeof proc) {
         case "string":
-            return [{ procName: proc, settings: undefined }];
+            return [{ procName: proc, settings: null }];
         case "object":
             if (Array.isArray(proc)) {
-                return proc.map(ident => ({ procName: ident, settings: undefined }));
+                return proc.map(ident => ({ procName: ident, settings: null }));
             }
             else {
                 return Array.from(Object.entries(proc).map(([ident, settings]) => ({ procName: ident, settings })));
@@ -115,12 +115,12 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
             }
             // console.log(`file=${absFileName} before=${JSON.stringify(Array.from(fileProcsBefore.values()))} after=${JSON.stringify(Array.from(fileProcsAfter.values()))}`)
             for (const procRule of fileProcsBefore.values()) {
-                let procRuleAfter = fileProcsAfter.values().find(procRuleAfter => deepEq(procRule, procRuleAfter));
-                if (procRuleAfter === undefined) {
+                let matchedProcRule = fileProcsAfter.values().find(procRuleAfter => deepEq(procRule, procRuleAfter));
+                if (matchedProcRule === undefined) {
                     removedProcs.add(procRule);
                 }
                 else {
-                    fileProcsAfter.delete(procRule);
+                    fileProcsAfter.delete(matchedProcRule);
                 }
             }
             let procCache = ProcessorHandles.getCache();
@@ -150,7 +150,7 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
                 const procClass = await getProcessor(root, toAdd.procName);
                 const meta = {
                     childPath: absFileName,
-                    fullPath: path.join(root, "src", relFileName),
+                    // fullPath: path.join(root, "src", relFileName),
                     procName: toAdd.procName,
                     relativePath: relFileName,
                     ruleLocation: rulesDirName,

@@ -9,6 +9,7 @@ import writeEntry = require("../types/writeEntry")
 import ruleEntry = require("../types/ruleEntry")
 import type WriteEntriesManager = require("../info/writeEntriesManager")
 import assert = require("assert")
+import type wmanifest = require("../types/wmanifest");
 
 function replacer(_: string, value: any) {
   if(value instanceof Map) {
@@ -77,9 +78,9 @@ async function readBuildInfo(root: string): Promise<BuildInfo> {
     }
 }
 
-async function writeBuildInfo(root: string, data: BuildInfo): Promise<void> {
+async function writeBuildInfo(root: string, manifest: wmanifest.WManifest, data: BuildInfo): Promise<void> {
     const buildInfoPath = path.join(root, "meta", "buildInfo.json");
-    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, 4))
+    await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, manifest.format.buildInfo ? manifest.format.tabSpaces : 0))
 }
 
 function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>, cachedRules: Map<string, ruleEntry.RuleEntryNormalised>): BuildInfo {

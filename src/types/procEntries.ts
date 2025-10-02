@@ -4,7 +4,7 @@ import type writeEntry = require("./writeEntry")
 import type WriteEntriesManager = require("../info/writeEntriesManager")
 
 export interface ProcessorMetaEntry {
-    fullPath: string,
+    // fullPath: string,
     childPath: string,
     procName: string,
     relativePath: string,

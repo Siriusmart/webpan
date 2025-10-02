@@ -2,7 +2,6 @@ import type Processor = require("./processor");
 import type ProcessorHandle = require("./processorHandle");
 import type WriteEntriesManager = require("../info/writeEntriesManager");
 export interface ProcessorMetaEntry {
-    fullPath: string;
     childPath: string;
     procName: string;
     relativePath: string;
