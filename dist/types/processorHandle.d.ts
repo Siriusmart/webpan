@@ -2,20 +2,17 @@ import type procEntries = require("./procEntries");
 import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
 import writeEntry = require("../types/writeEntry");
-import WriteEntriesManager = require("../info/writeEntriesManager");
+import type BuildInstance = require("../types/buildInstance");
 export = ProcessorHandle;
 declare class ProcessorHandle {
     id: string;
     state: processorStates.ProcessorState;
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
-    handles: Map<string, Map<string, Set<ProcessorHandle>>>;
-    writeEntries: WriteEntriesManager;
+    buildInstance: BuildInstance;
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
-    static getHandle(id: string): ProcessorHandle | null;
-    static getHandlesIdMap(): Map<string, ProcessorHandle>;
-    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, writeEntries: WriteEntriesManager, id?: string);
+    constructor(buildInstance: BuildInstance, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string);
     drop(): void;
     dependsOn(needle: ProcessorHandle): boolean;
     isOrDependsOn(needle: ProcessorHandle): boolean;
@@ -30,8 +27,8 @@ declare class ProcessorHandle {
         reject: (err: any) => void;
     };
     unwrapPendingResult(res: ["ok", processorStates.ProcessorResult] | ["err", any]): processorStates.ProcessorResult;
-    buildWithBuffer(): Promise<processorStates.ProcessorResult>;
+    buildWithBuffer(buildInstance: BuildInstance): Promise<processorStates.ProcessorResult>;
     getResult(requester: ProcessorHandle): Promise<processorStates.ProcessorResult>;
-    getProcessor(requester: ProcessorHandle): Promise<Processor>;
+    getProcessor(buildInstance: BuildInstance, requester: ProcessorHandle): Promise<Processor>;
 }
 //# sourceMappingURL=processorHandle.d.ts.map

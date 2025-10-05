@@ -18,8 +18,10 @@ function clearFsContentCache(): void {
     fsContentCache = null;
 }
 
+/*
 export = {
     getFsContentCache,
     setFsContentCache,
     clearFsContentCache
 }
+*/

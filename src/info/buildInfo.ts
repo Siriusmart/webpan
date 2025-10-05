@@ -10,6 +10,7 @@ import ruleEntry = require("../types/ruleEntry")
 import type WriteEntriesManager = require("../info/writeEntriesManager")
 import assert = require("assert")
 import type wmanifest = require("../types/wmanifest");
+import type BuildInstance = require("../types/buildInstance");
 
 function replacer(_: string, value: any) {
   if(value instanceof Map) {
@@ -121,13 +122,15 @@ function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors:
     }
 }
 
-function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo):
+function unwrapBuildInfo(buildInstance: BuildInstance, writeEntries: WriteEntriesManager, buildInfo: BuildInfo):
     {
         hashedEntries: fsEntries.HashedEntries,
         cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>,
+        cachedProcessorsFlat: Map<string, ProcessorHandle>,
         cachedRules: Map<string, ruleEntry.RuleEntryNormalised>
 } {
     let cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> = new Map()
+    let cachedProcessorsFlat: Map<string, ProcessorHandle> = new Map()
     let relationsMap: Map<string, { dependents: string[], dependencies: string[] }> = new Map();
 
     for(const resultEntry of buildInfo.buildCache) {
@@ -138,7 +141,7 @@ function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo
             throw new Error("Could not load proccessor with name " + resultEntry.meta.procName + " because " + e)
         }
 
-        let procObject = new foundClass(cachedProcessors, writeEntries, resultEntry.meta, resultEntry.id)
+        let procObject = new foundClass(buildInstance, resultEntry.meta, resultEntry.id)
         relationsMap.set(resultEntry.id, { dependencies: resultEntry.dependencies, dependents: resultEntry.dependents })
 
         if(!cachedProcessors.has(resultEntry.meta.childPath)) {
@@ -150,6 +153,7 @@ function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo
         }
 
         cachedProcessors.get(resultEntry.meta.childPath)?.get(resultEntry.meta.procName)?.add(procObject.handle)
+        cachedProcessorsFlat.set(procObject.handle.id, procObject.handle)
 
         switch (resultEntry.state[0]) {
             case "empty":
@@ -172,20 +176,20 @@ function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo
         }
     }
 
-    for(let [id, handle] of ProcessorHandle.getHandlesIdMap().entries()) {
+    for(let [id, handle] of cachedProcessorsFlat.entries()) {
         const relationEntry = relationsMap.get(id);
         assert(relationEntry !== undefined)
 
         const { dependencies, dependents } = relationEntry
         handle.dependencies = new Set(dependencies.map((id) => {
-            const dependency = ProcessorHandle.getHandle(id)
-            assert(dependency !== null)
+            const dependency = cachedProcessorsFlat.get(id)
+            assert(dependency !== undefined)
             return dependency
         }))
 
         handle.dependents = new Set(dependents.map((id) => {
-            const dependency = ProcessorHandle.getHandle(id)
-            assert(dependency !== null)
+            const dependency = cachedProcessorsFlat.get(id)
+            assert(dependency !== undefined)
             return dependency
         }))
     }
@@ -193,7 +197,8 @@ function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo
     return {
         hashedEntries: buildInfo.hashedEntries,
         cachedRules: buildInfo.rules,
-        cachedProcessors
+        cachedProcessors,
+        cachedProcessorsFlat
     }
 }
 

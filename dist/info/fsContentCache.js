@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 let fsContentCache = null;
 function setFsContentCache(content) {
     fsContentCache = content;
@@ -12,9 +13,11 @@ function getFsContentCache() {
 function clearFsContentCache() {
     fsContentCache = null;
 }
-module.exports = {
+/*
+export = {
     getFsContentCache,
     setFsContentCache,
     clearFsContentCache
-};
+}
+*/
 //# sourceMappingURL=fsContentCache.js.map

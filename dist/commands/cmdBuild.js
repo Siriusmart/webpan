@@ -13,6 +13,7 @@ const buildDiff = require("../actions/buildDiff");
 const WriteEntriesManager = require("../info/writeEntriesManager");
 const wrules = require("../info/wrules");
 const wproject = require("../info/wproject");
+const BuildInstance = require("../types/buildInstance");
 async function cmdBuild(args) {
     const argPath = args.path;
     const root = await findRoot(argPath);
@@ -25,10 +26,15 @@ async function cmdBuild(args) {
         await cleanBuild(root);
     }
     let writeEntries = new WriteEntriesManager();
+    let buildInstance = new BuildInstance(root, manifest);
     const gotBuildInfo = await buildInfo.readBuildInfo(root);
-    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(writeEntries, gotBuildInfo);
-    ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors);
-    hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries);
+    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(buildInstance, writeEntries, gotBuildInfo);
+    buildInstance
+        .withHashedEntries(unwrappedBuildInfo.hashedEntries)
+        .withRules(unwrappedBuildInfo.cachedRules)
+        .withProcs(unwrappedBuildInfo.cachedProcessors, unwrappedBuildInfo.cachedProcessorsFlat);
+    // ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors)
+    // hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries)
     const srcPath = path.join(root, "src");
     if (!await fsUtils.exists(srcPath)) {
         await fs.mkdir(srcPath, { recursive: true });
@@ -39,10 +45,10 @@ async function cmdBuild(args) {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
-    wrules.setCachedRules(unwrappedBuildInfo.cachedRules);
+    // wrules.setCachedRules(unwrappedBuildInfo.cachedRules)
     // wrules.initRules(srcContents)
     await fs.mkdir(path.join(root, "dist"), { recursive: true });
-    await buildDiff(root, manifest, writeEntries, srcContents, hashedDiff, hashedEntries);
+    await buildDiff(buildInstance, srcContents, hashedDiff, hashedEntries);
 }
 module.exports = cmdBuild;
 //# sourceMappingURL=cmdBuild.js.map

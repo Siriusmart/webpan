@@ -12,23 +12,27 @@ import fsContentCache = require("../info/fsContentCache");
 import WriteEntriesManager = require("../info/writeEntriesManager")
 import buildInfo = require("../info/buildInfo")
 import type wmanifest = require("../types/wmanifest");
+import type BuildInstance = require("../types/buildInstance");
 
 let currentlyBuilding: Promise<void> | null = null;
-let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.HashedEntries] | null = null;
+let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.HashedEntries, fsEntries.FsContentEntries] | null = null;
 
-async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
-    let cachedProcessors = ProcessorHandles.getCache()
+// async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
+ async function buildDiffInternal(buildInstance: BuildInstance, fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<void> {
+    // let cachedProcessors = ProcessorHandles.getCache()
     // TODO change to only feed in updated rules files
     
-    writeEntries.setState("writable")
+    await buildInstance.withBuildCycleState("writable")
+                 .withFsContent(fsContent, hashedEntries, fsDiff)
 
-    fsContentCache.setFsContentCache(fsContent);
-    await wrules.updateRules(root, fsContent, writeEntries, diff)
+    // fsContentCache.setFsContentCache(fsContent);
+    // await wrules.updateRules(root, fsContent, writeEntries, diff)
 
     // let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
-    let writableBuffer = writeEntries.getBuffer()
+    // let writableBuffer = writeEntries.getBuffer()
+    let cachedProcessors = buildInstance.getProcByFiles()
 
-    for(const [filePath, diffType] of diff.entries()) {
+    for(const [filePath, diffType] of fsDiff.entries()) {
         // IMPORTANT! update cachedProcessors
         switch(diffType) {
             case "removed":
@@ -54,7 +58,7 @@ async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, wr
                 }
                 break;
             case "created":
-                const resolvedProcessors = await wrules.resolveProcessors(root, filePath);
+                const resolvedProcessors = await wrules.resolveProcessors(buildInstance, filePath);
                 cachedProcessors.set(filePath, new Map())
 
                 resolvedProcessors.values().forEach(procEntry => {
@@ -67,7 +71,7 @@ async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, wr
                         // pattern: procEntry.pattern,
                         settings: procEntry.settings,
                     }
-                    let proc = new procEntry.processorClass(cachedProcessors, writeEntries, meta);
+                    let proc = new procEntry.processorClass(buildInstance, meta);
 
                     if(!cachedProcessors.has(filePath)) {
                         cachedProcessors.set(filePath, new Map())
@@ -105,7 +109,7 @@ async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, wr
     }
     */
 
-    const res = await ProcessorHandles.buildOutputAll(fsContent)
+    const res = await ProcessorHandles.buildOutputAll(buildInstance)
 
     /*
     await Promise.all(toBuild.map(async ([handle, content]) => {
@@ -146,16 +150,15 @@ async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, wr
     }))
     */
 
-    writeEntries.setState("readonly")
-    fsContentCache.clearFsContentCache();
+    buildInstance.withBuildCycleState("readonly")
 
     res.forEach(([handle, output]) => {
-        handle.updateWithOutput(output, writableBuffer)
+        handle.updateWithOutput(output, buildInstance.getWriteEntriesManager().getBuffer())
     })
 
-    const writeTasks = Array.from(writableBuffer.entries()).map(async ([childPath, writeEntry]) => {
+    const writeTasks = Array.from(buildInstance.getWriteEntriesManager().getBuffer().entries()).map(async ([childPath, writeEntry]) => {
         try {
-            const fullPath = path.join(root, "dist", childPath);
+            const fullPath = path.join(buildInstance.getRoot(), "dist", childPath);
             if(writeEntry.content == "remove") {
                 await fs.unlink(fullPath)
             } else {
@@ -170,14 +173,15 @@ async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, wr
     })
 
     await Promise.all(writeTasks)
-    writeEntries.setState("disabled")
+    buildInstance.withBuildCycleState("disabled")
 
-    await buildInfo.writeBuildInfo(root, manifest, buildInfo.wrapBuildInfo(hashedEntries, cachedProcessors, wrules.getAllRules()))
+    await buildInstance.writeMeta()
 }
 
-async function buildDiff(root: string, manifest: wmanifest.WManifest, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
+// async function buildDiff(root: string, manifest: wmanifest.WManifest, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
+async function buildDiff(buildInstance: BuildInstance, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
     if(currentlyBuilding === null) {
-        currentlyBuilding = buildDiffInternal(root, manifest, writeEntries, fsContent, diff, hashedEntries);
+        currentlyBuilding = buildDiffInternal(buildInstance, fsContent, hashedEntries, diff);
         await currentlyBuilding;
         currentlyBuilding = null;
         return;
@@ -204,12 +208,12 @@ async function buildDiff(root: string, manifest: wmanifest.WManifest, writeEntri
             }
 
             await currentlyBuilding;
-            currentlyBuilding = buildDiffInternal(root, manifest, writeEntries, fsContent, nextBuilding[1], nextBuilding[2]);
+            currentlyBuilding = buildDiffInternal(buildInstance, nextBuilding[3], nextBuilding[2], nextBuilding[1]);
             nextBuilding = null;
             await currentlyBuilding;
             currentlyBuilding = null;
             res();
-        }), new Map(), hashedEntries];
+        }), new Map(), hashedEntries, fsContent];
     } else {
         await nextBuilding[0]
     }

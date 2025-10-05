@@ -4,9 +4,7 @@ const fsContentCache = require("../info/fsContentCache");
 const path = require("path");
 const writeEntry = require("../types/writeEntry");
 const calcDiff = require("../utils/calcDiff");
-const WriteEntriesManager = require("../info/writeEntriesManager");
 const random = require("../utils/random");
-const ProcessorHandles = require("../types/processorHandles");
 function normaliseOutput(output, meta) {
     output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
         if (!filePath.startsWith('/')) {
@@ -23,32 +21,35 @@ class ProcessorHandle {
     state;
     meta;
     processor;
-    handles;
-    writeEntries;
+    buildInstance;
+    // handles: Map<string, Map<string, Set<ProcessorHandle>>>;
+    // writeEntries: WriteEntriesManager;
     dependents;
     dependencies;
-    static getHandle(id) {
-        return ProcessorHandles.handlesMap.get(id) ?? null;
+    /*
+    static getHandle(id: string): ProcessorHandle | null {
+        return ProcessorHandles.handlesMap.get(id) ?? null
     }
-    static getHandlesIdMap() {
-        return ProcessorHandles.handlesMap;
+
+    static getHandlesIdMap(): Map<string, ProcessorHandle> {
+        return ProcessorHandles.handlesMap
     }
-    constructor(handles, meta, processor, writeEntries, id) {
-        this.id = id ?? random.hexString(8, (id) => !ProcessorHandles.handlesMap.has(id));
-        ProcessorHandles.handlesMap.set(this.id, this);
+    */
+    constructor(buildInstance, meta, processor, id) {
+        this.id = id ?? random.hexString(8, (id) => !buildInstance.getProcById().has(id));
+        buildInstance.getProcById().set(this.id, this);
         this.state = {
             status: "empty",
         };
-        this.writeEntries = writeEntries;
+        this.buildInstance = buildInstance;
         this.meta = meta;
-        this.handles = handles;
         this.processor = processor;
         this.dependents = new Set();
         this.dependencies = new Set();
     }
     drop() {
         this.reset();
-        if (!ProcessorHandles.handlesMap.delete(this.id)) {
+        if (!this.buildInstance.getProcById().delete(this.id)) {
             throw new Error("You called drop twice!");
         }
     }
@@ -60,7 +61,7 @@ class ProcessorHandle {
     }
     reset() {
         if ("result" in this.state) {
-            this.state.result.files.forEach(toDelete => this.writeEntries.set(toDelete, { processor: this, content: "remove" }));
+            this.state.result.files.forEach(toDelete => this.buildInstance.getWriteEntriesManager().set(toDelete, { processor: this, content: "remove" }));
         }
         if (this.state.status === "empty") {
             return;
@@ -141,8 +142,8 @@ class ProcessorHandle {
                 throw res[1];
         }
     }
-    async buildWithBuffer() {
-        const contentEntry = fsContentCache.getFsContentCache().get(this.meta.childPath);
+    async buildWithBuffer(buildInstance) {
+        const contentEntry = buildInstance.getFsContent().get(this.meta.childPath);
         assert(contentEntry !== undefined);
         let content;
         switch (contentEntry.content[0]) {
@@ -163,7 +164,7 @@ class ProcessorHandle {
         };
         try {
             let output = await this.processor.build(content);
-            this.updateWithOutput(output, this.writeEntries.getBuffer());
+            this.updateWithOutput(output, this.buildInstance.getWriteEntriesManager().getBuffer());
             this.state = {
                 status: "built",
                 processor: this.processor,
@@ -202,7 +203,7 @@ class ProcessorHandle {
                 throw this.state.err;
         }
     }
-    async getProcessor(requester) {
+    async getProcessor(buildInstance, requester) {
         if (this.isOrDependsOn(requester)) {
             throw new Error("There is a cycle in dependency.");
         }
@@ -210,7 +211,7 @@ class ProcessorHandle {
         requester.dependencies.add(this);
         switch (this.state.status) {
             case "resultonly":
-                await this.buildWithBuffer();
+                await this.buildWithBuffer(buildInstance);
                 return this.processor;
             case "empty":
                 throw new Error("processor is not being built and will not be resolved");

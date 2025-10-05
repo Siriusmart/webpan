@@ -7,7 +7,7 @@ const getProcessor = require("./getProcessor");
 const deepEq = require("../utils/deepEq");
 const ProcessorHandles = require("../types/processorHandles");
 const WriteEntriesManager = require("../info/writeEntriesManager");
-let cachedRules = new Map();
+// let cachedRules: Map<string, ruleEntry.RuleEntryNormalised> = new Map();
 function normaliseRawProcessor(proc) {
     switch (typeof proc) {
         case "string":
@@ -55,11 +55,17 @@ function initRules(fsEntries: fsEntries.FsContentEntries) {
     }
 }
 */
-function setCachedRules(rules) {
-    cachedRules = rules;
+/*
+function setCachedRules(rules: Map<string, ruleEntry.RuleEntryNormalised>) {
+    cachedRules = rules
 }
-async function updateRules(root, fsEntries, writeEntries, diff) {
-    let processors = ProcessorHandles.getCache();
+*/
+async function updateRules(buildInstance) {
+    // let processors = ProcessorHandles.getCache();
+    let procCache = buildInstance.getProcByFiles();
+    let cachedRules = buildInstance.getRules();
+    let fsEntries = buildInstance.getFsContent();
+    let diff = buildInstance.getFsDiff();
     for (const [filePath, diffType] of diff.entries()) {
         if (path.basename(filePath) !== "wrules.json") {
             continue;
@@ -123,7 +129,6 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
                     fileProcsAfter.delete(matchedProcRule);
                 }
             }
-            let procCache = ProcessorHandles.getCache();
             let fileProcsEditable = procCache.get(absFileName);
             if (fileProcsEditable === undefined) {
                 fileProcsEditable = new Map();
@@ -147,7 +152,7 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
                 throw new Error(`Cannot find processor ${toRemove} for removal`);
             }
             for (const toAdd of fileProcsAfter.values()) {
-                const procClass = await getProcessor(root, toAdd.procName);
+                const procClass = await getProcessor(buildInstance.getRoot(), toAdd.procName);
                 const meta = {
                     childPath: absFileName,
                     // fullPath: path.join(root, "src", relFileName),
@@ -156,7 +161,7 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
                     ruleLocation: rulesDirName,
                     settings: toAdd.settings,
                 };
-                let procObj = new procClass(processors, writeEntries, meta);
+                let procObj = new procClass(buildInstance, meta);
                 let procNamedSet = fileProcsEditable.get(toAdd.procName);
                 if (procNamedSet === undefined) {
                     procNamedSet = new Set();
@@ -170,21 +175,15 @@ async function updateRules(root, fsEntries, writeEntries, diff) {
         }
     }
 }
-function getRule(dirName) {
-    return cachedRules?.get(dirName);
-}
-function getAllRules() {
-    return cachedRules;
-}
-async function resolveProcessors(root, dirCursor, fileName = dirCursor.endsWith("/") ? "/" : "") {
-    const dirRule = getRule(dirCursor);
+async function resolveProcessors(buildInstance, dirCursor, fileName = dirCursor.endsWith("/") ? "/" : "") {
+    const dirRule = buildInstance.getRules().get(dirCursor);
     let foundEntries = new Set();
     if (dirRule !== undefined) {
         for (const [pattern, procs] of dirRule.processors.entries()) {
             if (micromatch.isMatch(fileName, pattern)) {
                 for (const proc of procs) {
                     foundEntries.add({
-                        processorClass: await getProcessor(root, proc.procName),
+                        processorClass: await getProcessor(buildInstance.getRoot(), proc.procName),
                         settings: proc.settings,
                         // procDir: path.join(dirCursor, "/"), why is this a thing?
                         relativePath: fileName,
@@ -197,16 +196,16 @@ async function resolveProcessors(root, dirCursor, fileName = dirCursor.endsWith(
         }
     }
     if (dirCursor !== "/") {
-        const parentProcessors = await resolveProcessors(root, path.join(path.dirname(dirCursor), "/"), path.join("/", path.basename(dirCursor), fileName));
+        const parentProcessors = await resolveProcessors(buildInstance, path.join(path.dirname(dirCursor), "/"), path.join("/", path.basename(dirCursor), fileName));
         parentProcessors.forEach(foundEntries.add, foundEntries);
     }
     return foundEntries;
 }
 module.exports = {
     // initRules,
-    setCachedRules,
-    getRule,
-    getAllRules,
+    // setCachedRules,
+    // getRule,
+    // getAllRules,
     updateRules,
     resolveProcessors
 };

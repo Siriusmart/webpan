@@ -4,6 +4,7 @@ import ProcessorHandle = require("../types/processorHandle");
 import ruleEntry = require("../types/ruleEntry");
 import type WriteEntriesManager = require("../info/writeEntriesManager");
 import type wmanifest = require("../types/wmanifest");
+import type BuildInstance = require("../types/buildInstance");
 interface BuildResultEntry {
     id: string;
     meta: procEntries.ProcessorMetaEntry;
@@ -22,9 +23,10 @@ interface BuildInfo {
 declare function readBuildInfo(root: string): Promise<BuildInfo>;
 declare function writeBuildInfo(root: string, manifest: wmanifest.WManifest, data: BuildInfo): Promise<void>;
 declare function wrapBuildInfo(hashedEntries: fsEntries.HashedEntries, cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>, cachedRules: Map<string, ruleEntry.RuleEntryNormalised>): BuildInfo;
-declare function unwrapBuildInfo(writeEntries: WriteEntriesManager, buildInfo: BuildInfo): {
+declare function unwrapBuildInfo(buildInstance: BuildInstance, writeEntries: WriteEntriesManager, buildInfo: BuildInfo): {
     hashedEntries: fsEntries.HashedEntries;
     cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>;
+    cachedProcessorsFlat: Map<string, ProcessorHandle>;
     cachedRules: Map<string, ruleEntry.RuleEntryNormalised>;
 };
 declare const _default: {

@@ -13,6 +13,7 @@ import buildDiff = require("../actions/buildDiff");
 import WriteEntriesManager = require("../info/writeEntriesManager");
 import wrules = require("../info/wrules");
 import wproject = require("../info/wproject");
+import BuildInstance = require("../types/buildInstance");
 
 async function cmdBuild(args: yargs.Arguments): Promise<void> {
     const argPath = args.path as string;
@@ -31,11 +32,18 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
 
     let writeEntries = new WriteEntriesManager();
 
-    const gotBuildInfo = await buildInfo.readBuildInfo(root)
-    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(writeEntries, gotBuildInfo)
+    let buildInstance = new BuildInstance(root, manifest)
 
-    ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors)
-    hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries)
+    const gotBuildInfo = await buildInfo.readBuildInfo(root)
+    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(buildInstance, writeEntries, gotBuildInfo)
+
+    buildInstance
+        .withHashedEntries(unwrappedBuildInfo.hashedEntries)
+        .withRules(unwrappedBuildInfo.cachedRules)
+        .withProcs(unwrappedBuildInfo.cachedProcessors, unwrappedBuildInfo.cachedProcessorsFlat)
+
+    // ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors)
+    // hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries)
 
     const srcPath = path.join(root, "src");
 
@@ -51,11 +59,11 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
 
-    wrules.setCachedRules(unwrappedBuildInfo.cachedRules)
+    // wrules.setCachedRules(unwrappedBuildInfo.cachedRules)
     // wrules.initRules(srcContents)
 
     await fs.mkdir(path.join(root, "dist"), { recursive: true } )
-    await buildDiff(root, manifest, writeEntries, srcContents, hashedDiff, hashedEntries);
+    await buildDiff(buildInstance, srcContents, hashedDiff, hashedEntries);
 }
 
 export = cmdBuild;

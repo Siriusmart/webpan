@@ -12,3 +12,5 @@ export interface ProcessorSettings {
 export interface RuleEntryNormalised {
     processors: Map<string, Set<ProcessorSettings>>
 }
+
+export type RuleEntries = Map<string, RuleEntryNormalised>

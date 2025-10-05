@@ -95,8 +95,9 @@ function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules) {
         }))))))
     };
 }
-function unwrapBuildInfo(writeEntries, buildInfo) {
+function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
     let cachedProcessors = new Map();
+    let cachedProcessorsFlat = new Map();
     let relationsMap = new Map();
     for (const resultEntry of buildInfo.buildCache) {
         let foundClass;
@@ -106,7 +107,7 @@ function unwrapBuildInfo(writeEntries, buildInfo) {
         catch (e) {
             throw new Error("Could not load proccessor with name " + resultEntry.meta.procName + " because " + e);
         }
-        let procObject = new foundClass(cachedProcessors, writeEntries, resultEntry.meta, resultEntry.id);
+        let procObject = new foundClass(buildInstance, resultEntry.meta, resultEntry.id);
         relationsMap.set(resultEntry.id, { dependencies: resultEntry.dependencies, dependents: resultEntry.dependents });
         if (!cachedProcessors.has(resultEntry.meta.childPath)) {
             cachedProcessors.set(resultEntry.meta.childPath, new Map());
@@ -115,6 +116,7 @@ function unwrapBuildInfo(writeEntries, buildInfo) {
             cachedProcessors.get(resultEntry.meta.childPath)?.set(resultEntry.meta.procName, new Set());
         }
         cachedProcessors.get(resultEntry.meta.childPath)?.get(resultEntry.meta.procName)?.add(procObject.handle);
+        cachedProcessorsFlat.set(procObject.handle.id, procObject.handle);
         switch (resultEntry.state[0]) {
             case "empty":
                 break; // it is empty by default
@@ -135,25 +137,26 @@ function unwrapBuildInfo(writeEntries, buildInfo) {
                 break;
         }
     }
-    for (let [id, handle] of ProcessorHandle.getHandlesIdMap().entries()) {
+    for (let [id, handle] of cachedProcessorsFlat.entries()) {
         const relationEntry = relationsMap.get(id);
         assert(relationEntry !== undefined);
         const { dependencies, dependents } = relationEntry;
         handle.dependencies = new Set(dependencies.map((id) => {
-            const dependency = ProcessorHandle.getHandle(id);
-            assert(dependency !== null);
+            const dependency = cachedProcessorsFlat.get(id);
+            assert(dependency !== undefined);
             return dependency;
         }));
         handle.dependents = new Set(dependents.map((id) => {
-            const dependency = ProcessorHandle.getHandle(id);
-            assert(dependency !== null);
+            const dependency = cachedProcessorsFlat.get(id);
+            assert(dependency !== undefined);
             return dependency;
         }));
     }
     return {
         hashedEntries: buildInfo.hashedEntries,
         cachedRules: buildInfo.rules,
-        cachedProcessors
+        cachedProcessors,
+        cachedProcessorsFlat
     };
 }
 module.exports = {

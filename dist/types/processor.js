@@ -2,10 +2,10 @@
 const ProcessorHandle = require("./processorHandle");
 class Processor {
     handle;
-    allHandles;
-    constructor(allHandles, writeEntries, meta, id) {
-        this.allHandles = allHandles;
-        this.handle = new ProcessorHandle(allHandles, meta, this, writeEntries, id);
+    buildInstance;
+    constructor(buildInstance, meta, id) {
+        this.buildInstance = buildInstance;
+        this.handle = new ProcessorHandle(buildInstance, meta, this, id);
     }
 }
 module.exports = Processor;

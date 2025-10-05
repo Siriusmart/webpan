@@ -3,18 +3,21 @@ const assert = require("assert");
 const fsEntries = require("./fsEntries");
 module.exports = class ProcessorHandles {
     // [fileName, procName] => proc set
-    static cachedProcessors = new Map();
+    // static cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>> = new Map()
     // id => proc
-    static handlesMap = new Map();
-    static getCache() {
-        return this.cachedProcessors;
+    // static handlesMap: Map<string, ProcessorHandle> = new Map()
+    /*
+    static getCache(): Map<string, Map<string, Set<ProcessorHandle>>> {
+        return this.cachedProcessors
     }
-    static setCache(value) {
-        this.cachedProcessors = value;
+
+    static setCache(value: Map<string, Map<string, Set<ProcessorHandle>>>): void {
+        this.cachedProcessors = value
     }
-    static async buildOutputAll(fsContent) {
+    */
+    static async buildOutputAll(buildInstance) {
         let toBuild = new Set();
-        for (const proc of this.handlesMap.values()) {
+        for (const proc of buildInstance.getProcById().values()) {
             if (proc.state.status !== "empty") {
                 continue;
             }
@@ -28,6 +31,7 @@ module.exports = class ProcessorHandles {
             toBuild.add(proc);
         }
         let res = new Set();
+        let fsContent = buildInstance.getFsContent();
         await Promise.all(toBuild.values().map(async (handle) => {
             assert(handle.state.status === "building");
             let output;

@@ -1,10 +1,8 @@
 import type writeEntry = require("../types/writeEntry")
 
-type WriteEntryManagerState = "writable" | "readonly" | "disabled";
-
 class WriteEntriesManager {
     bufferedContent: Map<string, writeEntry.WriteEntry> = new Map();
-    state: WriteEntryManagerState = "disabled";
+    state: writeEntry.WriteEntryManagerState = "disabled";
 
     set(path: string, content: writeEntry.WriteEntry): void {
         if(this.state !== "writable") {
@@ -22,9 +20,23 @@ class WriteEntriesManager {
         return this.bufferedContent.get(path)
     }
 
-    setState(state: WriteEntryManagerState): void {
-        if(state === this.state) {
-            throw new Error("attempting to set state when unchanged")
+    setState(state: writeEntry.WriteEntryManagerState): void {
+        switch(this.state) {
+            case "disabled":
+                if(state !== "writable") {
+                    throw new Error("the state after disabled should be writable")
+                }
+                break
+            case "writable":
+                if(state !== "readonly") {
+                    throw new Error("the state after writable should be readonly")
+                }
+                break
+            case "readonly":
+                if(state !== "disabled") {
+                    throw new Error("the state after readonly should be disabled")
+                }
+                break
         }
 
         if(state === "disabled") {

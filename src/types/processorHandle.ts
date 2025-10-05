@@ -6,9 +6,8 @@ import type processorStates = require("./processorStates");
 import path = require("path");
 import writeEntry = require("../types/writeEntry")
 import calcDiff = require("../utils/calcDiff");
-import WriteEntriesManager = require("../info/writeEntriesManager")
 import random = require("../utils/random")
-import ProcessorHandles = require("../types/processorHandles")
+import type BuildInstance = require("../types/buildInstance")
 
 export = ProcessorHandle
 
@@ -29,11 +28,13 @@ class ProcessorHandle {
     state: processorStates.ProcessorState;
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
-    handles: Map<string, Map<string, Set<ProcessorHandle>>>;
-    writeEntries: WriteEntriesManager;
+    buildInstance: BuildInstance;
+    // handles: Map<string, Map<string, Set<ProcessorHandle>>>;
+    // writeEntries: WriteEntriesManager;
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
 
+    /*
     static getHandle(id: string): ProcessorHandle | null {
         return ProcessorHandles.handlesMap.get(id) ?? null
     }
@@ -41,16 +42,16 @@ class ProcessorHandle {
     static getHandlesIdMap(): Map<string, ProcessorHandle> {
         return ProcessorHandles.handlesMap
     }
+    */
 
-    constructor(handles: Map<string, Map<string, Set<ProcessorHandle>>>, meta: procEntries.ProcessorMetaEntry, processor: Processor, writeEntries: WriteEntriesManager, id?: string) {
-        this.id = id ?? random.hexString(8, (id) => !ProcessorHandles.handlesMap.has(id))
-        ProcessorHandles.handlesMap.set(this.id, this)
+    constructor(buildInstance: BuildInstance, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string) {
+        this.id = id ?? random.hexString(8, (id) => !buildInstance.getProcById().has(id))
+        buildInstance.getProcById().set(this.id, this)
         this.state = {
             status: "empty",
         };
-        this.writeEntries = writeEntries;
+        this.buildInstance = buildInstance;
         this.meta = meta;
-        this.handles = handles;
         this.processor = processor;
         this.dependents = new Set();
         this.dependencies = new Set();
@@ -58,7 +59,7 @@ class ProcessorHandle {
 
     drop(): void {
         this.reset()
-        if(!ProcessorHandles.handlesMap.delete(this.id)) {
+        if(!this.buildInstance.getProcById().delete(this.id)) {
             throw new Error("You called drop twice!")
         }
     }
@@ -73,7 +74,7 @@ class ProcessorHandle {
 
     reset(): void {
         if("result" in this.state) {
-            this.state.result.files.forEach(toDelete => this.writeEntries.set(toDelete, { processor: this, content: "remove"}))
+            this.state.result.files.forEach(toDelete => this.buildInstance.getWriteEntriesManager().set(toDelete, { processor: this, content: "remove"}))
         }
 
         if(this.state.status === "empty") {
@@ -171,8 +172,8 @@ class ProcessorHandle {
         }
     }
 
-    async buildWithBuffer(): Promise<processorStates.ProcessorResult> {
-        const contentEntry = fsContentCache.getFsContentCache().get(this.meta.childPath);
+    async buildWithBuffer(buildInstance: BuildInstance): Promise<processorStates.ProcessorResult> {
+        const contentEntry = buildInstance.getFsContent().get(this.meta.childPath);
         assert(contentEntry !== undefined)
         let content: Buffer | "dir";
 
@@ -197,7 +198,7 @@ class ProcessorHandle {
 
         try {
             let output = await this.processor.build(content);
-            this.updateWithOutput(output, this.writeEntries.getBuffer())
+            this.updateWithOutput(output, this.buildInstance.getWriteEntriesManager().getBuffer())
 
             this.state = {
                 status: "built",
@@ -239,7 +240,7 @@ class ProcessorHandle {
         }
     }
 
-    async getProcessor(requester: ProcessorHandle): Promise<Processor> {
+    async getProcessor(buildInstance: BuildInstance, requester: ProcessorHandle): Promise<Processor> {
         if(this.isOrDependsOn(requester)) {
             throw new Error("There is a cycle in dependency.")
         }
@@ -247,7 +248,7 @@ class ProcessorHandle {
         requester.dependencies.add(this);
         switch(this.state.status) {
             case "resultonly":
-                await this.buildWithBuffer();
+                await this.buildWithBuffer(buildInstance);
             return this.processor;
             case "empty":
                 throw new Error("processor is not being built and will not be resolved")

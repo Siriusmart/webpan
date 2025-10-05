@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 let hashedEntryCache = undefined;
 function setHashedEntriesCache(entries) {
     hashedEntryCache = entries;
@@ -9,8 +10,10 @@ function getHashedEntriesCache() {
     }
     return hashedEntryCache;
 }
-module.exports = {
+/*
+export = {
     getHashedEntriesCache,
     setHashedEntriesCache
-};
+}
+*/
 //# sourceMappingURL=hashedEntriesCache.js.map

@@ -14,7 +14,9 @@ function getHashedEntriesCache(): fsEntries.HashedEntries {
     return hashedEntryCache;
 }
 
+/*
 export = {
     getHashedEntriesCache,
     setHashedEntriesCache
 }
+*/
