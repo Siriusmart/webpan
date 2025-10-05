@@ -3,6 +3,8 @@ import type fsEntries = require("../types/fsEntries");
 import type procEntries = require("../types/procEntries");
 import type writeEntry = require("../types/writeEntry");
 import type ruleEntry = require("../types/ruleEntry");
+import type processorStates = require("../types/processorStates");
+import type ProcessorHandle = require("../types/processorHandle");
 import WriteEntriesManager = require("../info/writeEntriesManager");
 declare class BuildInstance {
     private root;
@@ -16,6 +18,7 @@ declare class BuildInstance {
     private rules;
     constructor(root: string, manifest: wmanifest.WManifest);
     withHashedEntries(hashedEntries: fsEntries.HashedEntries): BuildInstance;
+    buildOutputAll(): Promise<Set<[ProcessorHandle, processorStates.ProcessorOutput]>>;
     withFsContent(fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<BuildInstance>;
     withProcs(procByFiles: procEntries.ProcByFileMap, procById: procEntries.ProcByIdMap): BuildInstance;
     withRules(rules: ruleEntry.RuleEntries): BuildInstance;

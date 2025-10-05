@@ -1,19 +1,18 @@
 import type yargs = require("yargs");
+
+import path = require("path");
+import fs = require("fs/promises");
+
+import WriteEntriesManager = require("../info/writeEntriesManager");
+import BuildInstance = require("../types/buildInstance");
 import findRoot = require("../info/findRoot");
 import buildInfo = require("../info/buildInfo");
 import cleanBuild = require("../actions/cleanBuild");
 import fsUtils = require("../utils/fsUtils");
-import ProcessorHandles = require("../types/processorHandles");
-import path = require("path");
-import fs = require("fs/promises");
 import calcHashedEntries = require("../info/calcHashedEntries");
-import hashedEntriesCache = require("../info/hashedEntriesCache");
 import calcDiff = require("../utils/calcDiff");
 import buildDiff = require("../actions/buildDiff");
-import WriteEntriesManager = require("../info/writeEntriesManager");
-import wrules = require("../info/wrules");
 import wproject = require("../info/wproject");
-import BuildInstance = require("../types/buildInstance");
 
 async function cmdBuild(args: yargs.Arguments): Promise<void> {
     const argPath = args.path as string;
@@ -42,9 +41,6 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
         .withRules(unwrappedBuildInfo.cachedRules)
         .withProcs(unwrappedBuildInfo.cachedProcessors, unwrappedBuildInfo.cachedProcessorsFlat)
 
-    // ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors)
-    // hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries)
-
     const srcPath = path.join(root, "src");
 
     if(!await fsUtils.exists(srcPath)) {
@@ -58,9 +54,6 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
-
-    // wrules.setCachedRules(unwrappedBuildInfo.cachedRules)
-    // wrules.initRules(srcContents)
 
     await fs.mkdir(path.join(root, "dist"), { recursive: true } )
     await buildDiff(buildInstance, srcContents, hashedDiff, hashedEntries);

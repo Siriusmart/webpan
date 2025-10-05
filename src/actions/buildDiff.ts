@@ -1,35 +1,20 @@
-import assert = require("assert");
-import wrules = require("../info/wrules");
-import fsEntries = require("../types/fsEntries");
-import type procEntries = require("../types/procEntries");
-import ProcessorHandle = require("../types/processorHandle");
-import ProcessorHandles = require("../types/processorHandles");
-import processorStates = require("../types/processorStates");
 import path = require("path");
+import assert = require("assert");
 import fs = require("fs/promises");
-import fsUtils = require("../utils/fsUtils");
-import fsContentCache = require("../info/fsContentCache");
-import WriteEntriesManager = require("../info/writeEntriesManager")
-import buildInfo = require("../info/buildInfo")
-import type wmanifest = require("../types/wmanifest");
+
+import type fsEntries = require("../types/fsEntries");
+import type procEntries = require("../types/procEntries");
 import type BuildInstance = require("../types/buildInstance");
+
+import wrules = require("../info/wrules");
+import fsUtils = require("../utils/fsUtils");
 
 let currentlyBuilding: Promise<void> | null = null;
 let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.HashedEntries, fsEntries.FsContentEntries] | null = null;
 
-// async function buildDiffInternal(root: string, manifest: wmanifest.WManifest, writeEntries: WriteEntriesManager, fsContent: fsEntries.FsContentEntries, diff: procEntries.DiffEntries<string>, hashedEntries: fsEntries.HashedEntries): Promise<void> {
  async function buildDiffInternal(buildInstance: BuildInstance, fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<void> {
-    // let cachedProcessors = ProcessorHandles.getCache()
-    // TODO change to only feed in updated rules files
-    
     await buildInstance.withBuildCycleState("writable")
                  .withFsContent(fsContent, hashedEntries, fsDiff)
-
-    // fsContentCache.setFsContentCache(fsContent);
-    // await wrules.updateRules(root, fsContent, writeEntries, diff)
-
-    // let toBuild: [ProcessorHandle, Buffer | "dir"][] = [];
-    // let writableBuffer = writeEntries.getBuffer()
     let cachedProcessors = buildInstance.getProcByFiles()
 
     for(const [filePath, diffType] of fsDiff.entries()) {
@@ -95,61 +80,7 @@ let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.H
         }
     }
 
-    /*
-    for(const [handleToBuild, _] of toBuild.values()) {
-        assert(handleToBuild.state.status === "empty")
-
-        const { promise, resolve, reject } = handleToBuild.pendingResultPromise();
-        handleToBuild.state = {
-            status: "building",
-            pendingResult: promise,
-            reject,
-            resolve
-        }
-    }
-    */
-
-    const res = await ProcessorHandles.buildOutputAll(buildInstance)
-
-    /*
-    await Promise.all(toBuild.map(async ([handle, content]) => {
-        assert(handle.state.status === "building")
-        let output: processorStates.ProcessorOutput;
-        try {
-            output = await handle.processor.build(content)
-        } catch(err) {
-            const reject = handle.state.reject;
-            assert(reject !== undefined)
-            handle.state = {
-                status: "error",
-                err
-            }
-
-            reject(err)
-
-            err = typeof err === "object" && err !== null && "stack" in err ? err.stack : err
-            console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`)
-            return;
-        }
-
-        res.add([handle, output])
-        const resolve = handle.state.resolve;
-        assert(resolve !== undefined)
-        handle.state = {
-            status: "built",
-            processor: handle.processor,
-            result: {
-                result: output.result,
-                files: new Set(output.files.keys())
-            }
-        }
-        resolve({
-            result: output.result,
-            files: new Set(output.files.keys())
-        })
-    }))
-    */
-
+    const res = await buildInstance.buildOutputAll()
     buildInstance.withBuildCycleState("readonly")
 
     res.forEach(([handle, output]) => {

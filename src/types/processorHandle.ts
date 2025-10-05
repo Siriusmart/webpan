@@ -1,13 +1,14 @@
 import assert = require("assert");
-import fsContentCache = require("../info/fsContentCache");
+import path = require("path");
+
 import type procEntries = require("./procEntries");
 import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
-import path = require("path");
-import writeEntry = require("../types/writeEntry")
+import type BuildInstance = require("../types/buildInstance")
+import type writeEntry = require("../types/writeEntry")
+
 import calcDiff = require("../utils/calcDiff");
 import random = require("../utils/random")
-import type BuildInstance = require("../types/buildInstance")
 
 export = ProcessorHandle
 
@@ -29,20 +30,8 @@ class ProcessorHandle {
     meta: procEntries.ProcessorMetaEntry;
     processor: Processor;
     buildInstance: BuildInstance;
-    // handles: Map<string, Map<string, Set<ProcessorHandle>>>;
-    // writeEntries: WriteEntriesManager;
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
-
-    /*
-    static getHandle(id: string): ProcessorHandle | null {
-        return ProcessorHandles.handlesMap.get(id) ?? null
-    }
-
-    static getHandlesIdMap(): Map<string, ProcessorHandle> {
-        return ProcessorHandles.handlesMap
-    }
-    */
 
     constructor(buildInstance: BuildInstance, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string) {
         this.id = id ?? random.hexString(8, (id) => !buildInstance.getProcById().has(id))

@@ -1,9 +1,8 @@
 import type procEntries = require("./procEntries");
-import ProcessorHandle = require("./processorHandle");
 import type processorStates = require("./processorStates");
-import type writeEntry = require("./writeEntry");
-import type WriteEntriesManager = require("../info/writeEntriesManager");
 import type BuildInstance = require("./buildInstance");
+
+import ProcessorHandle = require("./processorHandle");
 
 abstract class Processor {
     handle: ProcessorHandle;

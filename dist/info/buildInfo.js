@@ -1,14 +1,8 @@
 "use strict";
 const path = require("path");
 const fs = require("fs/promises");
-const fsUtils = require("../utils/fsUtils");
-const fsEntries = require("../types/fsEntries");
-const procEntries = require("../types/procEntries");
-const ProcessorHandle = require("../types/processorHandle");
-const Processor = require("../types/processor");
-const writeEntry = require("../types/writeEntry");
-const ruleEntry = require("../types/ruleEntry");
 const assert = require("assert");
+const fsUtils = require("../utils/fsUtils");
 function replacer(_, value) {
     if (value instanceof Map) {
         return {

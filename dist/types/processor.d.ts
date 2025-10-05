@@ -1,7 +1,7 @@
 import type procEntries = require("./procEntries");
-import ProcessorHandle = require("./processorHandle");
 import type processorStates = require("./processorStates");
 import type BuildInstance = require("./buildInstance");
+import ProcessorHandle = require("./processorHandle");
 declare abstract class Processor {
     handle: ProcessorHandle;
     buildInstance: BuildInstance;

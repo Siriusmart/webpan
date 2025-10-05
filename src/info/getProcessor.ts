@@ -1,6 +1,8 @@
 import path = require("path");
-import Processor = require("../types/processor");
+
 import type procEntries = require("../types/procEntries")
+
+import Processor = require("../types/processor");
 import fsUtils = require("../utils/fsUtils");
 
 let cachedProcessorClasses: Map<string, { new(): Processor }> = new Map();

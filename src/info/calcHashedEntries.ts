@@ -1,4 +1,5 @@
 import crypto = require("crypto");
+
 import type fsEntries = require("../types/fsEntries");
 
 function calcHashedEntries(fsEntries: fsEntries.FsContentEntries): fsEntries.HashedEntries {

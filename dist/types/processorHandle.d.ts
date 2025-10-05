@@ -1,8 +1,8 @@
 import type procEntries = require("./procEntries");
 import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
-import writeEntry = require("../types/writeEntry");
 import type BuildInstance = require("../types/buildInstance");
+import type writeEntry = require("../types/writeEntry");
 export = ProcessorHandle;
 declare class ProcessorHandle {
     id: string;

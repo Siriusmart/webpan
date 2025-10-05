@@ -1,4 +1,4 @@
-import Stream = require("stream");
+import type Stream = require("stream");
 export interface OutputEntry {
     path: string;
     buffer: Buffer;

@@ -1,8 +1,6 @@
 "use strict";
 const assert = require("assert");
-const fsContentCache = require("../info/fsContentCache");
 const path = require("path");
-const writeEntry = require("../types/writeEntry");
 const calcDiff = require("../utils/calcDiff");
 const random = require("../utils/random");
 function normaliseOutput(output, meta) {
@@ -22,19 +20,8 @@ class ProcessorHandle {
     meta;
     processor;
     buildInstance;
-    // handles: Map<string, Map<string, Set<ProcessorHandle>>>;
-    // writeEntries: WriteEntriesManager;
     dependents;
     dependencies;
-    /*
-    static getHandle(id: string): ProcessorHandle | null {
-        return ProcessorHandles.handlesMap.get(id) ?? null
-    }
-
-    static getHandlesIdMap(): Map<string, ProcessorHandle> {
-        return ProcessorHandles.handlesMap
-    }
-    */
     constructor(buildInstance, meta, processor, id) {
         this.id = id ?? random.hexString(8, (id) => !buildInstance.getProcById().has(id));
         buildInstance.getProcById().set(this.id, this);

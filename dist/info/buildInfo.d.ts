@@ -1,10 +1,10 @@
-import fsEntries = require("../types/fsEntries");
-import procEntries = require("../types/procEntries");
-import ProcessorHandle = require("../types/processorHandle");
-import ruleEntry = require("../types/ruleEntry");
-import type WriteEntriesManager = require("../info/writeEntriesManager");
-import type wmanifest = require("../types/wmanifest");
 import type BuildInstance = require("../types/buildInstance");
+import type WriteEntriesManager = require("../info/writeEntriesManager");
+import type ProcessorHandle = require("../types/processorHandle");
+import type wmanifest = require("../types/wmanifest");
+import type fsEntries = require("../types/fsEntries");
+import type procEntries = require("../types/procEntries");
+import type ruleEntry = require("../types/ruleEntry");
 interface BuildResultEntry {
     id: string;
     meta: procEntries.ProcessorMetaEntry;

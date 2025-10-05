@@ -1,6 +1,7 @@
 import yargs = require("yargs");
 import fs = require("fs/promises")
 import path = require("path")
+
 import type wmanifest = require("../types/wmanifest")
 
 async function createProjectManifest(root: string, yargs: yargs.ArgumentsCamelCase<{}>): Promise<wmanifest.WManifest> {

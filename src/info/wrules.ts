@@ -1,19 +1,13 @@
 import path = require("path");
-import type fsEntries = require("../types/fsEntries");
-import type procEntries = require("../types/procEntries");
 import assert = require("assert");
-import type ruleEntry = require("../types/ruleEntry");
-import type writeEntry = require("../types/writeEntry");
-import Processor = require("../types/processor");
 import micromatch = require("micromatch")
-import getProcessor = require("./getProcessor");
-import deepEq = require("../utils/deepEq");
-import ProcessorHandles = require("../types/processorHandles");
-import WriteEntriesManager = require("../info/writeEntriesManager");
-import type ProcessorHandle = require("../types/processorHandle");
+
+import type procEntries = require("../types/procEntries");
+import type ruleEntry = require("../types/ruleEntry");
 import type BuildInstance = require("../types/buildInstance");
 
-// let cachedRules: Map<string, ruleEntry.RuleEntryNormalised> = new Map();
+import getProcessor = require("./getProcessor");
+import deepEq = require("../utils/deepEq");
 
 function normaliseRawProcessor(proc: ruleEntry.ProcessorType): ruleEntry.ProcessorSettings[] {
     switch(typeof proc) {
@@ -39,40 +33,7 @@ function rawToNormalised(raw: ruleEntry.RuleEntryRaw): ruleEntry.RuleEntryNormal
     }
 }
 
-/*
-function initRules(fsEntries: fsEntries.FsContentEntries) {
-    for(const [entryPath, entry] of fsEntries.entries()) {
-        if(path.basename(entryPath) !== "wrules.json") {
-            continue;
-        }
-
-        try {
-            assert(entry.content[0] === "file");
-            const rulesRaw = JSON.parse(entry.content[1].toString("utf8")) as ruleEntry.RuleEntryRaw;
-            const rulesNormalised = rawToNormalised(rulesRaw);
-
-            cachedRules ??= new Map();
-
-            const rulesDirName = path.join(path.dirname(entryPath), "/")
-            cachedRules.set(rulesDirName, rulesNormalised);
-        } catch (e) {
-            if(typeof e === "object" && e !== null && "stack" in e) {
-                e = e.stack
-            }
-            throw new Error(`Failed to read ${entryPath} because ${e}.`)
-        }
-    }
-}
-*/
-
-/*
-function setCachedRules(rules: Map<string, ruleEntry.RuleEntryNormalised>) {
-    cachedRules = rules
-}
-*/
-
 async function updateRules(buildInstance: BuildInstance): Promise<void> {
-    // let processors = ProcessorHandles.getCache();
     let procCache = buildInstance.getProcByFiles()
     let cachedRules = buildInstance.getRules()
     let fsEntries = buildInstance.getFsContent();
@@ -118,8 +79,6 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
                 continue
             }
 
-            // console.log(`file=${absFileName} rulesDir=${rulesDirName} diff=${diff.get(absFileName)}`)
-
             const relFileName = absFileName.substring(rulesDirName.length - 1)
 
             let removedProcs: Set<ruleEntry.ProcessorSettings> = new Set()
@@ -142,8 +101,6 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
                 }
             }
 
-            // console.log(`file=${absFileName} before=${JSON.stringify(Array.from(fileProcsBefore.values()))} after=${JSON.stringify(Array.from(fileProcsAfter.values()))}`)
-
             for(const procRule of fileProcsBefore.values()) {
                 let matchedProcRule = fileProcsAfter.values().find(procRuleAfter => deepEq(procRule, procRuleAfter))
 
@@ -163,7 +120,6 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
 
             // now removedProcs contains all procs removed
             // and fileProcsAfter contains all added procs
-            // console.log(`${absFileName} toAdd=${Array.from(fileProcsAfter)} toRemove=${Array.from(removedProcs)}`)
 
             nextProc: for(const toRemove of removedProcs) {
                 let setWithProcName = fileProcsEditable.get(toRemove.procName) ?? new Set();
@@ -186,7 +142,6 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
 
                 const meta: procEntries.ProcessorMetaEntry = {
                     childPath: absFileName,
-                    // fullPath: path.join(root, "src", relFileName),
                     procName: toAdd.procName,
                     relativePath: relFileName,
                     ruleLocation: rulesDirName,
@@ -211,22 +166,9 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
     }
 }
 
-/*
-function getRule(dirName: string): ruleEntry.RuleEntryNormalised | undefined {
-    return cachedRules?.get(dirName)
-}
-*/
-
-/*
-function getAllRules(): Map<string, ruleEntry.RuleEntryNormalised> {
-    return cachedRules
-}
-*/
-
 interface FoundProcessorEntry {
     processorClass: procEntries.ProcClass,
     settings: any,
-    // procDir: string, why is this a thing?
     relativePath: string,
     ruleLocation: string,
     pattern: string,
@@ -245,7 +187,6 @@ async function resolveProcessors(buildInstance: BuildInstance, dirCursor: string
                     foundEntries.add({
                         processorClass: await getProcessor(buildInstance.getRoot(), proc.procName),
                         settings: proc.settings,
-                        // procDir: path.join(dirCursor, "/"), why is this a thing?
                         relativePath: fileName,
                         ruleLocation: dirCursor,
                         pattern: pattern,
@@ -265,10 +206,6 @@ async function resolveProcessors(buildInstance: BuildInstance, dirCursor: string
 }
 
 export = {
-    // initRules,
-    // setCachedRules,
-    // getRule,
-    // getAllRules,
     updateRules,
     resolveProcessors
 }

@@ -1,5 +1,6 @@
 import yargs = require("yargs");
 import yargsHelpers = require('yargs/helpers');
+
 import cmdBuild = require("./cmdBuild");
 
 async function main(): Promise<void> {

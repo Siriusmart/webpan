@@ -1,6 +1,7 @@
 import fs = require("fs/promises");
-import type fsEntries = require("../types/fsEntries");
 import path = require("path");
+
+import type fsEntries = require("../types/fsEntries");
 
 async function exists(path: string): Promise<boolean> {
     try {

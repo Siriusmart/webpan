@@ -1,16 +1,16 @@
 import path = require("path")
 import fs = require("fs/promises")
-import fsUtils = require("../utils/fsUtils")
-import fsEntries = require("../types/fsEntries")
-import procEntries = require("../types/procEntries")
-import ProcessorHandle = require("../types/processorHandle")
-import Processor = require("../types/processor")
-import writeEntry = require("../types/writeEntry")
-import ruleEntry = require("../types/ruleEntry")
-import type WriteEntriesManager = require("../info/writeEntriesManager")
 import assert = require("assert")
-import type wmanifest = require("../types/wmanifest");
+
 import type BuildInstance = require("../types/buildInstance");
+import type WriteEntriesManager = require("../info/writeEntriesManager")
+import type ProcessorHandle = require("../types/processorHandle")
+import type wmanifest = require("../types/wmanifest");
+import type fsEntries = require("../types/fsEntries")
+import type procEntries = require("../types/procEntries")
+import type ruleEntry = require("../types/ruleEntry")
+
+import fsUtils = require("../utils/fsUtils")
 
 function replacer(_: string, value: any) {
   if(value instanceof Map) {

@@ -1,12 +1,4 @@
-import Stream = require("stream");
-
-/*
-export interface HashedEntry {
-    // fullPath: string,
-    // childPath: string,
-    hash?: string,
-}
-*/
+import type Stream = require("stream");
 
 export interface OutputEntry {
     path: string,

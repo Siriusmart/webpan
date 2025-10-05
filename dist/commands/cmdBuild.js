@@ -1,19 +1,16 @@
 "use strict";
+const path = require("path");
+const fs = require("fs/promises");
+const WriteEntriesManager = require("../info/writeEntriesManager");
+const BuildInstance = require("../types/buildInstance");
 const findRoot = require("../info/findRoot");
 const buildInfo = require("../info/buildInfo");
 const cleanBuild = require("../actions/cleanBuild");
 const fsUtils = require("../utils/fsUtils");
-const ProcessorHandles = require("../types/processorHandles");
-const path = require("path");
-const fs = require("fs/promises");
 const calcHashedEntries = require("../info/calcHashedEntries");
-const hashedEntriesCache = require("../info/hashedEntriesCache");
 const calcDiff = require("../utils/calcDiff");
 const buildDiff = require("../actions/buildDiff");
-const WriteEntriesManager = require("../info/writeEntriesManager");
-const wrules = require("../info/wrules");
 const wproject = require("../info/wproject");
-const BuildInstance = require("../types/buildInstance");
 async function cmdBuild(args) {
     const argPath = args.path;
     const root = await findRoot(argPath);
@@ -33,8 +30,6 @@ async function cmdBuild(args) {
         .withHashedEntries(unwrappedBuildInfo.hashedEntries)
         .withRules(unwrappedBuildInfo.cachedRules)
         .withProcs(unwrappedBuildInfo.cachedProcessors, unwrappedBuildInfo.cachedProcessorsFlat);
-    // ProcessorHandles.setCache(unwrappedBuildInfo.cachedProcessors)
-    // hashedEntriesCache.setHashedEntriesCache(unwrappedBuildInfo.hashedEntries)
     const srcPath = path.join(root, "src");
     if (!await fsUtils.exists(srcPath)) {
         await fs.mkdir(srcPath, { recursive: true });
@@ -45,8 +40,6 @@ async function cmdBuild(args) {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
-    // wrules.setCachedRules(unwrappedBuildInfo.cachedRules)
-    // wrules.initRules(srcContents)
     await fs.mkdir(path.join(root, "dist"), { recursive: true });
     await buildDiff(buildInstance, srcContents, hashedDiff, hashedEntries);
 }

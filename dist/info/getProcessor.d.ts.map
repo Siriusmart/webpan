@@ -1,1 +1,1 @@
-{"version":3,"file":"getProcessor.d.ts","sourceRoot":"","sources":["../../src/info/getProcessor.ts"],"names":[],"mappings":"AAEA,YAAY,WAAW,GAAG,QAAQ,sBAAsB,CAAC,CAAA;AAKzD,iBAAe,YAAY,CAAC,IAAI,EAAE,MAAM,EAAE,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,WAAW,CAAC,SAAS,CAAC,CAmBvF;AAED,SAAS,YAAY,CAAC"}
+{"version":3,"file":"getProcessor.d.ts","sourceRoot":"","sources":["../../src/info/getProcessor.ts"],"names":[],"mappings":"AAEA,YAAY,WAAW,GAAG,QAAQ,sBAAsB,CAAC,CAAA;AAOzD,iBAAe,YAAY,CAAC,IAAI,EAAE,MAAM,EAAE,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,WAAW,CAAC,SAAS,CAAC,CAmBvF;AAED,SAAS,YAAY,CAAC"}
