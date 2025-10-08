@@ -109,13 +109,13 @@ function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
         if (!cachedProcessors.get(resultEntry.meta.childPath)?.has(resultEntry.meta.procName)) {
             cachedProcessors.get(resultEntry.meta.childPath)?.set(resultEntry.meta.procName, new Set());
         }
-        cachedProcessors.get(resultEntry.meta.childPath)?.get(resultEntry.meta.procName)?.add(procObject.handle);
-        cachedProcessorsFlat.set(procObject.handle.id, procObject.handle);
+        cachedProcessors.get(resultEntry.meta.childPath)?.get(resultEntry.meta.procName)?.add(procObject.__handle);
+        cachedProcessorsFlat.set(procObject.__handle.id, procObject.__handle);
         switch (resultEntry.state[0]) {
             case "empty":
                 break; // it is empty by default
             case "ok":
-                procObject.handle.state = {
+                procObject.__handle.state = {
                     status: "resultonly",
                     result: {
                         files: new Set(resultEntry.state[1].files),
@@ -124,7 +124,7 @@ function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
                 };
                 break;
             case "err":
-                procObject.handle.state = {
+                procObject.__handle.state = {
                     status: "error",
                     err: resultEntry.state[1]
                 };

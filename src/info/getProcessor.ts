@@ -19,7 +19,7 @@ async function getProcessor(root: string, ident: string): Promise<procEntries.Pr
         throw new Error(`Processor not found: no directory at ${procPath}`)
     }
 
-    const procClass = require(ident);
+    const procClass = (require(ident) ?? {}).default;
     if(typeof procClass !== "function") {
         throw new Error(`Package ${ident} doesn't seem to be a webpan processor`)
     }

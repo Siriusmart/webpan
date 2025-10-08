@@ -155,7 +155,7 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
                     fileProcsEditable.set(toAdd.procName, procNamedSet)
                 }
 
-                procNamedSet.add(procObj.handle)
+                procNamedSet.add(procObj.__handle)
             }
 
             if(fileProcsEditable.size === 0) {

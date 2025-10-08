@@ -29,6 +29,6 @@ declare class ProcessorHandle {
     unwrapPendingResult(res: ["ok", processorStates.ProcessorResult] | ["err", any]): processorStates.ProcessorResult;
     buildWithBuffer(buildInstance: BuildInstance): Promise<processorStates.ProcessorResult>;
     getResult(requester: ProcessorHandle): Promise<processorStates.ProcessorResult>;
-    getProcessor(buildInstance: BuildInstance, requester: ProcessorHandle): Promise<Processor>;
+    getProcessor(requester: ProcessorHandle): Promise<Processor>;
 }
 //# sourceMappingURL=processorHandle.d.ts.map

@@ -51,10 +51,9 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
                     if (!cachedProcessors.get(filePath)?.has(procEntry.procName)) {
                         cachedProcessors.get(filePath)?.set(procEntry.procName, new Set());
                     }
-                    cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.handle);
+                    cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.__handle);
                     const content = fsContent.get(filePath)?.content;
                     assert(content !== undefined);
-                    // toBuild.push([proc.handle, content[0] === "file" ? content[1] : "dir"])
                 });
             // get processors
             // insert each task into cachedProcessors (flat)

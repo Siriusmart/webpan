@@ -128,7 +128,7 @@ async function updateRules(buildInstance) {
                     procNamedSet = new Set();
                     fileProcsEditable.set(toAdd.procName, procNamedSet);
                 }
-                procNamedSet.add(procObj.handle);
+                procNamedSet.add(procObj.__handle);
             }
             if (fileProcsEditable.size === 0) {
                 procCache.delete(absFileName);

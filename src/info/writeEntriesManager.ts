@@ -1,8 +1,8 @@
 import type writeEntry = require("../types/writeEntry")
 
 class WriteEntriesManager {
-    bufferedContent: Map<string, writeEntry.WriteEntry> = new Map();
-    state: writeEntry.WriteEntryManagerState = "disabled";
+    private bufferedContent: Map<string, writeEntry.WriteEntry> = new Map();
+    private state: writeEntry.WriteEntryManagerState = "disabled";
 
     set(path: string, content: writeEntry.WriteEntry): void {
         if(this.state !== "writable") {

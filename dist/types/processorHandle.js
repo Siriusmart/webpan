@@ -190,7 +190,7 @@ class ProcessorHandle {
                 throw this.state.err;
         }
     }
-    async getProcessor(buildInstance, requester) {
+    async getProcessor(requester) {
         if (this.isOrDependsOn(requester)) {
             throw new Error("There is a cycle in dependency.");
         }
@@ -198,7 +198,7 @@ class ProcessorHandle {
         requester.dependencies.add(this);
         switch (this.state.status) {
             case "resultonly":
-                await this.buildWithBuffer(buildInstance);
+                await this.buildWithBuffer(this.buildInstance);
                 return this.processor;
             case "empty":
                 throw new Error("processor is not being built and will not be resolved");

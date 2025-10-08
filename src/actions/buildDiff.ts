@@ -12,7 +12,7 @@ import fsUtils = require("../utils/fsUtils");
 let currentlyBuilding: Promise<void> | null = null;
 let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.HashedEntries, fsEntries.FsContentEntries] | null = null;
 
- async function buildDiffInternal(buildInstance: BuildInstance, fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<void> {
+async function buildDiffInternal(buildInstance: BuildInstance, fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<void> {
     await buildInstance.withBuildCycleState("writable")
                  .withFsContent(fsContent, hashedEntries, fsDiff)
     let cachedProcessors = buildInstance.getProcByFiles()
@@ -66,12 +66,11 @@ let nextBuilding: [Promise<void>, Map<string, procEntries.DiffType>, fsEntries.H
                         cachedProcessors.get(filePath)?.set(procEntry.procName, new Set())
                     }
 
-                    cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.handle)
+                    cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.__handle)
 
 
                     const content = fsContent.get(filePath)?.content;
                     assert(content !== undefined);
-                    // toBuild.push([proc.handle, content[0] === "file" ? content[1] : "dir"])
                 })
                 // get processors
                 // insert each task into cachedProcessors (flat)
