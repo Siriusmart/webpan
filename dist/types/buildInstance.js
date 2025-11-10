@@ -4,6 +4,7 @@ const assert = require("assert");
 const WriteEntriesManager = require("../info/writeEntriesManager");
 const wrules = require("../info/wrules");
 const buildInfo = require("../info/buildInfo");
+const path = require("path");
 class BuildInstance {
     root;
     manifest;
@@ -16,6 +17,17 @@ class BuildInstance {
     procByFiles;
     procById;
     rules;
+    static normaliseOutput(output, meta) {
+        output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
+            if (!filePath.startsWith('/')) {
+                filePath = path.normalize(path.join(meta.ruleLocation, filePath));
+            }
+            else {
+                filePath = path.normalize(filePath);
+            }
+            return [filePath, buffer];
+        }));
+    }
     constructor(root, manifest) {
         this.root = root;
         this.manifest = manifest;
@@ -76,6 +88,7 @@ class BuildInstance {
                 console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`);
                 return;
             }
+            BuildInstance.normaliseOutput(output, handle.meta);
             res.add([handle, output]);
             const resolve = handle.state.resolve;
             assert(resolve !== undefined);

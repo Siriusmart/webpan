@@ -4,25 +4,13 @@ import path = require("path");
 import type procEntries = require("./procEntries");
 import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
-import type BuildInstance = require("../types/buildInstance")
+import BuildInstance = require("../types/buildInstance")
 import type writeEntry = require("../types/writeEntry")
 
 import calcDiff = require("../utils/calcDiff");
 import random = require("../utils/random")
 
 export = ProcessorHandle
-
-function normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry) {
-    output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
-        if(!filePath.startsWith('/')) {
-            filePath = path.normalize(path.join(meta.childPath, filePath))
-        } else {
-            filePath = path.normalize(filePath)
-        }
-
-        return [filePath, buffer]
-    }))
-}
 
 class ProcessorHandle {
     id: string;
@@ -92,7 +80,7 @@ class ProcessorHandle {
     }
 
     updateWithOutput(output: processorStates.ProcessorOutput, writeEntries: Map<string, writeEntry.WriteEntry>) {
-        normaliseOutput(output, this.meta);
+        // normaliseOutput(output, this.meta);
         const previousOutput: Set<string> = "result" in this.state ? this.state.result.files : new Set();
         const previousOutputMap: Map<string, any> = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));
         const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files)
@@ -108,14 +96,14 @@ class ProcessorHandle {
             let content: Buffer | "remove";
             switch(difftype) {
                 case "changed":
-                    case "created":
+                case "created":
                     content = output.files.get(filePath) as Buffer;
-                break;
+                    break;
                 case "removed":
                     if(writeEntries.has(filePath)) {
-                    continue;
-                }
-                content = "remove"
+                        continue;
+                    }
+                    content = "remove"
             }
 
             const writeEntry: writeEntry.WriteEntry = {
@@ -187,6 +175,7 @@ class ProcessorHandle {
 
         try {
             let output = await this.processor.build(content);
+            BuildInstance.normaliseOutput(output, this.meta)
             this.updateWithOutput(output, this.buildInstance.getWriteEntriesManager().getBuffer())
 
             this.state = {

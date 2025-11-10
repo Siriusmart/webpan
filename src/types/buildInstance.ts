@@ -12,6 +12,7 @@ import type ProcessorHandle = require("../types/processorHandle");
 import WriteEntriesManager = require("../info/writeEntriesManager");
 import wrules = require("../info/wrules");
 import buildInfo = require("../info/buildInfo");
+import path = require("path");
 
 class BuildInstance {
     private root: string;
@@ -27,6 +28,19 @@ class BuildInstance {
     private procByFiles: procEntries.ProcByFileMap
     private procById: procEntries.ProcByIdMap;
     private rules: ruleEntry.RuleEntries
+
+    static normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry) {
+        output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
+            if(!filePath.startsWith('/')) {
+                filePath = path.normalize(path.join(meta.ruleLocation, filePath))
+            } else {
+                filePath = path.normalize(filePath)
+            }
+
+            return [filePath, buffer]
+        }))
+    }
+
 
     constructor(root: string, manifest: wmanifest.WManifest) {
         this.root = root;
@@ -100,6 +114,8 @@ class BuildInstance {
                 console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`)
                 return;
             }
+
+            BuildInstance.normaliseOutput(output, handle.meta)
 
             res.add([handle, output])
             const resolve = handle.state.resolve;

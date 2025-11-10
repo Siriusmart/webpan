@@ -16,6 +16,7 @@ declare class BuildInstance {
     private procByFiles;
     private procById;
     private rules;
+    static normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry): void;
     constructor(root: string, manifest: wmanifest.WManifest);
     withHashedEntries(hashedEntries: fsEntries.HashedEntries): BuildInstance;
     buildOutputAll(): Promise<Set<[ProcessorHandle, processorStates.ProcessorOutput]>>;

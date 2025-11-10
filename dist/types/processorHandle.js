@@ -1,19 +1,9 @@
 "use strict";
 const assert = require("assert");
 const path = require("path");
+const BuildInstance = require("../types/buildInstance");
 const calcDiff = require("../utils/calcDiff");
 const random = require("../utils/random");
-function normaliseOutput(output, meta) {
-    output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
-        if (!filePath.startsWith('/')) {
-            filePath = path.normalize(path.join(meta.childPath, filePath));
-        }
-        else {
-            filePath = path.normalize(filePath);
-        }
-        return [filePath, buffer];
-    }));
-}
 class ProcessorHandle {
     id;
     state;
@@ -71,7 +61,7 @@ class ProcessorHandle {
         return this.state.status === "built";
     }
     updateWithOutput(output, writeEntries) {
-        normaliseOutput(output, this.meta);
+        // normaliseOutput(output, this.meta);
         const previousOutput = "result" in this.state ? this.state.result.files : new Set();
         const previousOutputMap = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));
         const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files);
@@ -151,6 +141,7 @@ class ProcessorHandle {
         };
         try {
             let output = await this.processor.build(content);
+            BuildInstance.normaliseOutput(output, this.meta);
             this.updateWithOutput(output, this.buildInstance.getWriteEntriesManager().getBuffer());
             this.state = {
                 status: "built",

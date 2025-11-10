@@ -54,6 +54,14 @@ class Processor {
         this.buildInstance = buildInstance;
         this.__handle = new ProcessorHandle(buildInstance, meta, this, id);
     }
+    filePath(options = {}) {
+        if (options.absolute !== true) {
+            return path.join(".", this.__handle.meta.relativePath);
+        }
+        else {
+            return this.__handle.meta.childPath;
+        }
+    }
     files(options = {}) {
         let dirPath = this.__handle.meta.childPath;
         if (options.absolute !== true && !dirPath.endsWith('/')) {

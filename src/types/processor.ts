@@ -74,6 +74,14 @@ abstract class Processor {
         this.__handle = new ProcessorHandle(buildInstance, meta, this, id);
     }
 
+    public filePath(options: { absolute?: boolean } = {}): string {
+        if(options.absolute !== true) {
+            return path.join(".", this.__handle.meta.relativePath)
+        } else {
+            return this.__handle.meta.childPath
+        }
+    }
+
     public files(options: { pattern?: string, absolute?: boolean } = {}): Map<string, FileProcs> {
         let dirPath = this.__handle.meta.childPath;
 

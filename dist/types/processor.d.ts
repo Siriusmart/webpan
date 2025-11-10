@@ -28,6 +28,9 @@ declare abstract class Processor {
     __handle: ProcessorHandle;
     private buildInstance;
     constructor(buildInstance: BuildInstance, meta: procEntries.ProcessorMetaEntry, id?: string);
+    filePath(options?: {
+        absolute?: boolean;
+    }): string;
     files(options?: {
         pattern?: string;
         absolute?: boolean;
