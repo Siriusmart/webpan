@@ -1,5 +1,5 @@
-import processor = require("./types/processor")
+import processor = require("./types/processor");
 
 export = {
-    Processor: processor
-}
+    Processor: processor,
+};

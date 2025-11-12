@@ -7,7 +7,8 @@ const fsUtils = require("../utils/fsUtils");
 let currentlyBuilding = null;
 let nextBuilding = null;
 async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff) {
-    await buildInstance.withBuildCycleState("writable")
+    await buildInstance
+        .withBuildCycleState("writable")
         .withFsContent(fsContent, hashedEntries, fsDiff);
     let cachedProcessors = buildInstance.getProcByFiles();
     for (const [filePath, diffType] of fsDiff.entries()) {
@@ -15,8 +16,10 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
         switch (diffType) {
             case "removed":
             case "changed":
-                cachedProcessors.get(filePath)?.values()
-                    .forEach(handles => handles.forEach(handle => {
+                cachedProcessors
+                    .get(filePath)
+                    ?.values()
+                    .forEach((handles) => handles.forEach((handle) => {
                     if (diffType === "changed") {
                         const content = fsContent.get(filePath)?.content;
                         assert(content !== undefined);
@@ -34,7 +37,7 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
             case "created":
                 const resolvedProcessors = await wrules.resolveProcessors(buildInstance, filePath);
                 cachedProcessors.set(filePath, new Map());
-                resolvedProcessors.values().forEach(procEntry => {
+                resolvedProcessors.values().forEach((procEntry) => {
                     const meta = {
                         childPath: filePath,
                         // fullPath: path.join(root, "src", filePath),
@@ -49,9 +52,14 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
                         cachedProcessors.set(filePath, new Map());
                     }
                     if (!cachedProcessors.get(filePath)?.has(procEntry.procName)) {
-                        cachedProcessors.get(filePath)?.set(procEntry.procName, new Set());
+                        cachedProcessors
+                            .get(filePath)
+                            ?.set(procEntry.procName, new Set());
                     }
-                    cachedProcessors.get(filePath)?.get(procEntry.procName)?.add(proc.__handle);
+                    cachedProcessors
+                        .get(filePath)
+                        ?.get(procEntry.procName)
+                        ?.add(proc.__handle);
                     const content = fsContent.get(filePath)?.content;
                     assert(content !== undefined);
                 });
@@ -96,7 +104,8 @@ async function buildDiff(buildInstance, fsContent, diff, hashedEntries) {
         return;
     }
     if (nextBuilding === null) {
-        nextBuilding = [new Promise(async (res) => {
+        nextBuilding = [
+            new Promise(async (res) => {
                 assert(nextBuilding !== null);
                 for (const [entryPath, entryDiff] of diff.entries()) {
                     switch (entryDiff) {
@@ -120,7 +129,11 @@ async function buildDiff(buildInstance, fsContent, diff, hashedEntries) {
                 await currentlyBuilding;
                 currentlyBuilding = null;
                 res();
-            }), new Map(), hashedEntries, fsContent];
+            }),
+            new Map(),
+            hashedEntries,
+            fsContent,
+        ];
     }
     else {
         await nextBuilding[0];

@@ -17,11 +17,11 @@ class FileNamedProcOne {
     }
 
     public async getResult(): Promise<processorStates.ProcessorResult> {
-        return await this.proc.getResult(this.parent)
+        return await this.proc.getResult(this.parent);
     }
 
     public async getProcessor(): Promise<Processor> {
-        return await this.proc.getProcessor(this.parent)
+        return await this.proc.getProcessor(this.parent);
     }
 }
 
@@ -35,11 +35,13 @@ class FileNamedProcs {
     }
 
     public values(): IteratorObject<FileNamedProcOne> {
-        return this.procsSet.values().map(proc => new FileNamedProcOne(this.parent, proc))
+        return this.procsSet
+            .values()
+            .map((proc) => new FileNamedProcOne(this.parent, proc));
     }
 
     public toSet(): Set<FileNamedProcOne> {
-        return new Set(this.values())
+        return new Set(this.values());
     }
 }
 
@@ -47,17 +49,25 @@ class FileProcs {
     private parent: ProcessorHandle;
     private procsMap: Map<string, Set<ProcessorHandle>>;
 
-    constructor(parent: ProcessorHandle, procsMap: Map<string, Set<ProcessorHandle>>) {
+    constructor(
+        parent: ProcessorHandle,
+        procsMap: Map<string, Set<ProcessorHandle>>
+    ) {
         this.parent = parent;
         this.procsMap = procsMap;
     }
 
-    public procs(options: { pattern?: string } = {}): Map<string, FileNamedProcs> {
+    public procs(
+        options: { pattern?: string } = {}
+    ): Map<string, FileNamedProcs> {
         let out: Map<string, FileNamedProcs> = new Map();
 
-        for(const [name, fileNamedProcs] of this.procsMap.entries()) {
-            if(options.pattern === undefined || micromatch.isMatch(name, options.pattern)) {
-                out.set(name, new FileNamedProcs(this.parent, fileNamedProcs))
+        for (const [name, fileNamedProcs] of this.procsMap.entries()) {
+            if (
+                options.pattern === undefined ||
+                micromatch.isMatch(name, options.pattern)
+            ) {
+                out.set(name, new FileNamedProcs(this.parent, fileNamedProcs));
             }
         }
 
@@ -69,50 +79,63 @@ abstract class Processor {
     __handle: ProcessorHandle;
     private buildInstance: BuildInstance;
 
-    constructor(buildInstance: BuildInstance, meta: procEntries.ProcessorMetaEntry, id?: string) {
-        this.buildInstance = buildInstance
+    constructor(
+        buildInstance: BuildInstance,
+        meta: procEntries.ProcessorMetaEntry,
+        id?: string
+    ) {
+        this.buildInstance = buildInstance;
         this.__handle = new ProcessorHandle(buildInstance, meta, this, id);
     }
 
     public filePath(options: { absolute?: boolean } = {}): string {
-        if(options.absolute !== true) {
-            return path.join(".", this.__handle.meta.relativePath)
+        if (options.absolute !== true) {
+            return path.join(".", this.__handle.meta.relativePath);
         } else {
-            return this.__handle.meta.childPath
+            return this.__handle.meta.childPath;
         }
     }
 
-    public files(options: { pattern?: string, absolute?: boolean } = {}): Map<string, FileProcs> {
+    public files(
+        options: { pattern?: string; absolute?: boolean } = {}
+    ): Map<string, FileProcs> {
         let dirPath = this.__handle.meta.childPath;
 
-        if(options.absolute !== true && !dirPath.endsWith('/')) {
-            dirPath = path.join(path.dirname(dirPath), "/")
+        if (options.absolute !== true && !dirPath.endsWith("/")) {
+            dirPath = path.join(path.dirname(dirPath), "/");
         }
 
         let out: Map<string, FileProcs> = new Map();
 
-        for(const [absPath, procsMap] of this.buildInstance.getProcByFiles().entries()) {
+        for (const [absPath, procsMap] of this.buildInstance
+            .getProcByFiles()
+            .entries()) {
             let relPath;
-            
-            if(options.absolute ?? false) {
+
+            if (options.absolute ?? false) {
                 relPath = absPath;
             } else {
-                if(!absPath.startsWith(dirPath)) {
-                    continue
+                if (!absPath.startsWith(dirPath)) {
+                    continue;
                 }
 
-                relPath = absPath.substring(dirPath.length - 1)
+                relPath = absPath.substring(dirPath.length - 1);
             }
 
-            if(options.pattern === undefined || micromatch.isMatch(relPath, options.pattern)) {
-                out.set(relPath, new FileProcs(this.__handle, procsMap))
+            if (
+                options.pattern === undefined ||
+                micromatch.isMatch(relPath, options.pattern)
+            ) {
+                out.set(relPath, new FileProcs(this.__handle, procsMap));
             }
         }
 
         return out;
     }
 
-    abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutput>;
+    abstract build(
+        content: Buffer | "dir"
+    ): Promise<processorStates.ProcessorOutput>;
 }
 
-export = Processor
+export = Processor;

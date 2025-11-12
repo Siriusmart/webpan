@@ -10,10 +10,16 @@ function normaliseRawProcessor(proc) {
             return [{ procName: proc, settings: null }];
         case "object":
             if (Array.isArray(proc)) {
-                return proc.map(ident => ({ procName: ident, settings: null }));
+                return proc.map((ident) => ({
+                    procName: ident,
+                    settings: null,
+                }));
             }
             else {
-                return Array.from(Object.entries(proc).map(([ident, settings]) => ({ procName: ident, settings })));
+                return Array.from(Object.entries(proc).map(([ident, settings]) => ({
+                    procName: ident,
+                    settings,
+                })));
             }
     }
 }
@@ -22,8 +28,10 @@ function rawToNormalised(raw) {
         raw.processors = new Map();
     }
     return {
-        processors: new Map(Object.entries(raw.processors)
-            .map(([fileName, procs]) => [fileName, new Set(normaliseRawProcessor(procs))]))
+        processors: new Map(Object.entries(raw.processors).map(([fileName, procs]) => [
+            fileName,
+            new Set(normaliseRawProcessor(procs)),
+        ])),
     };
 }
 async function updateRules(buildInstance) {
@@ -62,16 +70,17 @@ async function updateRules(buildInstance) {
                 }
         }
         for (const absFileName of fsEntries.keys()) {
-            if (!absFileName.startsWith(rulesDirName) || (diff.has(absFileName) && diff.get(absFileName) !== "changed")) {
+            if (!absFileName.startsWith(rulesDirName) ||
+                (diff.has(absFileName) && diff.get(absFileName) !== "changed")) {
                 continue;
             }
             const relFileName = absFileName.substring(rulesDirName.length - 1);
             let removedProcs = new Set();
             let fileProcsBefore = new Set();
             if (previousRules !== undefined) {
-                for (const [pattern, procs] of previousRules.processors.entries()) {
+                for (const [pattern, procs,] of previousRules.processors.entries()) {
                     if (micromatch.isMatch(relFileName, pattern)) {
-                        procs.forEach(setting => fileProcsBefore.add(setting));
+                        procs.forEach((setting) => fileProcsBefore.add(setting));
                     }
                 }
             }
@@ -79,12 +88,14 @@ async function updateRules(buildInstance) {
             if (newRules !== undefined) {
                 for (const [pattern, procs] of newRules.processors.entries()) {
                     if (micromatch.isMatch(relFileName, pattern)) {
-                        procs.forEach(setting => fileProcsAfter.add(setting));
+                        procs.forEach((setting) => fileProcsAfter.add(setting));
                     }
                 }
             }
             for (const procRule of fileProcsBefore.values()) {
-                let matchedProcRule = fileProcsAfter.values().find(procRuleAfter => deepEq(procRule, procRuleAfter));
+                let matchedProcRule = fileProcsAfter
+                    .values()
+                    .find((procRuleAfter) => deepEq(procRule, procRuleAfter));
                 if (matchedProcRule === undefined) {
                     removedProcs.add(procRule);
                 }
@@ -102,7 +113,8 @@ async function updateRules(buildInstance) {
             nextProc: for (const toRemove of removedProcs) {
                 let setWithProcName = fileProcsEditable.get(toRemove.procName) ?? new Set();
                 for (const potentialTarget of setWithProcName) {
-                    if (potentialTarget.meta.ruleLocation === rulesDirName && deepEq(potentialTarget.meta.settings, toRemove.settings)) {
+                    if (potentialTarget.meta.ruleLocation === rulesDirName &&
+                        deepEq(potentialTarget.meta.settings, toRemove.settings)) {
                         potentialTarget.drop();
                         setWithProcName.delete(potentialTarget);
                         if (setWithProcName.size === 0) {
@@ -149,7 +161,7 @@ async function resolveProcessors(buildInstance, dirCursor, fileName = dirCursor.
                         relativePath: fileName,
                         ruleLocation: dirCursor,
                         pattern: pattern,
-                        procName: proc.procName
+                        procName: proc.procName,
                     });
                 }
             }
@@ -163,6 +175,6 @@ async function resolveProcessors(buildInstance, dirCursor, fileName = dirCursor.
 }
 module.exports = {
     updateRules,
-    resolveProcessors
+    resolveProcessors,
 };
 //# sourceMappingURL=wrules.js.map

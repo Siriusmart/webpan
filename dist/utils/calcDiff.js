@@ -22,11 +22,11 @@ function calcDiffByExtractor(before, after, extractor) {
     return calcDiffByEq(before, after, (a, b) => extractor(a) === extractor(b));
 }
 function calcDiff(before, after) {
-    return calcDiffByExtractor(before, after, a => a);
+    return calcDiffByExtractor(before, after, (a) => a);
 }
 module.exports = {
     calcDiffByEq,
     calcDiffByExtractor,
-    calcDiff
+    calcDiff,
 };
 //# sourceMappingURL=calcDiff.js.map

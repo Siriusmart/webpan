@@ -10,6 +10,6 @@ function hexString(length = 8, constraint) {
     }
 }
 module.exports = {
-    hexString
+    hexString,
 };
 //# sourceMappingURL=random.js.map

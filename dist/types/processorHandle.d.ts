@@ -22,7 +22,10 @@ declare class ProcessorHandle {
     hasProcessor(): boolean;
     updateWithOutput(output: processorStates.ProcessorOutput, writeEntries: Map<string, writeEntry.WriteEntry>): void;
     pendingResultPromise(): {
-        promise: Promise<["ok", processorStates.ProcessorResult] | ["err", any]>;
+        promise: Promise<[
+            "ok",
+            processorStates.ProcessorResult
+        ] | ["err", any]>;
         resolve: (result: processorStates.ProcessorResult) => void;
         reject: (err: any) => void;
     };

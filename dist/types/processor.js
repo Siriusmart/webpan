@@ -24,7 +24,9 @@ class FileNamedProcs {
         this.procsSet = procsSet;
     }
     values() {
-        return this.procsSet.values().map(proc => new FileNamedProcOne(this.parent, proc));
+        return this.procsSet
+            .values()
+            .map((proc) => new FileNamedProcOne(this.parent, proc));
     }
     toSet() {
         return new Set(this.values());
@@ -40,7 +42,8 @@ class FileProcs {
     procs(options = {}) {
         let out = new Map();
         for (const [name, fileNamedProcs] of this.procsMap.entries()) {
-            if (options.pattern === undefined || micromatch.isMatch(name, options.pattern)) {
+            if (options.pattern === undefined ||
+                micromatch.isMatch(name, options.pattern)) {
                 out.set(name, new FileNamedProcs(this.parent, fileNamedProcs));
             }
         }
@@ -64,11 +67,13 @@ class Processor {
     }
     files(options = {}) {
         let dirPath = this.__handle.meta.childPath;
-        if (options.absolute !== true && !dirPath.endsWith('/')) {
+        if (options.absolute !== true && !dirPath.endsWith("/")) {
             dirPath = path.join(path.dirname(dirPath), "/");
         }
         let out = new Map();
-        for (const [absPath, procsMap] of this.buildInstance.getProcByFiles().entries()) {
+        for (const [absPath, procsMap] of this.buildInstance
+            .getProcByFiles()
+            .entries()) {
             let relPath;
             if (options.absolute ?? false) {
                 relPath = absPath;
@@ -79,7 +84,8 @@ class Processor {
                 }
                 relPath = absPath.substring(dirPath.length - 1);
             }
-            if (options.pattern === undefined || micromatch.isMatch(relPath, options.pattern)) {
+            if (options.pattern === undefined ||
+                micromatch.isMatch(relPath, options.pattern)) {
                 out.set(relPath, new FileProcs(this.__handle, procsMap));
             }
         }

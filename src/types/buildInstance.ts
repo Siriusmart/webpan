@@ -25,35 +25,41 @@ class BuildInstance {
     private fsDiff: procEntries.DiffEntries<string>;
 
     // processor
-    private procByFiles: procEntries.ProcByFileMap
+    private procByFiles: procEntries.ProcByFileMap;
     private procById: procEntries.ProcByIdMap;
-    private rules: ruleEntry.RuleEntries
+    private rules: ruleEntry.RuleEntries;
 
-    static normaliseOutput(output: processorStates.ProcessorOutput, meta: procEntries.ProcessorMetaEntry) {
-        output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
-            if(!filePath.startsWith('/')) {
-                filePath = path.normalize(path.join(meta.ruleLocation, filePath))
-            } else {
-                filePath = path.normalize(filePath)
-            }
+    static normaliseOutput(
+        output: processorStates.ProcessorOutput,
+        meta: procEntries.ProcessorMetaEntry
+    ) {
+        output.files = new Map(
+            output.files.entries().map(([filePath, buffer]) => {
+                if (!filePath.startsWith("/")) {
+                    filePath = path.normalize(
+                        path.join(meta.ruleLocation, filePath)
+                    );
+                } else {
+                    filePath = path.normalize(filePath);
+                }
 
-            return [filePath, buffer]
-        }))
+                return [filePath, buffer];
+            })
+        );
     }
-
 
     constructor(root: string, manifest: wmanifest.WManifest) {
         this.root = root;
         this.manifest = manifest;
-        this.writeEntries = new WriteEntriesManager()
+        this.writeEntries = new WriteEntriesManager();
 
-        this.fsContent = new Map()
-        this.fsHashedEntries = new Map()
-        this.fsDiff = new Map()
+        this.fsContent = new Map();
+        this.fsHashedEntries = new Map();
+        this.fsDiff = new Map();
 
-        this.procByFiles = new Map()
-        this.procById = new Map()
-        this.rules = new Map()
+        this.procByFiles = new Map();
+        this.procById = new Map();
+        this.rules = new Map();
     }
 
     withHashedEntries(hashedEntries: fsEntries.HashedEntries): BuildInstance {
@@ -61,11 +67,13 @@ class BuildInstance {
         return this;
     }
 
-    async buildOutputAll(): Promise<Set<[ProcessorHandle, processorStates.ProcessorOutput]>> {
-        let toBuild: Set<ProcessorHandle> = new Set()
+    async buildOutputAll(): Promise<
+        Set<[ProcessorHandle, processorStates.ProcessorOutput]>
+    > {
+        let toBuild: Set<ProcessorHandle> = new Set();
 
-        for(const proc of this.getProcById().values()) {
-            if(proc.state.status !== "empty") {
+        for (const proc of this.getProcById().values()) {
+            if (proc.state.status !== "empty") {
                 continue;
             }
 
@@ -74,143 +82,171 @@ class BuildInstance {
                 status: "building",
                 pendingResult: promise,
                 reject,
-                resolve
-            }
+                resolve,
+            };
 
-            toBuild.add(proc)
+            toBuild.add(proc);
         }
 
-        let res: Set<[ProcessorHandle, processorStates.ProcessorOutput]> = new Set()
-        let fsContent = this.getFsContent()
+        let res: Set<[ProcessorHandle, processorStates.ProcessorOutput]> =
+            new Set();
+        let fsContent = this.getFsContent();
 
-        await Promise.all(toBuild.values().map(async (handle) => {
-            assert(handle.state.status === "building")
-            let output: processorStates.ProcessorOutput;
-            let fsEntry = fsContent.get(handle.meta.childPath)
-            assert(fsEntry !== undefined)
+        await Promise.all(
+            toBuild.values().map(async (handle) => {
+                assert(handle.state.status === "building");
+                let output: processorStates.ProcessorOutput;
+                let fsEntry = fsContent.get(handle.meta.childPath);
+                assert(fsEntry !== undefined);
 
-            let content: Buffer | "dir";
+                let content: Buffer | "dir";
 
-            try {
-                switch(fsEntry.content[0]) {
-                    case "file":
-                        content = fsEntry.content[1]
-                        break;
-                    case "dir":
-                        content = "dir"
+                try {
+                    switch (fsEntry.content[0]) {
+                        case "file":
+                            content = fsEntry.content[1];
+                            break;
+                        case "dir":
+                            content = "dir";
+                    }
+                    output = await handle.processor.build(content);
+                } catch (err) {
+                    const reject = handle.state.reject;
+                    assert(reject !== undefined);
+                    handle.state = {
+                        status: "error",
+                        err,
+                    };
+
+                    reject(err);
+
+                    err =
+                        typeof err === "object" &&
+                        err !== null &&
+                        "stack" in err
+                            ? err.stack
+                            : err;
+                    console.error(
+                        `Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`
+                    );
+                    return;
                 }
-                output = await handle.processor.build(content)
-            } catch(err) {
-                const reject = handle.state.reject;
-                assert(reject !== undefined)
+
+                BuildInstance.normaliseOutput(output, handle.meta);
+
+                res.add([handle, output]);
+                const resolve = handle.state.resolve;
+                assert(resolve !== undefined);
                 handle.state = {
-                    status: "error",
-                    err
-                }
-
-                reject(err)
-
-                err = typeof err === "object" && err !== null && "stack" in err ? err.stack : err
-                console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`)
-                return;
-            }
-
-            BuildInstance.normaliseOutput(output, handle.meta)
-
-            res.add([handle, output])
-            const resolve = handle.state.resolve;
-            assert(resolve !== undefined)
-            handle.state = {
-                status: "built",
-                processor: handle.processor,
-                result: {
+                    status: "built",
+                    processor: handle.processor,
+                    result: {
+                        result: output.result,
+                        files: new Set(output.files.keys()),
+                    },
+                };
+                resolve({
                     result: output.result,
-                    files: new Set(output.files.keys())
-                }
-            }
-            resolve({
-                result: output.result,
-                files: new Set(output.files.keys())
+                    files: new Set(output.files.keys()),
+                });
             })
-        }))
+        );
 
         return res;
     }
 
-    async withFsContent(fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<BuildInstance>{
+    async withFsContent(
+        fsContent: fsEntries.FsContentEntries,
+        hashedEntries: fsEntries.HashedEntries,
+        fsDiff: procEntries.DiffEntries<string>
+    ): Promise<BuildInstance> {
         this.fsContent = fsContent;
-        this.fsHashedEntries = hashedEntries
-        this.fsDiff = fsDiff
+        this.fsHashedEntries = hashedEntries;
+        this.fsDiff = fsDiff;
 
-        await wrules.updateRules(this)
-        
-        return this
+        await wrules.updateRules(this);
+
+        return this;
     }
 
-    withProcs(procByFiles: procEntries.ProcByFileMap, procById: procEntries.ProcByIdMap): BuildInstance {
-        this.procByFiles = procByFiles
-        this.procById = procById
-        return this
+    withProcs(
+        procByFiles: procEntries.ProcByFileMap,
+        procById: procEntries.ProcByIdMap
+    ): BuildInstance {
+        this.procByFiles = procByFiles;
+        this.procById = procById;
+        return this;
     }
 
     withRules(rules: ruleEntry.RuleEntries): BuildInstance {
         this.rules = rules;
-        return this
+        return this;
     }
 
-    withBuildCycleState(buildCycleState: writeEntry.WriteEntryManagerState): BuildInstance {
-        this.writeEntries.setState(buildCycleState)
+    withBuildCycleState(
+        buildCycleState: writeEntry.WriteEntryManagerState
+    ): BuildInstance {
+        this.writeEntries.setState(buildCycleState);
 
-        switch(buildCycleState) {
+        switch (buildCycleState) {
             case "readonly":
-                this.fsDiff.clear()
-                this.fsContent.clear()
+                this.fsDiff.clear();
+                this.fsContent.clear();
                 break;
-            default: {}
+            default: {
+            }
         }
 
-        return this
+        return this;
     }
 
     getRoot(): string {
-        return this.root
+        return this.root;
     }
 
     getWriteEntriesManager(): WriteEntriesManager {
-        return this.writeEntries
+        return this.writeEntries;
     }
 
     getFsDiff(): procEntries.DiffEntries<string> {
-        return this.fsDiff
+        return this.fsDiff;
     }
 
     getFsContent(): fsEntries.FsContentEntries {
-        return this.fsContent
+        return this.fsContent;
     }
 
     getFsHashedEntries(): fsEntries.HashedEntries {
-        return this.fsHashedEntries
+        return this.fsHashedEntries;
     }
 
     getRules(): ruleEntry.RuleEntries {
-        return this.rules
+        return this.rules;
     }
 
     getProcByFiles(): procEntries.ProcByFileMap {
-        return this.procByFiles
+        return this.procByFiles;
     }
 
     getProcById(): procEntries.ProcByIdMap {
-        return this.procById
+        return this.procById;
     }
 
     async clean(): Promise<void> {
-        await cleanBuild(this.root)
+        await cleanBuild(this.root);
     }
 
     async writeMeta(): Promise<void> {
-        await buildInfo.writeBuildInfo(this.root, this.manifest, buildInfo.wrapBuildInfo(this.fsHashedEntries, this.procByFiles, this.rules))
+        await buildInfo.writeBuildInfo(
+            this.root,
+            this.manifest,
+            buildInfo.wrapBuildInfo(
+                this.fsHashedEntries,
+                this.procByFiles,
+                this.rules
+            )
+        );
     }
 }
 
-export = BuildInstance
+export = BuildInstance;

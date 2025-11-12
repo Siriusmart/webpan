@@ -6,24 +6,24 @@ const fsUtils = require("../utils/fsUtils");
 function replacer(_, value) {
     if (value instanceof Map) {
         return {
-            _t: 'Map',
-            _c: Array.from(value.entries())
+            _t: "Map",
+            _c: Array.from(value.entries()),
         };
     }
     if (value instanceof Set) {
         return {
-            _t: 'Set',
-            _c: Array.from(value.values())
+            _t: "Set",
+            _c: Array.from(value.values()),
         };
     }
     return value;
 }
 function reviver(_, value) {
-    if (typeof value === 'object' && value !== null) {
-        if (value._t === 'Map') {
+    if (typeof value === "object" && value !== null) {
+        if (value._t === "Map") {
             return new Map(value._c);
         }
-        if (value._t === 'Set') {
+        if (value._t === "Set") {
             return new Set(value._c);
         }
     }
@@ -40,7 +40,7 @@ async function readBuildInfo(root) {
             return {
                 hashedEntries: new Map(),
                 rules: new Map(),
-                buildCache: []
+                buildCache: [],
             };
         }
     }
@@ -59,16 +59,24 @@ function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules) {
     return {
         hashedEntries,
         rules: cachedRules,
-        buildCache: (Array.from(cachedProcessors.values().flatMap((fileProcs) => fileProcs.values().flatMap((fileProcWithName) => Array.from(fileProcWithName.values().map((proc) => {
+        buildCache: Array.from(cachedProcessors.values().flatMap((fileProcs) => fileProcs.values().flatMap((fileProcWithName) => Array.from(fileProcWithName.values().map((proc) => {
             let state;
             switch (proc.state.status) {
                 case "built":
                 case "resultonly":
-                    state = ["ok", { files: Array.from(proc.state.result.files), result: proc.state.result.result }];
+                    state = [
+                        "ok",
+                        {
+                            files: Array.from(proc.state.result.files),
+                            result: proc.state.result.result,
+                        },
+                    ];
                     break;
                 case "error":
                     let e = proc.state.err;
-                    if (typeof e === "object" && e !== null && "stack" in e) {
+                    if (typeof e === "object" &&
+                        e !== null &&
+                        "stack" in e) {
                         e = e.stack;
                     }
                     state = ["err", e];
@@ -82,11 +90,11 @@ function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules) {
             return {
                 id: proc.id,
                 meta: proc.meta,
-                dependents: Array.from(proc.dependents).map(proc => proc.id),
-                dependencies: Array.from(proc.dependencies).map(proc => proc.id),
-                state
+                dependents: Array.from(proc.dependents).map((proc) => proc.id),
+                dependencies: Array.from(proc.dependencies).map((proc) => proc.id),
+                state,
             };
-        }))))))
+        }))))),
     };
 }
 function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
@@ -99,17 +107,30 @@ function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
             foundClass = require(resultEntry.meta.procName).default;
         }
         catch (e) {
-            throw new Error("Could not load proccessor with name " + resultEntry.meta.procName + " because " + e);
+            throw new Error("Could not load proccessor with name " +
+                resultEntry.meta.procName +
+                " because " +
+                e);
         }
         let procObject = new foundClass(buildInstance, resultEntry.meta, resultEntry.id);
-        relationsMap.set(resultEntry.id, { dependencies: resultEntry.dependencies, dependents: resultEntry.dependents });
+        relationsMap.set(resultEntry.id, {
+            dependencies: resultEntry.dependencies,
+            dependents: resultEntry.dependents,
+        });
         if (!cachedProcessors.has(resultEntry.meta.childPath)) {
             cachedProcessors.set(resultEntry.meta.childPath, new Map());
         }
-        if (!cachedProcessors.get(resultEntry.meta.childPath)?.has(resultEntry.meta.procName)) {
-            cachedProcessors.get(resultEntry.meta.childPath)?.set(resultEntry.meta.procName, new Set());
+        if (!cachedProcessors
+            .get(resultEntry.meta.childPath)
+            ?.has(resultEntry.meta.procName)) {
+            cachedProcessors
+                .get(resultEntry.meta.childPath)
+                ?.set(resultEntry.meta.procName, new Set());
         }
-        cachedProcessors.get(resultEntry.meta.childPath)?.get(resultEntry.meta.procName)?.add(procObject.__handle);
+        cachedProcessors
+            .get(resultEntry.meta.childPath)
+            ?.get(resultEntry.meta.procName)
+            ?.add(procObject.__handle);
         cachedProcessorsFlat.set(procObject.__handle.id, procObject.__handle);
         switch (resultEntry.state[0]) {
             case "empty":
@@ -119,14 +140,14 @@ function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
                     status: "resultonly",
                     result: {
                         files: new Set(resultEntry.state[1].files),
-                        result: resultEntry.state[1].result
-                    }
+                        result: resultEntry.state[1].result,
+                    },
                 };
                 break;
             case "err":
                 procObject.__handle.state = {
                     status: "error",
-                    err: resultEntry.state[1]
+                    err: resultEntry.state[1],
                 };
                 break;
         }
@@ -150,13 +171,13 @@ function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
         hashedEntries: buildInfo.hashedEntries,
         cachedRules: buildInfo.rules,
         cachedProcessors,
-        cachedProcessorsFlat
+        cachedProcessorsFlat,
     };
 }
 module.exports = {
     readBuildInfo,
     writeBuildInfo,
     wrapBuildInfo,
-    unwrapBuildInfo
+    unwrapBuildInfo,
 };
 //# sourceMappingURL=buildInfo.js.map

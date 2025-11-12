@@ -19,7 +19,7 @@ class BuildInstance {
     rules;
     static normaliseOutput(output, meta) {
         output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
-            if (!filePath.startsWith('/')) {
+            if (!filePath.startsWith("/")) {
                 filePath = path.normalize(path.join(meta.ruleLocation, filePath));
             }
             else {
@@ -54,7 +54,7 @@ class BuildInstance {
                 status: "building",
                 pendingResult: promise,
                 reject,
-                resolve
+                resolve,
             };
             toBuild.add(proc);
         }
@@ -81,10 +81,15 @@ class BuildInstance {
                 assert(reject !== undefined);
                 handle.state = {
                     status: "error",
-                    err
+                    err,
                 };
                 reject(err);
-                err = typeof err === "object" && err !== null && "stack" in err ? err.stack : err;
+                err =
+                    typeof err === "object" &&
+                        err !== null &&
+                        "stack" in err
+                        ? err.stack
+                        : err;
                 console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`);
                 return;
             }
@@ -97,12 +102,12 @@ class BuildInstance {
                 processor: handle.processor,
                 result: {
                     result: output.result,
-                    files: new Set(output.files.keys())
-                }
+                    files: new Set(output.files.keys()),
+                },
             };
             resolve({
                 result: output.result,
-                files: new Set(output.files.keys())
+                files: new Set(output.files.keys()),
             });
         }));
         return res;
@@ -130,7 +135,8 @@ class BuildInstance {
                 this.fsDiff.clear();
                 this.fsContent.clear();
                 break;
-            default: { }
+            default: {
+            }
         }
         return this;
     }

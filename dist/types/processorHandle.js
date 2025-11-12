@@ -13,7 +13,9 @@ class ProcessorHandle {
     dependents;
     dependencies;
     constructor(buildInstance, meta, processor, id) {
-        this.id = id ?? random.hexString(8, (id) => !buildInstance.getProcById().has(id));
+        this.id =
+            id ??
+                random.hexString(8, (id) => !buildInstance.getProcById().has(id));
         buildInstance.getProcById().set(this.id, this);
         this.state = {
             status: "empty",
@@ -38,7 +40,9 @@ class ProcessorHandle {
     }
     reset() {
         if ("result" in this.state) {
-            this.state.result.files.forEach(toDelete => this.buildInstance.getWriteEntriesManager().set(toDelete, { processor: this, content: "remove" }));
+            this.state.result.files.forEach((toDelete) => this.buildInstance
+                .getWriteEntriesManager()
+                .set(toDelete, { processor: this, content: "remove" }));
         }
         if (this.state.status === "empty") {
             return;
@@ -55,7 +59,7 @@ class ProcessorHandle {
         return [this.meta.childPath, this.meta.procName];
     }
     hasResult() {
-        return this.state.status === "resultonly" || this.state.status === "built";
+        return (this.state.status === "resultonly" || this.state.status === "built");
     }
     hasProcessor() {
         return this.state.status === "built";
@@ -63,13 +67,13 @@ class ProcessorHandle {
     updateWithOutput(output, writeEntries) {
         // normaliseOutput(output, this.meta);
         const previousOutput = "result" in this.state ? this.state.result.files : new Set();
-        const previousOutputMap = new Map(Array.from(previousOutput).map(filePath => [filePath, null]));
+        const previousOutputMap = new Map(Array.from(previousOutput).map((filePath) => [filePath, null]));
         const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files);
         for (let [filePath, difftype] of outputDiff.entries()) {
             if (writeEntries.has(filePath)) {
                 const previousWriter = writeEntries.get(filePath);
                 if (previousWriter?.content !== "remove") {
-                    console.warn(`${this.getIdent().join('#')} is trying to write to ${filePath}, but it is already modified by ${previousWriter?.processor.meta.childPath}#${previousWriter?.processor.meta.procName}!`);
+                    console.warn(`${this.getIdent().join("#")} is trying to write to ${filePath}, but it is already modified by ${previousWriter?.processor.meta.childPath}#${previousWriter?.processor.meta.procName}!`);
                 }
             }
             let content;
@@ -86,7 +90,7 @@ class ProcessorHandle {
             }
             const writeEntry = {
                 content,
-                processor: this
+                processor: this,
             };
             writeEntries.set(filePath, writeEntry);
         }
@@ -103,12 +107,12 @@ class ProcessorHandle {
             status: "building",
             pendingResult: promise,
             reject: wrappedReject,
-            resolve: wrappedResolve
+            resolve: wrappedResolve,
         };
         return {
             promise,
             reject: wrappedReject,
-            resolve: wrappedResolve
+            resolve: wrappedResolve,
         };
     }
     unwrapPendingResult(res) {
@@ -120,7 +124,9 @@ class ProcessorHandle {
         }
     }
     async buildWithBuffer(buildInstance) {
-        const contentEntry = buildInstance.getFsContent().get(this.meta.childPath);
+        const contentEntry = buildInstance
+            .getFsContent()
+            .get(this.meta.childPath);
         assert(contentEntry !== undefined);
         let content;
         switch (contentEntry.content[0]) {
@@ -137,7 +143,7 @@ class ProcessorHandle {
             status: "building",
             pendingResult: promise,
             reject,
-            resolve
+            resolve,
         };
         try {
             let output = await this.processor.build(content);
@@ -148,15 +154,15 @@ class ProcessorHandle {
                 processor: this.processor,
                 result: {
                     result: output.result,
-                    files: new Set(output.files.keys())
-                }
+                    files: new Set(output.files.keys()),
+                },
             };
             resolve(this.state.result);
         }
         catch (err) {
             this.state = {
                 status: "error",
-                err
+                err,
             };
             reject(err);
         }

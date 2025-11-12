@@ -9,7 +9,7 @@ async function getProcessor(root, ident) {
         return cachedProcessor;
     }
     const procPath = path.join(root, "node_modules", ident);
-    if (!await fsUtils.existsDir(procPath)) {
+    if (!(await fsUtils.existsDir(procPath))) {
         throw new Error(`Processor not found: no directory at ${procPath}`);
     }
     const procClass = (require(ident) ?? {}).default;

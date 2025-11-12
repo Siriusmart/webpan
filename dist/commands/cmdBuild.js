@@ -31,7 +31,7 @@ async function cmdBuild(args) {
         .withRules(unwrappedBuildInfo.cachedRules)
         .withProcs(unwrappedBuildInfo.cachedProcessors, unwrappedBuildInfo.cachedProcessorsFlat);
     const srcPath = path.join(root, "src");
-    if (!await fsUtils.exists(srcPath)) {
+    if (!(await fsUtils.exists(srcPath))) {
         await fs.mkdir(srcPath, { recursive: true });
     }
     const srcContents = await fsUtils.readDirRecursive(srcPath);

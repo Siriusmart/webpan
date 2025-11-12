@@ -1,58 +1,70 @@
-import type writeEntry = require("../types/writeEntry")
+import type writeEntry = require("../types/writeEntry");
 
 class WriteEntriesManager {
     private bufferedContent: Map<string, writeEntry.WriteEntry> = new Map();
     private state: writeEntry.WriteEntryManagerState = "disabled";
 
     set(path: string, content: writeEntry.WriteEntry): void {
-        if(this.state !== "writable") {
-            throw new Error("attempt to write to writeEntries when it isn't writeable")
+        if (this.state !== "writable") {
+            throw new Error(
+                "attempt to write to writeEntries when it isn't writeable"
+            );
         }
 
-        this.bufferedContent.set(path, content)
+        this.bufferedContent.set(path, content);
     }
 
     get(path: string): undefined | writeEntry.WriteEntry {
-        if(this.state === "disabled") {
-            throw new Error("attempt to read from writeEntries when it is disabled")
+        if (this.state === "disabled") {
+            throw new Error(
+                "attempt to read from writeEntries when it is disabled"
+            );
         }
 
-        return this.bufferedContent.get(path)
+        return this.bufferedContent.get(path);
     }
 
     setState(state: writeEntry.WriteEntryManagerState): void {
-        switch(this.state) {
+        switch (this.state) {
             case "disabled":
-                if(state !== "writable") {
-                    throw new Error("the state after disabled should be writable")
+                if (state !== "writable") {
+                    throw new Error(
+                        "the state after disabled should be writable"
+                    );
                 }
-                break
+                break;
             case "writable":
-                if(state !== "readonly") {
-                    throw new Error("the state after writable should be readonly")
+                if (state !== "readonly") {
+                    throw new Error(
+                        "the state after writable should be readonly"
+                    );
                 }
-                break
+                break;
             case "readonly":
-                if(state !== "disabled") {
-                    throw new Error("the state after readonly should be disabled")
+                if (state !== "disabled") {
+                    throw new Error(
+                        "the state after readonly should be disabled"
+                    );
                 }
-                break
+                break;
         }
 
-        if(state === "disabled") {
-            this.bufferedContent.clear()
+        if (state === "disabled") {
+            this.bufferedContent.clear();
         }
 
-        this.state = state
+        this.state = state;
     }
 
     getBuffer(): Map<string, writeEntry.WriteEntry> {
-        if(this.state === "disabled") {
-            throw new Error("attempt to read from writeEntries when it is disabled")
+        if (this.state === "disabled") {
+            throw new Error(
+                "attempt to read from writeEntries when it is disabled"
+            );
         }
 
-        return this.bufferedContent
+        return this.bufferedContent;
     }
 }
 
-export = WriteEntriesManager
+export = WriteEntriesManager;

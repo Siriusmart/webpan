@@ -20,16 +20,18 @@ async function createProjectManifest(root, yargs) {
     return {
         format: {
             tabSpaces: yargs.tabSpaces ?? wproject.format.tabSpaces ?? 4,
-            buildInfo: yargs.formatbuildinfo ?? wproject.format.buildInfo ?? false
+            buildInfo: yargs.formatbuildinfo ?? wproject.format.buildInfo ?? false,
         },
         cmd: {
             build: {
-                clean: yargs.clean ?? wproject.cmd.build.clean ?? false
-            }
-        }
+                clean: yargs.clean ??
+                    wproject.cmd.build.clean ??
+                    false,
+            },
+        },
     };
 }
 module.exports = {
-    createProjectManifest
+    createProjectManifest,
 };
 //# sourceMappingURL=wproject.js.map
