@@ -109,10 +109,17 @@ class ProcessorHandle {
         for (let [filePath, difftype] of outputDiff.entries()) {
             if (writeEntries.has(filePath)) {
                 const previousWriter = writeEntries.get(filePath);
+
                 if (previousWriter?.content !== "remove") {
-                    console.warn(
-                        `${this.getIdent().join("#")} is trying to write to ${filePath}, but it is already modified by ${previousWriter?.processor.meta.childPath}#${previousWriter?.processor.meta.procName}!`
-                    );
+                    let thisProcIdent = this.getIdent();
+                    let prevProcIdent = previousWriter?.processor.getIdent() as [string, string];
+                    if (thisProcIdent[0].length < prevProcIdent[0].length || thisProcIdent[1].localeCompare(prevProcIdent[1]) === 1) {
+                        console.warn(`Conflict: ${thisProcIdent.join("#")} and ${prevProcIdent.join("#")} both outputs to ${filePath}. The output from ${thisProcIdent.join("#")} is discarded.`);
+                        continue
+                    } else {
+                        console.warn(`Conflict: ${prevProcIdent.join("#")} and ${thisProcIdent.join("#")} both outputs to ${filePath}. The output from ${prevProcIdent.join("#")} is discarded.`);
+                    }
+
                 }
             }
 
