@@ -8,25 +8,22 @@ class NewFiles {
         this.internal = internal;
         this.handle = handle;
     }
-    files(absolute, pattern) {
-        let dirPath = this.handle.meta.childPath;
-        if (absolute !== true && !dirPath.endsWith("/")) {
-            dirPath = path.join(path.dirname(dirPath), "/");
-        }
+    files(options = {}) {
+        let dirPath = this.handle.meta.ruleLocation;
         let out = new Set();
         for (const absPath of this.internal.values()) {
             let relPath;
-            if (absolute) {
+            if (options.absolute ?? false) {
                 relPath = absPath;
             }
             else {
                 if (!absPath.startsWith(dirPath)) {
                     continue;
                 }
-                relPath = "." + absPath.substring(dirPath.length - 1);
+                relPath = absPath.substring(dirPath.length - 1);
             }
-            if (pattern === undefined ||
-                micromatch.isMatch(relPath, pattern)) {
+            if (options.pattern === undefined ||
+                micromatch.isMatch(relPath, options.pattern)) {
                 out.add(relPath);
             }
         }

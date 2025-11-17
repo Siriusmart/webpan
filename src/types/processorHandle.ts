@@ -95,7 +95,7 @@ class ProcessorHandle {
     }
 
     updateWithOutput(
-        output: processorStates.ProcessorOutput,
+        output: processorStates.ProcessorOutputClean,
         writeEntries: Map<string, writeEntry.WriteEntry>
     ) {
         // normaliseOutput(output, this.meta);
@@ -215,9 +215,9 @@ class ProcessorHandle {
 
         try {
             let output = await this.processor.build(content);
-            BuildInstance.normaliseOutput(output, this.meta);
+            let cleanOutput = BuildInstance.normaliseOutput(output, this.meta);
             this.updateWithOutput(
-                output,
+                cleanOutput,
                 this.buildInstance.getWriteEntriesManager().getBuffer()
             );
 
@@ -225,8 +225,8 @@ class ProcessorHandle {
                 status: "built",
                 processor: this.processor,
                 result: {
-                    result: output.result,
-                    files: new Set(output.files.keys()),
+                    result: cleanOutput.result,
+                    files: new Set(cleanOutput.files.keys()),
                 },
             };
             resolve(this.state.result);

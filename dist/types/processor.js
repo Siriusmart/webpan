@@ -65,11 +65,11 @@ class Processor {
             return this.__handle.meta.childPath;
         }
     }
+    parentPath(option = {}) {
+        return path.dirname(this.filePath(option));
+    }
     files(options = {}) {
-        let dirPath = this.__handle.meta.childPath;
-        if (options.absolute !== true && !dirPath.endsWith("/")) {
-            dirPath = path.join(path.dirname(dirPath), "/");
-        }
+        let dirPath = this.__handle.meta.ruleLocation;
         let out = new Map();
         for (const [absPath, procsMap] of this.buildInstance
             .getProcByFiles()
@@ -82,7 +82,7 @@ class Processor {
                 if (!absPath.startsWith(dirPath)) {
                     continue;
                 }
-                relPath = "." + absPath.substring(dirPath.length - 1);
+                relPath = absPath.substring(dirPath.length - 1);
             }
             if (options.pattern === undefined ||
                 micromatch.isMatch(relPath, options.pattern)) {

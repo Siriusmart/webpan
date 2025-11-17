@@ -18,15 +18,25 @@ class BuildInstance {
     procById;
     rules;
     static normaliseOutput(output, meta) {
-        output.files = new Map(output.files.entries().map(([filePath, buffer]) => {
-            if (!filePath.startsWith("/")) {
+        let writes = new Map();
+        if (output.relative !== undefined)
+            output.relative.entries().forEach(([filePath, buffer]) => {
                 filePath = path.normalize(path.join(meta.ruleLocation, filePath));
-            }
-            else {
+                if (writes.has(filePath))
+                    console.warn(`Double writes to ${filePath}`);
+                writes.set(filePath, buffer);
+            });
+        if (output.absolute !== undefined)
+            output.absolute.entries().forEach(([filePath, buffer]) => {
                 filePath = path.normalize(filePath);
-            }
-            return [filePath, buffer];
-        }));
+                if (writes.has(filePath))
+                    console.warn(`Double writes to ${filePath}`);
+                writes.set(filePath, buffer);
+            });
+        return {
+            files: writes,
+            result: output.result ?? null,
+        };
     }
     constructor(root, manifest) {
         this.root = root;
@@ -93,21 +103,22 @@ class BuildInstance {
                 console.error(`Build failed at ${handle.meta.procName} for ${handle.meta.childPath} because ${err}`);
                 return;
             }
-            BuildInstance.normaliseOutput(output, handle.meta);
-            res.add([handle, output]);
+            let outputClean = BuildInstance.normaliseOutput(output, handle.meta);
+            res.add([handle, outputClean]);
             const resolve = handle.state.resolve;
             assert(resolve !== undefined);
+            let fileKeys = new Set(outputClean.files.keys());
             handle.state = {
                 status: "built",
                 processor: handle.processor,
                 result: {
                     result: output.result,
-                    files: new Set(output.files.keys()),
+                    files: fileKeys,
                 },
             };
             resolve({
                 result: output.result,
-                files: new Set(output.files.keys()),
+                files: fileKeys,
             });
         }));
         return res;

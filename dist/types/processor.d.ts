@@ -32,12 +32,15 @@ declare abstract class Processor {
     filePath(options?: {
         absolute?: boolean;
     }): string;
+    parentPath(option?: {
+        absolute?: boolean;
+    }): string;
     files(options?: {
         pattern?: string;
         absolute?: boolean;
     }): Map<string, FileProcs>;
     equals(handle: ProcessorHandle): boolean;
-    abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutput>;
+    abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutputRaw>;
     shouldRebuild(newFiles: NewFiles): boolean;
 }
 export = Processor;

@@ -30,22 +30,37 @@ class BuildInstance {
     private rules: ruleEntry.RuleEntries;
 
     static normaliseOutput(
-        output: processorStates.ProcessorOutput,
+        output: processorStates.ProcessorOutputRaw,
         meta: procEntries.ProcessorMetaEntry
-    ) {
-        output.files = new Map(
-            output.files.entries().map(([filePath, buffer]) => {
-                if (!filePath.startsWith("/")) {
-                    filePath = path.normalize(
-                        path.join(meta.ruleLocation, filePath)
-                    );
-                } else {
-                    filePath = path.normalize(filePath);
-                }
+    ): processorStates.ProcessorOutputClean {
+        let writes = new Map();
 
-                return [filePath, buffer];
+        if (output.relative !== undefined)
+            output.relative.entries().forEach(([filePath, buffer]) => {
+                filePath = path.normalize(
+                    path.join(meta.ruleLocation, filePath)
+                );
+
+                if (writes.has(filePath))
+                    console.warn(`Double writes to ${filePath}`);
+
+                writes.set(filePath, buffer)
             })
-        );
+
+        if (output.absolute !== undefined)
+            output.absolute.entries().forEach(([filePath, buffer]) => {
+                filePath = path.normalize(filePath);
+
+                if (writes.has(filePath))
+                    console.warn(`Double writes to ${filePath}`);
+
+                writes.set(filePath, buffer)
+            })
+
+        return {
+            files: writes,
+            result: output.result ?? null,
+        }
     }
 
     constructor(root: string, manifest: wmanifest.WManifest) {
@@ -68,7 +83,7 @@ class BuildInstance {
     }
 
     async buildOutputAll(): Promise<
-        Set<[ProcessorHandle, processorStates.ProcessorOutput]>
+        Set<[ProcessorHandle, processorStates.ProcessorOutputClean]>
     > {
         let toBuild: Set<ProcessorHandle> = new Set();
 
@@ -88,14 +103,14 @@ class BuildInstance {
             toBuild.add(proc);
         }
 
-        let res: Set<[ProcessorHandle, processorStates.ProcessorOutput]> =
+        let res: Set<[ProcessorHandle, processorStates.ProcessorOutputClean]> =
             new Set();
         let fsContent = this.getFsContent();
 
         await Promise.all(
             toBuild.values().map(async (handle) => {
                 assert(handle.state.status === "building");
-                let output: processorStates.ProcessorOutput;
+                let output: processorStates.ProcessorOutputRaw;
                 let fsEntry = fsContent.get(handle.meta.childPath);
                 assert(fsEntry !== undefined);
 
@@ -122,8 +137,8 @@ class BuildInstance {
 
                     err =
                         typeof err === "object" &&
-                        err !== null &&
-                        "stack" in err
+                            err !== null &&
+                            "stack" in err
                             ? err.stack
                             : err;
                     console.error(
@@ -132,22 +147,23 @@ class BuildInstance {
                     return;
                 }
 
-                BuildInstance.normaliseOutput(output, handle.meta);
+                let outputClean = BuildInstance.normaliseOutput(output, handle.meta);
 
-                res.add([handle, output]);
+                res.add([handle, outputClean]);
                 const resolve = handle.state.resolve;
                 assert(resolve !== undefined);
+                let fileKeys = new Set(outputClean.files.keys());
                 handle.state = {
                     status: "built",
                     processor: handle.processor,
                     result: {
                         result: output.result,
-                        files: new Set(output.files.keys()),
+                        files: fileKeys,
                     },
                 };
                 resolve({
                     result: output.result,
-                    files: new Set(output.files.keys()),
+                    files: fileKeys,
                 });
             })
         );

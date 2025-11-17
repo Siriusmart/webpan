@@ -97,14 +97,14 @@ abstract class Processor {
         }
     }
 
+    public parentPath(option: { absolute?: boolean } = {}): string {
+        return path.dirname(this.filePath(option))
+    }
+
     public files(
         options: { pattern?: string; absolute?: boolean } = {}
     ): Map<string, FileProcs> {
-        let dirPath = this.__handle.meta.childPath;
-
-        if (options.absolute !== true && !dirPath.endsWith("/")) {
-            dirPath = path.join(path.dirname(dirPath), "/");
-        }
+        let dirPath = this.__handle.meta.ruleLocation;
 
         let out: Map<string, FileProcs> = new Map();
 
@@ -120,7 +120,7 @@ abstract class Processor {
                     continue;
                 }
 
-                relPath = "." + absPath.substring(dirPath.length - 1);
+                relPath = absPath.substring(dirPath.length - 1);
             }
 
             if (
@@ -140,7 +140,7 @@ abstract class Processor {
 
     abstract build(
         content: Buffer | "dir"
-    ): Promise<processorStates.ProcessorOutput>;
+    ): Promise<processorStates.ProcessorOutputRaw>;
 
     shouldRebuild(newFiles: NewFiles): boolean {
         return false;

@@ -1,6 +1,11 @@
 import type fsEntries = require("./fsEntries");
 import Processor = require("./processor");
-export interface ProcessorOutput {
+export interface ProcessorOutputRaw {
+    relative?: Map<string, fsEntries.BufferLike>;
+    absolute?: Map<string, fsEntries.BufferLike>;
+    result?: any;
+}
+export interface ProcessorOutputClean {
     files: Map<string, fsEntries.BufferLike>;
     result: any;
 }

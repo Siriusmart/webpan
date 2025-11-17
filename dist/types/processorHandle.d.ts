@@ -20,7 +20,7 @@ declare class ProcessorHandle {
     getIdent(): [string, string];
     hasResult(): boolean;
     hasProcessor(): boolean;
-    updateWithOutput(output: processorStates.ProcessorOutput, writeEntries: Map<string, writeEntry.WriteEntry>): void;
+    updateWithOutput(output: processorStates.ProcessorOutputClean, writeEntries: Map<string, writeEntry.WriteEntry>): void;
     pendingResultPromise(): {
         promise: Promise<[
             "ok",

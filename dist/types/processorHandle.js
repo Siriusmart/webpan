@@ -155,14 +155,14 @@ class ProcessorHandle {
         };
         try {
             let output = await this.processor.build(content);
-            BuildInstance.normaliseOutput(output, this.meta);
-            this.updateWithOutput(output, this.buildInstance.getWriteEntriesManager().getBuffer());
+            let cleanOutput = BuildInstance.normaliseOutput(output, this.meta);
+            this.updateWithOutput(cleanOutput, this.buildInstance.getWriteEntriesManager().getBuffer());
             this.state = {
                 status: "built",
                 processor: this.processor,
                 result: {
-                    result: output.result,
-                    files: new Set(output.files.keys()),
+                    result: cleanOutput.result,
+                    files: new Set(cleanOutput.files.keys()),
                 },
             };
             resolve(this.state.result);
