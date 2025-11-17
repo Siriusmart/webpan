@@ -1,4 +1,5 @@
 import type BuildInstance = require("./buildInstance");
+import type NewFiles = require("./newfiles");
 import type procEntries = require("./procEntries");
 import type processorStates = require("./processorStates");
 import ProcessorHandle = require("./processorHandle");
@@ -35,7 +36,9 @@ declare abstract class Processor {
         pattern?: string;
         absolute?: boolean;
     }): Map<string, FileProcs>;
+    equals(handle: ProcessorHandle): boolean;
     abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutput>;
+    shouldRebuild(newFiles: NewFiles): boolean;
 }
 export = Processor;
 //# sourceMappingURL=processor.d.ts.map

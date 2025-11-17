@@ -82,7 +82,7 @@ class Processor {
                 if (!absPath.startsWith(dirPath)) {
                     continue;
                 }
-                relPath = absPath.substring(dirPath.length - 1);
+                relPath = "." + absPath.substring(dirPath.length - 1);
             }
             if (options.pattern === undefined ||
                 micromatch.isMatch(relPath, options.pattern)) {
@@ -90,6 +90,12 @@ class Processor {
             }
         }
         return out;
+    }
+    equals(handle) {
+        return this.__handle == handle;
+    }
+    shouldRebuild(newFiles) {
+        return false;
     }
 }
 module.exports = Processor;

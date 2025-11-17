@@ -4,6 +4,7 @@ const assert = require("assert");
 const fs = require("fs/promises");
 const wrules = require("../info/wrules");
 const fsUtils = require("../utils/fsUtils");
+const NewFiles = require("../types/newfiles");
 let currentlyBuilding = null;
 let nextBuilding = null;
 async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff) {
@@ -11,6 +12,11 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
         .withBuildCycleState("writable")
         .withFsContent(fsContent, hashedEntries, fsDiff);
     let cachedProcessors = buildInstance.getProcByFiles();
+    let newFiles = new Set(fsDiff.entries().filter(([_, diffType]) => diffType === "created").map(([name, _]) => name));
+    buildInstance.getProcById().values().forEach(proc => {
+        if (proc.processor.shouldRebuild(new NewFiles(newFiles, proc)))
+            proc.reset();
+    });
     for (const [filePath, diffType] of fsDiff.entries()) {
         // IMPORTANT! update cachedProcessors
         switch (diffType) {

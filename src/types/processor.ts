@@ -1,6 +1,7 @@
 import micromatch = require("micromatch");
 
 import type BuildInstance = require("./buildInstance");
+import type NewFiles = require("./newfiles");
 import type procEntries = require("./procEntries");
 import type processorStates = require("./processorStates");
 
@@ -119,7 +120,7 @@ abstract class Processor {
                     continue;
                 }
 
-                relPath = absPath.substring(dirPath.length - 1);
+                relPath = "." + absPath.substring(dirPath.length - 1);
             }
 
             if (
@@ -133,9 +134,17 @@ abstract class Processor {
         return out;
     }
 
+    public equals(handle: ProcessorHandle): boolean {
+        return this.__handle == handle;
+    }
+
     abstract build(
         content: Buffer | "dir"
     ): Promise<processorStates.ProcessorOutput>;
+
+    shouldRebuild(newFiles: NewFiles): boolean {
+        return false;
+    }
 }
 
 export = Processor;
