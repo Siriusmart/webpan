@@ -13,10 +13,11 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
         .withFsContent(fsContent, hashedEntries, fsDiff);
     let cachedProcessors = buildInstance.getProcByFiles();
     let newFiles = new Set(fsDiff.entries().filter(([_, diffType]) => diffType === "created").map(([name, _]) => name));
-    buildInstance.getProcById().values().forEach(proc => {
-        if (proc.processor.shouldRebuild(new NewFiles(newFiles, proc)))
-            proc.reset();
-    });
+    if (newFiles.size !== 0)
+        buildInstance.getProcById().values().forEach(proc => {
+            if (proc.processor.shouldRebuild(new NewFiles(newFiles, proc)))
+                proc.reset();
+        });
     for (const [filePath, diffType] of fsDiff.entries()) {
         // IMPORTANT! update cachedProcessors
         switch (diffType) {
