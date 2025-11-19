@@ -2,12 +2,12 @@ _webpan_ is currently under development. Join the [webpan development channel (M
 
 # Overview
 
-_webpan_ is a hackable build tool that can be used for:
+_webpan_ is an extensible build tool that can be used for:
 - Static site generation, such as creating wiki and blog sites.
 - Publishing massive, loosely structured notes folders.
 - Or any other user defined conversion tasks.
 
-## Design Philosophy
+## Design philosophy
 
 ### Be extensible
 There are a billion file formats out there, by default _webpan_ supports zero - it is up to the user to decide what they want.
@@ -37,6 +37,18 @@ Requires: **npm** and any text editor.
     ```bash
     $ python -m http.server
     ```
+    
+## The _webpan_ universe
+
+Your _webpan_ project is made of:
+- [_webpan_](https://github.com/Siriusmart/webpan): the extensible build tool.
+- [_create-wproject_](https://github.com/Siriusmart/create-wproject): the _webpan_ project template.
+- _webpan packages_: they look at the `src/` folder and writes to the `dist/` folder. In `src/wrules.json`, you can see [_copy_](https://github.com/Siriusmart/wp-copy) and [_index_](https://github.com/Siriusmart/wp-index) being used in the template project.
+
+  You can create your own package, or install existing packages with
+  ```bash
+  $ npm install wp-<package-name>
+  ```
 
 ## Todo List
 
