@@ -17,12 +17,12 @@ async function getProcessor(
         return cachedProcessor;
     }
 
-    const procPath = path.join(root, "node_modules", ident);
+    const procPath = path.join(root, "node_modules", `wp-${ident}`);
     if (!(await fsUtils.existsDir(procPath))) {
         throw new Error(`Processor not found: no directory at ${procPath}`);
     }
 
-    const procClass = (require(ident) ?? {}).default;
+    const procClass = (require(`wp-${ident}`) ?? {}).default;
     if (typeof procClass !== "function") {
         throw new Error(
             `Package ${ident} doesn't seem to be a webpan processor`
