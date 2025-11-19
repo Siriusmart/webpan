@@ -15,6 +15,9 @@ class FileNamedProcOne {
     async getProcessor() {
         return await this.proc.getProcessor(this.parent);
     }
+    equals(other) {
+        return this.proc.processor === other;
+    }
 }
 class FileNamedProcs {
     parent;
@@ -42,8 +45,8 @@ class FileProcs {
     procs(options = {}) {
         let out = new Map();
         for (const [name, fileNamedProcs] of this.procsMap.entries()) {
-            if (options.pattern === undefined ||
-                micromatch.isMatch(name, options.pattern)) {
+            if ((options.include === undefined && options.exclude === undefined) ||
+                micromatch.isMatch(name, options.include ?? "**", { ignore: options.exclude })) {
                 out.set(name, new FileNamedProcs(this.parent, fileNamedProcs));
             }
         }
@@ -84,15 +87,12 @@ class Processor {
                 }
                 relPath = absPath.substring(dirPath.length - 1);
             }
-            if (options.pattern === undefined ||
-                micromatch.isMatch(relPath, options.pattern)) {
+            if ((options.include === undefined && options.exclude === undefined) ||
+                micromatch.isMatch(relPath, options.include ?? "**", { ignore: options.exclude })) {
                 out.set(relPath, new FileProcs(this.__handle, procsMap));
             }
         }
         return out;
-    }
-    equals(handle) {
-        return this.__handle == handle;
     }
     shouldRebuild(newFiles) {
         return false;

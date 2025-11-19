@@ -26,17 +26,18 @@ class ProcessorHandle {
         this.dependents = new Set();
         this.dependencies = new Set();
     }
+    equals(proc) {
+        return this.processor === proc;
+    }
     drop() {
         this.reset();
         if (!this.buildInstance.getProcById().delete(this.id)) {
             throw new Error("You called drop twice!");
         }
     }
-    dependsOn(needle) {
-        return Array.from(this.dependents).some((dependent) => dependent.dependsOn(needle));
-    }
-    isOrDependsOn(needle) {
-        return needle === this || this.dependsOn(needle);
+    isOrDependsOn(needle, path = []) {
+        return needle === this || path.includes(this) ||
+            Array.from(this.dependencies).some((dependent) => dependent.isOrDependsOn(needle, path.concat([this])));
     }
     reset() {
         if ("result" in this.state) {

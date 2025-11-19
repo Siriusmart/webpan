@@ -9,6 +9,7 @@ declare class FileNamedProcOne {
     constructor(parent: ProcessorHandle, proc: ProcessorHandle);
     getResult(): Promise<processorStates.ProcessorResult>;
     getProcessor(): Promise<Processor>;
+    equals(other: Processor): boolean;
 }
 declare class FileNamedProcs {
     private parent;
@@ -22,7 +23,8 @@ declare class FileProcs {
     private procsMap;
     constructor(parent: ProcessorHandle, procsMap: Map<string, Set<ProcessorHandle>>);
     procs(options?: {
-        pattern?: string;
+        include?: string | string[];
+        exclude?: string | string[];
     }): Map<string, FileNamedProcs>;
 }
 declare abstract class Processor {
@@ -36,10 +38,10 @@ declare abstract class Processor {
         absolute?: boolean;
     }): string;
     files(options?: {
-        pattern?: string;
+        include?: string | string[];
+        exclude?: string | string[];
         absolute?: boolean;
     }): Map<string, FileProcs>;
-    equals(handle: ProcessorHandle): boolean;
     abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutputRaw>;
     shouldRebuild(newFiles: NewFiles): boolean;
 }

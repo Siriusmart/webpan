@@ -22,8 +22,8 @@ class NewFiles {
                 }
                 relPath = absPath.substring(dirPath.length - 1);
             }
-            if (options.pattern === undefined ||
-                micromatch.isMatch(relPath, options.pattern)) {
+            if ((options.include === undefined && options.exclude === undefined) ||
+                micromatch.isMatch(relPath, options.include ?? "**", { ignore: options.exclude })) {
                 out.add(relPath);
             }
         }

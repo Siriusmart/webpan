@@ -13,9 +13,9 @@ declare class ProcessorHandle {
     dependents: Set<ProcessorHandle>;
     dependencies: Set<ProcessorHandle>;
     constructor(buildInstance: BuildInstance, meta: procEntries.ProcessorMetaEntry, processor: Processor, id?: string);
+    equals(proc: Processor): boolean;
     drop(): void;
-    dependsOn(needle: ProcessorHandle): boolean;
-    isOrDependsOn(needle: ProcessorHandle): boolean;
+    isOrDependsOn(needle: ProcessorHandle, path?: ProcessorHandle[]): boolean;
     reset(): void;
     getIdent(): [string, string];
     hasResult(): boolean;

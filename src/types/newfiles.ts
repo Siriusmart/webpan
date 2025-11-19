@@ -12,7 +12,7 @@ class NewFiles {
         this.handle = handle;
     }
 
-    files(options: { absolute?: boolean, pattern?: string } = {}): Set<string> {
+    files(options: { absolute?: boolean, include?: string | string[], exclude?: string | string[] } = {}): Set<string> {
         let dirPath = this.handle.meta.ruleLocation;
 
         let out: Set<string> = new Set();
@@ -30,10 +30,8 @@ class NewFiles {
                 relPath = absPath.substring(dirPath.length - 1);
             }
 
-            if (
-                options.pattern === undefined ||
-                micromatch.isMatch(relPath, options.pattern)
-            ) {
+            if ((options.include === undefined && options.exclude === undefined) ||
+                micromatch.isMatch(relPath, options.include ?? "**", { ignore: options.exclude })) {
                 out.add(relPath);
             }
         }

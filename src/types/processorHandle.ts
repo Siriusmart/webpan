@@ -41,6 +41,10 @@ class ProcessorHandle {
         this.dependencies = new Set();
     }
 
+    equals(proc: Processor): boolean {
+        return this.processor === proc
+    }
+
     drop(): void {
         this.reset();
         if (!this.buildInstance.getProcById().delete(this.id)) {
@@ -48,14 +52,11 @@ class ProcessorHandle {
         }
     }
 
-    dependsOn(needle: ProcessorHandle): boolean {
-        return Array.from(this.dependents).some((dependent) =>
-            dependent.dependsOn(needle)
-        );
-    }
-
-    isOrDependsOn(needle: ProcessorHandle): boolean {
-        return needle === this || this.dependsOn(needle);
+    isOrDependsOn(needle: ProcessorHandle, path: ProcessorHandle[] = []): boolean {
+        return needle === this || path.includes(this) ||
+            Array.from(this.dependencies).some((dependent) =>
+                dependent.isOrDependsOn(needle, path.concat([this]))
+            );
     }
 
     reset(): void {

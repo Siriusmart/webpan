@@ -5,7 +5,8 @@ declare class NewFiles {
     constructor(internal: Set<string>, handle: ProcessorHandle);
     files(options?: {
         absolute?: boolean;
-        pattern?: string;
+        include?: string | string[];
+        exclude?: string | string[];
     }): Set<string>;
 }
 export = NewFiles;

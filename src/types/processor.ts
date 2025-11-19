@@ -24,6 +24,10 @@ class FileNamedProcOne {
     public async getProcessor(): Promise<Processor> {
         return await this.proc.getProcessor(this.parent);
     }
+
+    public equals(other: Processor): boolean {
+        return this.proc.processor === other
+    }
 }
 
 class FileNamedProcs {
@@ -59,15 +63,13 @@ class FileProcs {
     }
 
     public procs(
-        options: { pattern?: string } = {}
+        options: { include?: string | string[], exclude?: string | string[] } = {}
     ): Map<string, FileNamedProcs> {
         let out: Map<string, FileNamedProcs> = new Map();
 
         for (const [name, fileNamedProcs] of this.procsMap.entries()) {
-            if (
-                options.pattern === undefined ||
-                micromatch.isMatch(name, options.pattern)
-            ) {
+            if ((options.include === undefined && options.exclude === undefined) ||
+                micromatch.isMatch(name, options.include ?? "**", { ignore: options.exclude })) {
                 out.set(name, new FileNamedProcs(this.parent, fileNamedProcs));
             }
         }
@@ -102,7 +104,7 @@ abstract class Processor {
     }
 
     public files(
-        options: { pattern?: string; absolute?: boolean } = {}
+        options: { include?: string | string[], exclude?: string | string[], absolute?: boolean } = {}
     ): Map<string, FileProcs> {
         let dirPath = this.__handle.meta.ruleLocation;
 
@@ -124,18 +126,14 @@ abstract class Processor {
             }
 
             if (
-                options.pattern === undefined ||
-                micromatch.isMatch(relPath, options.pattern)
+                (options.include === undefined && options.exclude === undefined) ||
+                micromatch.isMatch(relPath, options.include ?? "**", { ignore: options.exclude })
             ) {
                 out.set(relPath, new FileProcs(this.__handle, procsMap));
             }
         }
 
         return out;
-    }
-
-    public equals(handle: ProcessorHandle): boolean {
-        return this.__handle == handle;
     }
 
     abstract build(
