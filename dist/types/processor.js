@@ -59,7 +59,7 @@ class Processor {
     }
     filePath(options = {}) {
         if (options.absolute !== true) {
-            return path.join(".", this.__handle.meta.relativePath);
+            return this.__handle.meta.relativePath;
         }
         else {
             return this.__handle.meta.childPath;
