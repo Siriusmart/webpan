@@ -104,7 +104,7 @@ function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
     for (const resultEntry of buildInfo.buildCache) {
         let foundClass;
         try {
-            foundClass = require(resultEntry.meta.procName).default;
+            foundClass = require(`wp-${resultEntry.meta.procName}`).default;
         }
         catch (e) {
             throw new Error("Could not load proccessor with name " +
