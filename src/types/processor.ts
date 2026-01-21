@@ -137,7 +137,7 @@ abstract class Processor {
         return out;
     }
     
-    public settings(): object {
+    public settings(): any {
         return this.__handle.meta.settings;
     }
 
