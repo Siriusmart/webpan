@@ -79,26 +79,9 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
     const res = await buildInstance.buildOutputAll();
     buildInstance.withBuildCycleState("readonly");
     res.forEach(([handle, output]) => {
-        handle.updateWithOutput(output, buildInstance.getWriteEntriesManager().getBuffer());
+        handle.updateWithOutput(output, buildInstance.getWriteEntriesManager());
     });
-    const writeTasks = Array.from(buildInstance.getWriteEntriesManager().getBuffer().entries()).map(async ([childPath, writeEntry]) => {
-        try {
-            const fullPath = path.join(buildInstance.getRoot(), "dist", childPath);
-            if (writeEntry.content == "remove") {
-                await fs.unlink(fullPath);
-            }
-            else {
-                await fsUtils.writeCreate(fullPath, writeEntry.content);
-            }
-        }
-        catch (e) {
-            if (typeof e === "object" && e !== null && "stack" in e) {
-                e = e.stack;
-            }
-            throw new Error(`An error occured when writing changes to ${childPath} because ${e}`);
-        }
-    });
-    await Promise.all(writeTasks);
+    await buildInstance.flush();
     buildInstance.withBuildCycleState("disabled");
     await buildInstance.writeMeta();
 }

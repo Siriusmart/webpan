@@ -1,5 +1,6 @@
 import cleanBuild = require("../actions/cleanBuild");
 import assert = require("assert");
+import fs = require("fs/promises")
 
 import type wmanifest = require("../types/wmanifest");
 import type fsEntries = require("../types/fsEntries");
@@ -13,6 +14,7 @@ import WriteEntriesManager = require("../info/writeEntriesManager");
 import wrules = require("../info/wrules");
 import buildInfo = require("../info/buildInfo");
 import path = require("path");
+import fsUtils = require("../utils/fsUtils");
 
 class BuildInstance {
     private root: string;
@@ -33,7 +35,7 @@ class BuildInstance {
         output: processorStates.ProcessorOutputRaw,
         meta: procEntries.ProcessorMetaEntry
     ): processorStates.ProcessorOutputClean {
-        let writes = new Map();
+        let writes: Map<string, processorStates.ProcessorOutputEntry> = new Map();
 
         if (output.relative !== undefined)
             output.relative.entries().forEach(([filePath, buffer]) => {
@@ -44,7 +46,17 @@ class BuildInstance {
                 if (writes.has(filePath))
                     console.warn(`Double writes to ${filePath}`);
 
-                writes.set(filePath, buffer)
+                let cleanBuffer: processorStates.ProcessorOutputEntry;
+
+                if (typeof buffer === "object" && "priority" in buffer)
+                    cleanBuffer = buffer
+                else
+                    cleanBuffer = {
+                        buffer,
+                        priority: 0
+                    }
+
+                writes.set(filePath, cleanBuffer)
             })
 
         if (output.absolute !== undefined)
@@ -54,7 +66,17 @@ class BuildInstance {
                 if (writes.has(filePath))
                     console.warn(`Double writes to ${filePath}`);
 
-                writes.set(filePath, buffer)
+                let cleanBuffer: processorStates.ProcessorOutputEntry;
+
+                if (typeof buffer === "object" && "priority" in buffer)
+                    cleanBuffer = buffer
+                else
+                    cleanBuffer = {
+                        buffer,
+                        priority: 0
+                    }
+
+                writes.set(filePath, cleanBuffer)
             })
 
         return {
@@ -63,10 +85,10 @@ class BuildInstance {
         }
     }
 
-    constructor(root: string, manifest: wmanifest.WManifest) {
+    constructor(root: string, manifest: wmanifest.WManifest, writeEntries: Map<string, writeEntry.OutputTarget>) {
         this.root = root;
         this.manifest = manifest;
-        this.writeEntries = new WriteEntriesManager();
+        this.writeEntries = new WriteEntriesManager(writeEntries);
 
         this.fsContent = new Map();
         this.fsHashedEntries = new Map();
@@ -259,9 +281,58 @@ class BuildInstance {
             buildInfo.wrapBuildInfo(
                 this.fsHashedEntries,
                 this.procByFiles,
-                this.rules
+                this.rules,
+                this.writeEntries
             )
         );
+    }
+
+    async flush(): Promise<void> {
+        const actions = this.getWriteEntriesManager().getActions();
+
+        await Promise.all(Array.from(actions.removes).map(async relPath => {
+            const fullPath = path.join(
+                this.getRoot(),
+                relPath
+            );
+            await fs.unlink(fullPath);
+        }))
+
+        await Promise.all(Array.from(actions.writes).map(async ([relPath, buffer]) => {
+            const fullPath = path.join(
+                this.getRoot(),
+                relPath
+            );
+            await fsUtils.writeCreate(fullPath, buffer);
+        }))
+
+        await Promise.all(Array.from(actions.moves1).map(async ([from, to]) => {
+            const fullPathFrom = path.join(
+                this.getRoot(),
+                from
+            );
+
+            const fullPathTo = path.join(
+                this.getRoot(),
+                to
+            );
+
+            await fsUtils.moveCreate(fullPathFrom, fullPathTo)
+        }))
+
+        await Promise.all(Array.from(actions.moves2).map(async ([from, to]) => {
+            const fullPathFrom = path.join(
+                this.getRoot(),
+                from
+            );
+
+            const fullPathTo = path.join(
+                this.getRoot(),
+                to
+            );
+
+            await fsUtils.moveCreate(fullPathFrom, fullPathTo)
+        }))
     }
 }
 

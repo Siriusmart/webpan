@@ -2,13 +2,14 @@ import path = require("path");
 import fs = require("fs/promises");
 import assert = require("assert");
 
-import type BuildInstance = require("../types/buildInstance");
-import type WriteEntriesManager = require("../info/writeEntriesManager");
+import BuildInstance = require("../types/buildInstance");
+import WriteEntriesManager = require("../info/writeEntriesManager");
 import type ProcessorHandle = require("../types/processorHandle");
 import type wmanifest = require("../types/wmanifest");
 import type fsEntries = require("../types/fsEntries");
 import type procEntries = require("../types/procEntries");
 import type ruleEntry = require("../types/ruleEntry");
+import type writeEntry = require("../types/writeEntry");
 
 import fsUtils = require("../utils/fsUtils");
 
@@ -47,9 +48,9 @@ interface BuildResultEntry {
     id: string;
     meta: procEntries.ProcessorMetaEntry;
     state:
-        | ["ok", { files: string[]; result: any }]
-        | ["err", string]
-        | ["empty"];
+    | ["ok", { files: string[]; result: any }]
+    | ["err", string]
+    | ["empty"];
     dependents: string[];
     dependencies: string[];
 }
@@ -58,6 +59,7 @@ interface BuildInfo {
     hashedEntries: Map<string, string | null>;
     buildCache: BuildResultEntry[];
     rules: Map<string, ruleEntry.RuleEntryNormalised>;
+    writeEntries: Map<string, writeEntry.OutputTarget>;
 }
 
 async function readBuildInfo(root: string): Promise<BuildInfo> {
@@ -72,6 +74,7 @@ async function readBuildInfo(root: string): Promise<BuildInfo> {
                 hashedEntries: new Map(),
                 rules: new Map(),
                 buildCache: [],
+                writeEntries: new Map(),
             };
         }
     } catch (e) {
@@ -101,11 +104,13 @@ async function writeBuildInfo(
 function wrapBuildInfo(
     hashedEntries: fsEntries.HashedEntries,
     cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>,
-    cachedRules: Map<string, ruleEntry.RuleEntryNormalised>
+    cachedRules: Map<string, ruleEntry.RuleEntryNormalised>,
+    writeManager: WriteEntriesManager
 ): BuildInfo {
     return {
         hashedEntries,
         rules: cachedRules,
+        writeEntries: writeManager.__getOutputTargets(),
         buildCache: Array.from(
             cachedProcessors.values().flatMap((fileProcs) =>
                 fileProcs.values().flatMap((fileProcWithName) =>
@@ -168,15 +173,18 @@ function wrapBuildInfo(
 }
 
 function unwrapBuildInfo(
-    buildInstance: BuildInstance,
-    writeEntries: WriteEntriesManager,
+    root: string,
+    manifest: wmanifest.WManifest,
     buildInfo: BuildInfo
 ): {
     hashedEntries: fsEntries.HashedEntries;
     cachedProcessors: Map<string, Map<string, Set<ProcessorHandle>>>;
     cachedProcessorsFlat: Map<string, ProcessorHandle>;
     cachedRules: Map<string, ruleEntry.RuleEntryNormalised>;
+    writeManager: WriteEntriesManager,
+    buildInstance: BuildInstance
 } {
+    let buildInstance = new BuildInstance(root, manifest, buildInfo.writeEntries)
     let cachedProcessors: Map<
         string,
         Map<string, Set<ProcessorHandle>>
@@ -194,9 +202,9 @@ function unwrapBuildInfo(
         } catch (e) {
             throw new Error(
                 "Could not load proccessor with name " +
-                    resultEntry.meta.procName +
-                    " because " +
-                    e
+                resultEntry.meta.procName +
+                " because " +
+                e
             );
         }
 
@@ -278,6 +286,8 @@ function unwrapBuildInfo(
         cachedRules: buildInfo.rules,
         cachedProcessors,
         cachedProcessorsFlat,
+        writeManager: new WriteEntriesManager(buildInfo.writeEntries),
+        buildInstance,
     };
 }
 

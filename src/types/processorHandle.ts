@@ -9,6 +9,8 @@ import type writeEntry = require("../types/writeEntry");
 
 import calcDiff = require("../utils/calcDiff");
 import random = require("../utils/random");
+import WriteEntriesManager = require("../info/writeEntriesManager");
+import type fsEntries = require("./fsEntries");
 
 export = ProcessorHandle;
 
@@ -64,7 +66,7 @@ class ProcessorHandle {
             this.state.result.files.forEach((toDelete) =>
                 this.buildInstance
                     .getWriteEntriesManager()
-                    .set(toDelete, { processor: this, content: "remove" })
+                    .set(toDelete, { processor: this, content: "remove", priority: 0 })
             );
         }
 
@@ -97,7 +99,7 @@ class ProcessorHandle {
 
     updateWithOutput(
         output: processorStates.ProcessorOutputClean,
-        writeEntries: Map<string, writeEntry.WriteEntry>
+        writeEntries: WriteEntriesManager
     ) {
         // normaliseOutput(output, this.meta);
         const previousOutput: Set<string> =
@@ -108,38 +110,23 @@ class ProcessorHandle {
         const outputDiff = calcDiff.calcDiff(previousOutputMap, output.files);
 
         for (let [filePath, difftype] of outputDiff.entries()) {
-            if (writeEntries.has(filePath)) {
-                const previousWriter = writeEntries.get(filePath);
-
-                if (previousWriter?.content !== "remove") {
-                    let thisProcIdent = this.getIdent();
-                    let prevProcIdent = previousWriter?.processor.getIdent() as [string, string];
-                    if (thisProcIdent[0].length < prevProcIdent[0].length || thisProcIdent[1].localeCompare(prevProcIdent[1]) === 1) {
-                        console.warn(`Conflict: ${thisProcIdent.join("#")} and ${prevProcIdent.join("#")} both outputs to ${filePath}. The output from ${thisProcIdent.join("#")} is discarded.`);
-                        continue
-                    } else {
-                        console.warn(`Conflict: ${prevProcIdent.join("#")} and ${thisProcIdent.join("#")} both outputs to ${filePath}. The output from ${prevProcIdent.join("#")} is discarded.`);
-                    }
-
-                }
-            }
-
-            let content: Buffer | "remove";
+            let content: fsEntries.BufferLike | "remove";
+            let priority: number;
             switch (difftype) {
                 case "changed":
                 case "created":
-                    content = output.files.get(filePath) as Buffer;
+                    content = output.files.get(filePath)?.buffer as fsEntries.BufferLike;
+                    priority = output.files.get(filePath)?.priority as number;
                     break;
                 case "removed":
-                    if (writeEntries.has(filePath)) {
-                        continue;
-                    }
                     content = "remove";
+                    priority = 0;
             }
 
             const writeEntry: writeEntry.WriteEntry = {
                 content,
                 processor: this,
+                priority
             };
             writeEntries.set(filePath, writeEntry);
         }
@@ -219,7 +206,7 @@ class ProcessorHandle {
             let cleanOutput = BuildInstance.normaliseOutput(output, this.meta);
             this.updateWithOutput(
                 cleanOutput,
-                this.buildInstance.getWriteEntriesManager().getBuffer()
+                this.buildInstance.getWriteEntriesManager()
             );
 
             this.state = {

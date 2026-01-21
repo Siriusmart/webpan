@@ -22,11 +22,9 @@ async function cmdBuild(args) {
     if (manifest.cmd.build.clean) {
         await cleanBuild(root);
     }
-    let writeEntries = new WriteEntriesManager();
-    let buildInstance = new BuildInstance(root, manifest);
     const gotBuildInfo = await buildInfo.readBuildInfo(root);
-    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(buildInstance, writeEntries, gotBuildInfo);
-    buildInstance
+    const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(root, manifest, gotBuildInfo);
+    unwrappedBuildInfo.buildInstance
         .withHashedEntries(unwrappedBuildInfo.hashedEntries)
         .withRules(unwrappedBuildInfo.cachedRules)
         .withProcs(unwrappedBuildInfo.cachedProcessors, unwrappedBuildInfo.cachedProcessorsFlat);
@@ -41,7 +39,7 @@ async function cmdBuild(args) {
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
     await fs.mkdir(path.join(root, "dist"), { recursive: true });
-    await buildDiff(buildInstance, srcContents, hashedDiff, hashedEntries);
+    await buildDiff(unwrappedBuildInfo.buildInstance, srcContents, hashedDiff, hashedEntries);
 }
 module.exports = cmdBuild;
 //# sourceMappingURL=cmdBuild.js.map

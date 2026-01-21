@@ -1,10 +1,12 @@
 "use strict";
 const cleanBuild = require("../actions/cleanBuild");
 const assert = require("assert");
+const fs = require("fs/promises");
 const WriteEntriesManager = require("../info/writeEntriesManager");
 const wrules = require("../info/wrules");
 const buildInfo = require("../info/buildInfo");
 const path = require("path");
+const fsUtils = require("../utils/fsUtils");
 class BuildInstance {
     root;
     manifest;
@@ -24,24 +26,40 @@ class BuildInstance {
                 filePath = path.normalize(path.join(meta.ruleLocation, filePath));
                 if (writes.has(filePath))
                     console.warn(`Double writes to ${filePath}`);
-                writes.set(filePath, buffer);
+                let cleanBuffer;
+                if (typeof buffer === "object" && "priority" in buffer)
+                    cleanBuffer = buffer;
+                else
+                    cleanBuffer = {
+                        buffer,
+                        priority: 0
+                    };
+                writes.set(filePath, cleanBuffer);
             });
         if (output.absolute !== undefined)
             output.absolute.entries().forEach(([filePath, buffer]) => {
                 filePath = path.normalize(filePath);
                 if (writes.has(filePath))
                     console.warn(`Double writes to ${filePath}`);
-                writes.set(filePath, buffer);
+                let cleanBuffer;
+                if (typeof buffer === "object" && "priority" in buffer)
+                    cleanBuffer = buffer;
+                else
+                    cleanBuffer = {
+                        buffer,
+                        priority: 0
+                    };
+                writes.set(filePath, cleanBuffer);
             });
         return {
             files: writes,
             result: output.result ?? null,
         };
     }
-    constructor(root, manifest) {
+    constructor(root, manifest, writeEntries) {
         this.root = root;
         this.manifest = manifest;
-        this.writeEntries = new WriteEntriesManager();
+        this.writeEntries = new WriteEntriesManager(writeEntries);
         this.fsContent = new Map();
         this.fsHashedEntries = new Map();
         this.fsDiff = new Map();
@@ -179,7 +197,28 @@ class BuildInstance {
         await cleanBuild(this.root);
     }
     async writeMeta() {
-        await buildInfo.writeBuildInfo(this.root, this.manifest, buildInfo.wrapBuildInfo(this.fsHashedEntries, this.procByFiles, this.rules));
+        await buildInfo.writeBuildInfo(this.root, this.manifest, buildInfo.wrapBuildInfo(this.fsHashedEntries, this.procByFiles, this.rules, this.writeEntries));
+    }
+    async flush() {
+        const actions = this.getWriteEntriesManager().getActions();
+        await Promise.all(Array.from(actions.removes).map(async (relPath) => {
+            const fullPath = path.join(this.getRoot(), relPath);
+            await fs.unlink(fullPath);
+        }));
+        await Promise.all(Array.from(actions.writes).map(async ([relPath, buffer]) => {
+            const fullPath = path.join(this.getRoot(), relPath);
+            await fsUtils.writeCreate(fullPath, buffer);
+        }));
+        await Promise.all(Array.from(actions.moves1).map(async ([from, to]) => {
+            const fullPathFrom = path.join(this.getRoot(), from);
+            const fullPathTo = path.join(this.getRoot(), to);
+            await fsUtils.moveCreate(fullPathFrom, fullPathTo);
+        }));
+        await Promise.all(Array.from(actions.moves2).map(async ([from, to]) => {
+            const fullPathFrom = path.join(this.getRoot(), from);
+            const fullPathTo = path.join(this.getRoot(), to);
+            await fsUtils.moveCreate(fullPathFrom, fullPathTo);
+        }));
     }
 }
 module.exports = BuildInstance;

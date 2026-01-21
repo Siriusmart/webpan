@@ -17,7 +17,7 @@ declare class BuildInstance {
     private procById;
     private rules;
     static normaliseOutput(output: processorStates.ProcessorOutputRaw, meta: procEntries.ProcessorMetaEntry): processorStates.ProcessorOutputClean;
-    constructor(root: string, manifest: wmanifest.WManifest);
+    constructor(root: string, manifest: wmanifest.WManifest, writeEntries: Map<string, writeEntry.OutputTarget>);
     withHashedEntries(hashedEntries: fsEntries.HashedEntries): BuildInstance;
     buildOutputAll(): Promise<Set<[ProcessorHandle, processorStates.ProcessorOutputClean]>>;
     withFsContent(fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<BuildInstance>;
@@ -34,6 +34,7 @@ declare class BuildInstance {
     getProcById(): procEntries.ProcByIdMap;
     clean(): Promise<void>;
     writeMeta(): Promise<void>;
+    flush(): Promise<void>;
 }
 export = BuildInstance;
 //# sourceMappingURL=buildInstance.d.ts.map

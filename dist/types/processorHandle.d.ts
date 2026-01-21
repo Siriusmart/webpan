@@ -2,7 +2,7 @@ import type procEntries = require("./procEntries");
 import type Processor = require("./processor");
 import type processorStates = require("./processorStates");
 import BuildInstance = require("../types/buildInstance");
-import type writeEntry = require("../types/writeEntry");
+import WriteEntriesManager = require("../info/writeEntriesManager");
 export = ProcessorHandle;
 declare class ProcessorHandle {
     id: string;
@@ -20,7 +20,7 @@ declare class ProcessorHandle {
     getIdent(): [string, string];
     hasResult(): boolean;
     hasProcessor(): boolean;
-    updateWithOutput(output: processorStates.ProcessorOutputClean, writeEntries: Map<string, writeEntry.WriteEntry>): void;
+    updateWithOutput(output: processorStates.ProcessorOutputClean, writeEntries: WriteEntriesManager): void;
     pendingResultPromise(): {
         promise: Promise<[
             "ok",

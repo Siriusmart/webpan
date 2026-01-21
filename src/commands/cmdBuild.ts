@@ -29,18 +29,15 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
         await cleanBuild(root);
     }
 
-    let writeEntries = new WriteEntriesManager();
-
-    let buildInstance = new BuildInstance(root, manifest);
 
     const gotBuildInfo = await buildInfo.readBuildInfo(root);
     const unwrappedBuildInfo = buildInfo.unwrapBuildInfo(
-        buildInstance,
-        writeEntries,
+        root,
+        manifest,
         gotBuildInfo
     );
 
-    buildInstance
+    unwrappedBuildInfo.buildInstance
         .withHashedEntries(unwrappedBuildInfo.hashedEntries)
         .withRules(unwrappedBuildInfo.cachedRules)
         .withProcs(
@@ -66,7 +63,7 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     );
 
     await fs.mkdir(path.join(root, "dist"), { recursive: true });
-    await buildDiff(buildInstance, srcContents, hashedDiff, hashedEntries);
+    await buildDiff(unwrappedBuildInfo.buildInstance, srcContents, hashedDiff, hashedEntries);
 }
 
 export = cmdBuild;

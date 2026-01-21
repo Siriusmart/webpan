@@ -2,6 +2,8 @@
 const path = require("path");
 const fs = require("fs/promises");
 const assert = require("assert");
+const BuildInstance = require("../types/buildInstance");
+const WriteEntriesManager = require("../info/writeEntriesManager");
 const fsUtils = require("../utils/fsUtils");
 function replacer(_, value) {
     if (value instanceof Map) {
@@ -41,6 +43,7 @@ async function readBuildInfo(root) {
                 hashedEntries: new Map(),
                 rules: new Map(),
                 buildCache: [],
+                writeEntries: new Map(),
             };
         }
     }
@@ -55,10 +58,11 @@ async function writeBuildInfo(root, manifest, data) {
     const buildInfoPath = path.join(root, "meta", "buildInfo.json");
     await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, manifest.format.buildInfo ? manifest.format.tabSpaces : 0));
 }
-function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules) {
+function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules, writeManager) {
     return {
         hashedEntries,
         rules: cachedRules,
+        writeEntries: writeManager.__getOutputTargets(),
         buildCache: Array.from(cachedProcessors.values().flatMap((fileProcs) => fileProcs.values().flatMap((fileProcWithName) => Array.from(fileProcWithName.values().map((proc) => {
             let state;
             switch (proc.state.status) {
@@ -97,7 +101,8 @@ function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules) {
         }))))),
     };
 }
-function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
+function unwrapBuildInfo(root, manifest, buildInfo) {
+    let buildInstance = new BuildInstance(root, manifest, buildInfo.writeEntries);
     let cachedProcessors = new Map();
     let cachedProcessorsFlat = new Map();
     let relationsMap = new Map();
@@ -172,6 +177,8 @@ function unwrapBuildInfo(buildInstance, writeEntries, buildInfo) {
         cachedRules: buildInfo.rules,
         cachedProcessors,
         cachedProcessorsFlat,
+        writeManager: new WriteEntriesManager(buildInfo.writeEntries),
+        buildInstance,
     };
 }
 module.exports = {

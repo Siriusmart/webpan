@@ -91,10 +91,24 @@ async function writeCreate(
     await fs.writeFile(target, data);
 }
 
+async function moveCreate(
+    from: string,
+    to: string,
+): Promise<void> {
+    const parentDir = path.join(to, "..");
+
+    if (!(await exists(parentDir))) {
+        await fs.mkdir(parentDir, { recursive: true });
+    }
+
+    await fs.rename(from, to);
+}
+
 export = {
     exists,
     existsFile,
     existsDir,
     readDirRecursive,
     writeCreate,
+    moveCreate
 };

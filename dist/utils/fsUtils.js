@@ -78,11 +78,19 @@ async function writeCreate(target, data) {
     }
     await fs.writeFile(target, data);
 }
+async function moveCreate(from, to) {
+    const parentDir = path.join(to, "..");
+    if (!(await exists(parentDir))) {
+        await fs.mkdir(parentDir, { recursive: true });
+    }
+    await fs.rename(from, to);
+}
 module.exports = {
     exists,
     existsFile,
     existsDir,
     readDirRecursive,
     writeCreate,
+    moveCreate
 };
 //# sourceMappingURL=fsUtils.js.map
