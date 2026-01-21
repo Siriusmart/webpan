@@ -2,7 +2,7 @@ import path = require("path");
 import fs = require("fs/promises");
 import assert = require("assert");
 
-import BuildInstance = require("../types/buildInstance");
+import type BuildInstance = require("../types/buildInstance");
 import WriteEntriesManager = require("../info/writeEntriesManager");
 import type ProcessorHandle = require("../types/processorHandle");
 import type wmanifest = require("../types/wmanifest");
@@ -184,6 +184,7 @@ function unwrapBuildInfo(
     writeManager: WriteEntriesManager,
     buildInstance: BuildInstance
 } {
+    const BuildInstance = require("../types/buildInstance");
     let buildInstance = new BuildInstance(root, manifest, buildInfo.writeEntries)
     let cachedProcessors: Map<
         string,

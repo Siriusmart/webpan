@@ -1,4 +1,4 @@
-import BuildInstance = require("../types/buildInstance");
+import type BuildInstance = require("../types/buildInstance");
 import WriteEntriesManager = require("../info/writeEntriesManager");
 import type ProcessorHandle = require("../types/processorHandle");
 import type wmanifest = require("../types/wmanifest");

@@ -143,9 +143,11 @@ class WriteEntriesManager {
         }
 
         if (state === "disabled")
-            for (const [childPath, targetEntry] of this.outputTargets.entries())
+            for (const [childPath, targetEntry] of this.outputTargets.entries()) {
+                targetEntry.newWrites.clear()
                 if (targetEntry.allOutputs.size === 0)
                     this.outputTargets.delete(childPath)
+            }
 
         this.state = state;
     }

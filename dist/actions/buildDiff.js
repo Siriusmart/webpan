@@ -77,10 +77,10 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
         }
     }
     const res = await buildInstance.buildOutputAll();
-    buildInstance.withBuildCycleState("readonly");
     res.forEach(([handle, output]) => {
         handle.updateWithOutput(output, buildInstance.getWriteEntriesManager());
     });
+    buildInstance.withBuildCycleState("readonly");
     await buildInstance.flush();
     buildInstance.withBuildCycleState("disabled");
     await buildInstance.writeMeta();

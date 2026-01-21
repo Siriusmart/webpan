@@ -2,7 +2,6 @@
 const path = require("path");
 const fs = require("fs/promises");
 const assert = require("assert");
-const BuildInstance = require("../types/buildInstance");
 const WriteEntriesManager = require("../info/writeEntriesManager");
 const fsUtils = require("../utils/fsUtils");
 function replacer(_, value) {
@@ -102,6 +101,7 @@ function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules, writeManage
     };
 }
 function unwrapBuildInfo(root, manifest, buildInfo) {
+    const BuildInstance = require("../types/buildInstance");
     let buildInstance = new BuildInstance(root, manifest, buildInfo.writeEntries);
     let cachedProcessors = new Map();
     let cachedProcessorsFlat = new Map();
