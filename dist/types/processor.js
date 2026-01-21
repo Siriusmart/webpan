@@ -94,6 +94,9 @@ class Processor {
         }
         return out;
     }
+    settings() {
+        return this.__handle.meta.settings;
+    }
     shouldRebuild(newFiles) {
         return false;
     }

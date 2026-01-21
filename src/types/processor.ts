@@ -136,6 +136,10 @@ abstract class Processor {
 
         return out;
     }
+    
+    public settings(): Object {
+        return this.__handle.meta.settings;
+    }
 
     abstract build(
         content: Buffer | "dir"

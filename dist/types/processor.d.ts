@@ -42,6 +42,7 @@ declare abstract class Processor {
         exclude?: string | string[];
         absolute?: boolean;
     }): Map<string, FileProcs>;
+    settings(): Object;
     abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutputRaw>;
     shouldRebuild(newFiles: NewFiles): boolean;
 }

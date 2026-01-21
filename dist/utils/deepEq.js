@@ -4,32 +4,27 @@ function deepEq(a, b) {
         return isNaN(b);
     }
     // null or typeof !== object
-    if (a === b) {
+    if (a === b)
         return true;
-    }
-    if (typeof a !== "object") {
-        return a === b;
-    }
-    if (a.constructor.name !== b.constructor.name) {
+    if (typeof a !== typeof b)
         return false;
-    }
-    if (a.constructor.name !== "Object" && a.constructor.name !== "Array") {
+    if (typeof a !== "object")
+        return a === b;
+    if (a === null)
+        return b === null;
+    if (a.constructor.name !== "Object" && a.constructor.name !== "Array")
         throw new Error("cannot use deepEq on structures other than Object or Array");
-    }
     let checkedKeys = new Set();
     for (const [key, value] of Object.entries(a)) {
         checkedKeys.add(key);
-        if (!deepEq(value, b[key])) {
+        if (!deepEq(value, b[key]))
             return false;
-        }
     }
     for (const [key, value] of Object.entries(b)) {
-        if (checkedKeys.has(key)) {
+        if (checkedKeys.has(key))
             continue;
-        }
-        if (!deepEq(value, a[key])) {
+        if (!deepEq(value, a[key]))
             return false;
-        }
     }
     return true;
 }
