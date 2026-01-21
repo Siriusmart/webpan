@@ -1,4 +1,5 @@
 "use strict";
+const writeEntry = require("../types/writeEntry");
 const path = require("path");
 const assert = require("assert");
 class WriteEntriesManager {
@@ -23,6 +24,8 @@ class WriteEntriesManager {
             });
         }
         else {
+            if (target.surface !== null && target.surface.procId === content.processor.id)
+                target.surface.priority = content.priority;
             target.newWrites.set(content.processor.id, content);
         }
     }
@@ -64,21 +67,22 @@ class WriteEntriesManager {
             if (targetEntry.allOutputs.size === 0)
                 continue;
             let entries = Array.from(targetEntry.allOutputs.entries());
-            let maxPrioxity = entries[0]?.[1];
-            let maxPrioxityProc = entries[0]?.[0];
+            let maxPriority = entries[0]?.[1];
+            let maxPriorityProc = entries[0]?.[0];
             for (const [procId, priority] of entries) {
-                if (priority > maxPrioxity) {
-                    maxPrioxity = priority;
-                    maxPrioxityProc = procId;
+                if (priority > maxPriority) {
+                    maxPriority = priority;
+                    maxPriorityProc = procId;
                 }
             }
             if (targetEntry.surface === null) {
-                targetEntry.surface = { procId: maxPrioxityProc, priority: maxPrioxity };
-                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPrioxityProc}`, path.join("dist", childPath)]);
+                targetEntry.surface = { procId: maxPriorityProc, priority: maxPriority };
+                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPriorityProc}`, path.join("dist", childPath)]);
             }
-            else if (targetEntry.surface.priority < maxPrioxity && targetEntry.surface.procId !== maxPrioxityProc) {
+            else if (targetEntry.surface.priority < maxPriority) {
                 moves1.push([path.join("dist", childPath), path.join("meta/shadowed", childPath) + `.${targetEntry.surface?.procId}`]);
-                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPrioxityProc}`, path.join("dist", childPath)]);
+                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPriorityProc}`, path.join("dist", childPath)]);
+                targetEntry.surface = { priority: maxPriority, procId: maxPriorityProc };
             }
         }
         return {

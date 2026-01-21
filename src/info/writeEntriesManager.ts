@@ -1,4 +1,4 @@
-import type writeEntry = require("../types/writeEntry");
+import writeEntry = require("../types/writeEntry");
 import type fsEntries = require("../types/fsEntries")
 import path = require("path");
 import assert = require("assert");
@@ -42,6 +42,9 @@ class WriteEntriesManager {
                 newWrites: new Map([[content.processor.id, content]])
             })
         } else {
+            if (target.surface !== null && target.surface.procId === content.processor.id)
+                target.surface.priority = content.priority
+
             target.newWrites.set(content.processor.id, content)
         }
     }
@@ -92,22 +95,23 @@ class WriteEntriesManager {
 
             let entries = Array.from(targetEntry.allOutputs.entries())
 
-            let maxPrioxity = entries[0]?.[1] as number;
-            let maxPrioxityProc = entries[0]?.[0] as string;
+            let maxPriority = entries[0]?.[1] as number;
+            let maxPriorityProc = entries[0]?.[0] as string;
 
             for (const [procId, priority] of entries) {
-                if (priority > maxPrioxity) {
-                    maxPrioxity = priority
-                    maxPrioxityProc = procId
+                if (priority > maxPriority) {
+                    maxPriority = priority
+                    maxPriorityProc = procId
                 }
             }
 
             if (targetEntry.surface === null) {
-                targetEntry.surface = { procId: maxPrioxityProc, priority: maxPrioxity }
-                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPrioxityProc}`, path.join("dist", childPath)])
-            } else if (targetEntry.surface.priority < maxPrioxity && targetEntry.surface.procId !== maxPrioxityProc) {
+                targetEntry.surface = { procId: maxPriorityProc, priority: maxPriority }
+                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPriorityProc}`, path.join("dist", childPath)])
+            } else if (targetEntry.surface.priority < maxPriority) {
                 moves1.push([path.join("dist", childPath), path.join("meta/shadowed", childPath) + `.${targetEntry.surface?.procId}`])
-                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPrioxityProc}`, path.join("dist", childPath)])
+                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPriorityProc}`, path.join("dist", childPath)])
+                targetEntry.surface = { priority: maxPriority, procId: maxPriorityProc }
             }
         }
 

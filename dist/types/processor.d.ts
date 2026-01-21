@@ -2,7 +2,7 @@ import type BuildInstance = require("./buildInstance");
 import type NewFiles = require("./newfiles");
 import type procEntries = require("./procEntries");
 import type processorStates = require("./processorStates");
-import ProcessorHandle = require("./processorHandle");
+import type ProcessorHandle = require("./processorHandle");
 declare class FileNamedProcOne {
     private parent;
     private proc;

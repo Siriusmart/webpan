@@ -5,7 +5,7 @@ import type writeEntry = require("../types/writeEntry");
 import type ruleEntry = require("../types/ruleEntry");
 import type processorStates = require("../types/processorStates");
 import type ProcessorHandle = require("../types/processorHandle");
-import WriteEntriesManager = require("../info/writeEntriesManager");
+import type WriteEntriesManager = require("../info/writeEntriesManager");
 declare class BuildInstance {
     private root;
     private manifest;

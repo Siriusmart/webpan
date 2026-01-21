@@ -1,4 +1,4 @@
-import type writeEntry = require("../types/writeEntry");
+import writeEntry = require("../types/writeEntry");
 import type fsEntries = require("../types/fsEntries");
 interface OutputActions {
     removes: Set<string>;

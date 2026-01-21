@@ -2,7 +2,6 @@
 const path = require("path");
 const fs = require("fs/promises");
 const assert = require("assert");
-const WriteEntriesManager = require("../info/writeEntriesManager");
 const fsUtils = require("../utils/fsUtils");
 function replacer(_, value) {
     if (value instanceof Map) {
@@ -172,6 +171,7 @@ function unwrapBuildInfo(root, manifest, buildInfo) {
             return dependency;
         }));
     }
+    const WriteEntriesManager = require("../info/writeEntriesManager");
     return {
         hashedEntries: buildInfo.hashedEntries,
         cachedRules: buildInfo.rules,

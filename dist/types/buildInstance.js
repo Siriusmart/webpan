@@ -2,7 +2,6 @@
 const cleanBuild = require("../actions/cleanBuild");
 const assert = require("assert");
 const fs = require("fs/promises");
-const WriteEntriesManager = require("../info/writeEntriesManager");
 const wrules = require("../info/wrules");
 const buildInfo = require("../info/buildInfo");
 const path = require("path");
@@ -57,6 +56,7 @@ class BuildInstance {
         };
     }
     constructor(root, manifest, writeEntries) {
+        const WriteEntriesManager = require("../info/writeEntriesManager");
         this.root = root;
         this.manifest = manifest;
         this.writeEntries = new WriteEntriesManager(writeEntries);

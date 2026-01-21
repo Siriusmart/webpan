@@ -3,7 +3,7 @@ import fs = require("fs/promises");
 import assert = require("assert");
 
 import type BuildInstance = require("../types/buildInstance");
-import WriteEntriesManager = require("../info/writeEntriesManager");
+import type WriteEntriesManager = require("../info/writeEntriesManager");
 import type ProcessorHandle = require("../types/processorHandle");
 import type wmanifest = require("../types/wmanifest");
 import type fsEntries = require("../types/fsEntries");
@@ -281,6 +281,8 @@ function unwrapBuildInfo(
             })
         );
     }
+
+    const WriteEntriesManager = require("../info/writeEntriesManager");
 
     return {
         hashedEntries: buildInfo.hashedEntries,

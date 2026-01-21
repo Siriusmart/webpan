@@ -5,7 +5,7 @@ import type NewFiles = require("./newfiles");
 import type procEntries = require("./procEntries");
 import type processorStates = require("./processorStates");
 
-import ProcessorHandle = require("./processorHandle");
+import type ProcessorHandle = require("./processorHandle");
 import path = require("path");
 
 class FileNamedProcOne {
@@ -87,6 +87,7 @@ abstract class Processor {
         meta: procEntries.ProcessorMetaEntry,
         id?: string
     ) {
+        const ProcessorHandle = require("./processorHandle");
         this.buildInstance = buildInstance;
         this.__handle = new ProcessorHandle(buildInstance, meta, this, id);
     }

@@ -10,7 +10,7 @@ import type ruleEntry = require("../types/ruleEntry");
 import type processorStates = require("../types/processorStates");
 import type ProcessorHandle = require("../types/processorHandle");
 
-import WriteEntriesManager = require("../info/writeEntriesManager");
+import type WriteEntriesManager = require("../info/writeEntriesManager");
 import wrules = require("../info/wrules");
 import buildInfo = require("../info/buildInfo");
 import path = require("path");
@@ -86,6 +86,8 @@ class BuildInstance {
     }
 
     constructor(root: string, manifest: wmanifest.WManifest, writeEntries: Map<string, writeEntry.OutputTarget>) {
+        const WriteEntriesManager = require("../info/writeEntriesManager");
+
         this.root = root;
         this.manifest = manifest;
         this.writeEntries = new WriteEntriesManager(writeEntries);

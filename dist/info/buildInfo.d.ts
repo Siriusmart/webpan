@@ -1,5 +1,5 @@
 import type BuildInstance = require("../types/buildInstance");
-import WriteEntriesManager = require("../info/writeEntriesManager");
+import type WriteEntriesManager = require("../info/writeEntriesManager");
 import type ProcessorHandle = require("../types/processorHandle");
 import type wmanifest = require("../types/wmanifest");
 import type fsEntries = require("../types/fsEntries");
