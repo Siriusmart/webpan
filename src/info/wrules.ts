@@ -147,7 +147,6 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
 
             // now removedProcs contains all procs removed
             // and fileProcsAfter contains all added procs
-
             nextProc: for (const toRemove of removedProcs) {
                 let setWithProcName =
                     fileProcsEditable.get(toRemove.procName) ?? new Set();

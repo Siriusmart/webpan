@@ -4,17 +4,13 @@ import path = require("path");
 import assert = require("assert");
 
 interface OutputActions {
-    removes: string[],
+    removes: Set<string>,
     // moves 1 to be completed before moves 2
     // moves 1 is to move the file from dist to shadowed
     // moves 2 is to move files from shadowed to dist
     moves1: [string, string][], // from, to
     moves2: [string, string][], // from, to
     writes: [string, fsEntries.BufferLike][],
-}
-
-function targetSet(target: writeEntry.OutputTarget, writeEntry: writeEntry.WriteEntry): void {
-    target.newWrites.set(writeEntry.processor.id, writeEntry)
 }
 
 class WriteEntriesManager {
@@ -57,15 +53,15 @@ class WriteEntriesManager {
             );
         }
 
-        let removes: string[] = []
+        let removes: Set<string> = new Set()
 
         for (const [childPath, targetEntry] of this.outputTargets.entries())
             for (const [prodId, writeEntry] of targetEntry.newWrites)
                 if (writeEntry.content === "remove") {
                     if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId) {
-                        removes.push(path.join("dist", childPath))
+                        removes.add(path.join("dist", childPath))
                         targetEntry.surface = null
-                    } else removes.push(path.join("meta/shadowed", childPath) + `.${prodId}`)
+                    } else removes.add(path.join("meta/shadowed", childPath) + `.${prodId}`)
 
                     targetEntry.allOutputs.delete(prodId)
                 }
@@ -75,9 +71,15 @@ class WriteEntriesManager {
         for (const [childPath, targetEntry] of this.outputTargets.entries())
             for (const [prodId, writeEntry] of targetEntry.newWrites)
                 if (writeEntry.content !== "remove") {
-                    if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId)
-                        writes.push([path.join("dist", childPath), writeEntry.content])
-                    else writes.push([path.join("meta/shadowed", childPath) + `.${prodId}`, writeEntry.content])
+                    if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId) {
+                        let relPath = path.join("dist", childPath);
+                        if (!removes.has(relPath))
+                            writes.push([relPath, writeEntry.content])
+                    } else {
+                        let relPath = path.join("meta/shadowed", childPath) + `.${prodId}`;
+                        if (!removes.has(relPath))
+                            writes.push([relPath, writeEntry.content])
+                    }
 
                     targetEntry.allOutputs.set(prodId, writeEntry.priority)
                 }

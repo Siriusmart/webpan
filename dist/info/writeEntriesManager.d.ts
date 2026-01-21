@@ -1,7 +1,7 @@
 import type writeEntry = require("../types/writeEntry");
 import type fsEntries = require("../types/fsEntries");
 interface OutputActions {
-    removes: string[];
+    removes: Set<string>;
     moves1: [string, string][];
     moves2: [string, string][];
     writes: [string, fsEntries.BufferLike][];

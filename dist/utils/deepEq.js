@@ -1,6 +1,6 @@
 "use strict";
 function deepEq(a, b) {
-    if (isNaN(a)) {
+    if (typeof a === "number" && typeof b === "number" && isNaN(a)) {
         return isNaN(b);
     }
     // null or typeof !== object
@@ -13,7 +13,7 @@ function deepEq(a, b) {
     if (a.constructor.name !== b.constructor.name) {
         return false;
     }
-    if (a.constructor.name !== "Object" || a.constructor.name !== "Array") {
+    if (a.constructor.name !== "Object" && a.constructor.name !== "Array") {
         throw new Error("cannot use deepEq on structures other than Object or Array");
     }
     let checkedKeys = new Set();

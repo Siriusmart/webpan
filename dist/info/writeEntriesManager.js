@@ -1,9 +1,6 @@
 "use strict";
 const path = require("path");
 const assert = require("assert");
-function targetSet(target, writeEntry) {
-    target.newWrites.set(writeEntry.processor.id, writeEntry);
-}
 class WriteEntriesManager {
     state = "disabled";
     outputTargets;
@@ -33,26 +30,32 @@ class WriteEntriesManager {
         if (this.state === "disabled") {
             throw new Error("attempt to read from writeEntries when it is disabled");
         }
-        let removes = [];
+        let removes = new Set();
         for (const [childPath, targetEntry] of this.outputTargets.entries())
             for (const [prodId, writeEntry] of targetEntry.newWrites)
                 if (writeEntry.content === "remove") {
                     if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId) {
-                        removes.push(path.join("dist", childPath));
+                        removes.add(path.join("dist", childPath));
                         targetEntry.surface = null;
                     }
                     else
-                        removes.push(path.join("meta/shadowed", childPath) + `.${prodId}`);
+                        removes.add(path.join("meta/shadowed", childPath) + `.${prodId}`);
                     targetEntry.allOutputs.delete(prodId);
                 }
         let writes = [];
         for (const [childPath, targetEntry] of this.outputTargets.entries())
             for (const [prodId, writeEntry] of targetEntry.newWrites)
                 if (writeEntry.content !== "remove") {
-                    if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId)
-                        writes.push([path.join("dist", childPath), writeEntry.content]);
-                    else
-                        writes.push([path.join("meta/shadowed", childPath) + `.${prodId}`, writeEntry.content]);
+                    if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId) {
+                        let relPath = path.join("dist", childPath);
+                        if (!removes.has(relPath))
+                            writes.push([relPath, writeEntry.content]);
+                    }
+                    else {
+                        let relPath = path.join("meta/shadowed", childPath) + `.${prodId}`;
+                        if (!removes.has(relPath))
+                            writes.push([relPath, writeEntry.content]);
+                    }
                     targetEntry.allOutputs.set(prodId, writeEntry.priority);
                 }
         let moves1 = [];

@@ -1,5 +1,5 @@
 function deepEq(a: any, b: any): boolean {
-    if (isNaN(a)) {
+    if (typeof a === "number" && typeof b === "number" && isNaN(a)) {
         return isNaN(b);
     }
 
@@ -16,7 +16,7 @@ function deepEq(a: any, b: any): boolean {
         return false;
     }
 
-    if (a.constructor.name !== "Object" || a.constructor.name !== "Array") {
+    if (a.constructor.name !== "Object" && a.constructor.name !== "Array") {
         throw new Error(
             "cannot use deepEq on structures other than Object or Array"
         );
