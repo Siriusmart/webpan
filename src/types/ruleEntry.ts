@@ -6,7 +6,7 @@ export interface RuleEntryRaw {
 
 export interface ProcessorSettings {
     procName: string;
-    settings: any;
+    settings: Record<string, any>;
 }
 
 export interface RuleEntryNormalised {

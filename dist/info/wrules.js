@@ -7,12 +7,12 @@ const deepEq = require("../utils/deepEq");
 function normaliseRawProcessor(proc) {
     switch (typeof proc) {
         case "string":
-            return [{ procName: proc, settings: null }];
+            return [{ procName: proc, settings: {} }];
         case "object":
             if (Array.isArray(proc)) {
                 return proc.map((ident) => ({
                     procName: ident,
-                    settings: null,
+                    settings: {},
                 }));
             }
             else {
