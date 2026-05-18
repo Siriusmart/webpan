@@ -7,6 +7,7 @@ declare class FileNamedProcOne {
     private parent;
     private proc;
     constructor(parent: ProcessorHandle, proc: ProcessorHandle);
+    getSettings(): Record<string, any>;
     getResult(): Promise<processorStates.ProcessorResult>;
     getProcessor(): Promise<Processor>;
     equals(other: Processor): boolean;

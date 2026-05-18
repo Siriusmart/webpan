@@ -17,6 +17,10 @@ class FileNamedProcOne {
         this.proc = proc;
     }
 
+    public getSettings(): Record<string, any> {
+        return this.proc.meta.settings
+    }
+
     public async getResult(): Promise<processorStates.ProcessorResult> {
         return await this.proc.getResult(this.parent);
     }

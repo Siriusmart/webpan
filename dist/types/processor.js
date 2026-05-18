@@ -8,6 +8,9 @@ class FileNamedProcOne {
         this.parent = parent;
         this.proc = proc;
     }
+    getSettings() {
+        return this.proc.meta.settings;
+    }
     async getResult() {
         return await this.proc.getResult(this.parent);
     }
