@@ -276,4 +276,12 @@ class ProcessorHandle {
                 return this.processor;
         }
     }
+
+    getSettings(requester: ProcessorHandle): Record<string, any> {
+        if (this.isOrDependsOn(requester)) {
+            throw new Error("There is a cycle in dependency.");
+        }
+        this.dependents.add(requester);
+        return this.meta.settings
+    }
 }

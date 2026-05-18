@@ -205,6 +205,13 @@ class ProcessorHandle {
                 return this.processor;
         }
     }
+    getSettings(requester) {
+        if (this.isOrDependsOn(requester)) {
+            throw new Error("There is a cycle in dependency.");
+        }
+        this.dependents.add(requester);
+        return this.meta.settings;
+    }
 }
 module.exports = ProcessorHandle;
 //# sourceMappingURL=processorHandle.js.map

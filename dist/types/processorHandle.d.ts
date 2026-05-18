@@ -33,5 +33,6 @@ declare class ProcessorHandle {
     buildWithBuffer(buildInstance: BuildInstance): Promise<processorStates.ProcessorResult>;
     getResult(requester: ProcessorHandle): Promise<processorStates.ProcessorResult>;
     getProcessor(requester: ProcessorHandle): Promise<Processor>;
+    getSettings(requester: ProcessorHandle): Record<string, any>;
 }
 //# sourceMappingURL=processorHandle.d.ts.map
