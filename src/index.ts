@@ -1,5 +1,5 @@
-import processor = require("./types/processor");
+import processor from "./types/processor.js";
 
-export = {
+export default {
     Processor: processor,
 };

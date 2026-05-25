@@ -1,5 +1,5 @@
-import type fsEntries = require("./fsEntries");
-import ProcessorHandle = require("./processorHandle");
+import type * as fsEntries from "./fsEntries.js";
+import ProcessorHandle from "./processorHandle.js";
 export interface OutputTarget {
     surface: {
         procId: string;

@@ -1,6 +1,5 @@
-"use strict";
-const path = require("path");
-const fsUtils = require("../utils/fsUtils");
+import path from "path";
+import fsUtils from "../utils/fsUtils.js";
 async function findRoot(pathHint = ".") {
     if (await fsUtils.existsDir(pathHint)) {
         if (await fsUtils.existsFile(path.join(pathHint, "wproject.json"))) {
@@ -12,5 +11,5 @@ async function findRoot(pathHint = ".") {
         return null;
     }
 }
-module.exports = findRoot;
+export default findRoot;
 //# sourceMappingURL=findRoot.js.map

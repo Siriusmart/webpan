@@ -1,8 +1,7 @@
-"use strict";
-const path = require("path");
-const fs = require("fs/promises");
-const assert = require("assert");
-const fsUtils = require("../utils/fsUtils");
+import path from "path";
+import fs from "fs/promises";
+import assert from "assert";
+import fsUtils from "../utils/fsUtils.js";
 function replacer(_, value) {
     if (value instanceof Map) {
         return {
@@ -181,7 +180,7 @@ function unwrapBuildInfo(root, manifest, buildInfo) {
         buildInstance,
     };
 }
-module.exports = {
+export default {
     readBuildInfo,
     writeBuildInfo,
     wrapBuildInfo,

@@ -41,4 +41,4 @@ function deepEq(a: any, b: any): boolean {
     return true;
 }
 
-export = deepEq;
+export default deepEq;

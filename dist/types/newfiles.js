@@ -1,6 +1,5 @@
-"use strict";
-const path = require("path");
-const micromatch = require("micromatch");
+import path from "path";
+import micromatch from "micromatch";
 class NewFiles {
     internal;
     handle;
@@ -30,5 +29,5 @@ class NewFiles {
         return out;
     }
 }
-module.exports = NewFiles;
+export default NewFiles;
 //# sourceMappingURL=newfiles.js.map

@@ -1,9 +1,9 @@
-import path = require("path");
+import path from "path";
 
-import type procEntries = require("../types/procEntries");
+import type * as procEntries from "../types/procEntries.js";
 
-import Processor = require("../types/processor");
-import fsUtils = require("../utils/fsUtils");
+import Processor from "../types/processor.js";
+import fsUtils from "../utils/fsUtils.js";
 
 let cachedProcessorClasses: Map<string, { new (): Processor }> = new Map();
 
@@ -33,4 +33,4 @@ async function getProcessor(
     return procClass;
 }
 
-export = getProcessor;
+export default getProcessor;

@@ -1,4 +1,3 @@
-"use strict";
 function deepEq(a, b) {
     if (typeof a === "number" && typeof b === "number" && isNaN(a)) {
         return isNaN(b);
@@ -28,5 +27,5 @@ function deepEq(a, b) {
     }
     return true;
 }
-module.exports = deepEq;
+export default deepEq;
 //# sourceMappingURL=deepEq.js.map

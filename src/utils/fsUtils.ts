@@ -1,7 +1,7 @@
-import fs = require("fs/promises");
-import path = require("path");
+import fs from "fs/promises";
+import path from "path";
 
-import type fsEntries = require("../types/fsEntries");
+import type * as fsEntries from "../types/fsEntries.js";
 
 async function exists(path: string): Promise<boolean> {
     try {
@@ -104,7 +104,7 @@ async function moveCreate(
     await fs.rename(from, to);
 }
 
-export = {
+export default {
     exists,
     existsFile,
     existsDir,

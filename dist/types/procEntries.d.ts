@@ -1,7 +1,7 @@
-import type Processor = require("./processor");
-import type ProcessorHandle = require("./processorHandle");
-import type BuildInstance = require("../types/buildInstance");
-import type procEntries = require("../types/procEntries");
+import type Processor from "./processor.js";
+import type ProcessorHandle from "./processorHandle.js";
+import type BuildInstance from "../types/buildInstance.js";
+import type * as procEntries from "../types/procEntries.js";
 export type ProcByFileMap = Map<string, Map<string, Set<ProcessorHandle>>>;
 export type ProcByIdMap = Map<string, ProcessorHandle>;
 export interface ProcessorMetaEntry {

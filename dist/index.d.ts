@@ -1,6 +1,6 @@
-import processor = require("./types/processor");
+import processor from "./types/processor.js";
 declare const _default: {
     Processor: typeof processor;
 };
-export = _default;
+export default _default;
 //# sourceMappingURL=index.d.ts.map

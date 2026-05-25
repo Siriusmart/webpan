@@ -1,5 +1,5 @@
-import writeEntry = require("../types/writeEntry");
-import type fsEntries = require("../types/fsEntries");
+import * as writeEntry from "../types/writeEntry.js";
+import type * as fsEntries from "../types/fsEntries.js";
 interface OutputActions {
     removes: Set<string>;
     moves1: [string, string][];
@@ -15,5 +15,5 @@ declare class WriteEntriesManager {
     getActions(): OutputActions;
     setState(state: writeEntry.WriteEntryManagerState): void;
 }
-export = WriteEntriesManager;
+export default WriteEntriesManager;
 //# sourceMappingURL=writeEntriesManager.d.ts.map

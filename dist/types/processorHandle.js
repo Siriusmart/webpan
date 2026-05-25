@@ -1,10 +1,10 @@
-"use strict";
-const assert = require("assert");
-const path = require("path");
-const BuildInstance = require("../types/buildInstance");
-const calcDiff = require("../utils/calcDiff");
-const random = require("../utils/random");
-const WriteEntriesManager = require("../info/writeEntriesManager");
+import assert from "assert";
+import path from "path";
+import Processor from "./processor.js";
+import BuildInstance from "../types/buildInstance.js";
+import calcDiff from "../utils/calcDiff.js";
+import random from "../utils/random.js";
+import WriteEntriesManager from "../info/writeEntriesManager.js";
 class ProcessorHandle {
     id;
     state;
@@ -213,5 +213,5 @@ class ProcessorHandle {
         return this.meta.settings;
     }
 }
-module.exports = ProcessorHandle;
+export default ProcessorHandle;
 //# sourceMappingURL=processorHandle.js.map

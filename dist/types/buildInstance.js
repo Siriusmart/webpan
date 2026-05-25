@@ -1,11 +1,10 @@
-"use strict";
-const cleanBuild = require("../actions/cleanBuild");
-const assert = require("assert");
-const fs = require("fs/promises");
-const wrules = require("../info/wrules");
-const buildInfo = require("../info/buildInfo");
-const path = require("path");
-const fsUtils = require("../utils/fsUtils");
+import cleanBuild from "../actions/cleanBuild.js";
+import assert from "assert";
+import fs from "fs/promises";
+import wrules from "../info/wrules.js";
+import buildInfo from "../info/buildInfo.js";
+import path from "path";
+import fsUtils from "../utils/fsUtils.js";
 class BuildInstance {
     root;
     manifest;
@@ -221,5 +220,5 @@ class BuildInstance {
         }));
     }
 }
-module.exports = BuildInstance;
+export default BuildInstance;
 //# sourceMappingURL=buildInstance.js.map

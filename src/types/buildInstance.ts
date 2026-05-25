@@ -1,20 +1,20 @@
-import cleanBuild = require("../actions/cleanBuild");
-import assert = require("assert");
-import fs = require("fs/promises")
+import cleanBuild from "../actions/cleanBuild.js";
+import assert from "assert";
+import fs from "fs/promises"
 
-import type wmanifest = require("../types/wmanifest");
-import type fsEntries = require("../types/fsEntries");
-import type procEntries = require("../types/procEntries");
-import type writeEntry = require("../types/writeEntry");
-import type ruleEntry = require("../types/ruleEntry");
-import type processorStates = require("../types/processorStates");
-import type ProcessorHandle = require("../types/processorHandle");
+import type * as wmanifest from "../types/wmanifest.js";
+import type * as fsEntries from "../types/fsEntries.js";
+import type * as procEntries from "../types/procEntries.js";
+import type * as writeEntry from "../types/writeEntry.js";
+import type * as ruleEntry from "../types/ruleEntry.js";
+import type * as processorStates from "../types/processorStates.js";
+import type ProcessorHandle from "../types/processorHandle.js";
 
-import type WriteEntriesManager = require("../info/writeEntriesManager");
-import wrules = require("../info/wrules");
-import buildInfo = require("../info/buildInfo");
-import path = require("path");
-import fsUtils = require("../utils/fsUtils");
+import type WriteEntriesManager from "../info/writeEntriesManager.js";
+import wrules from "../info/wrules.js";
+import buildInfo from "../info/buildInfo.js";
+import path from "path";
+import fsUtils from "../utils/fsUtils.js";
 
 class BuildInstance {
     private root: string;
@@ -338,4 +338,4 @@ class BuildInstance {
     }
 }
 
-export = BuildInstance;
+export default BuildInstance;

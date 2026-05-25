@@ -1,4 +1,4 @@
-import crypto = require("crypto");
+import crypto from "crypto";
 
 function hexString(
     length: number = 8,
@@ -13,6 +13,6 @@ function hexString(
     }
 }
 
-export = {
+export default {
     hexString,
 };

@@ -1,5 +1,4 @@
-"use strict";
-const crypto = require("crypto");
+import crypto from "crypto";
 function hexString(length = 8, constraint) {
     let toTest = crypto.randomBytes(length).toString("hex");
     if (constraint(toTest)) {
@@ -9,7 +8,7 @@ function hexString(length = 8, constraint) {
         return hexString(length, constraint);
     }
 }
-module.exports = {
+export default {
     hexString,
 };
 //# sourceMappingURL=random.js.map

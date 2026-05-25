@@ -2,5 +2,5 @@ declare function hexString(length: number | undefined, constraint: (output: stri
 declare const _default: {
     hexString: typeof hexString;
 };
-export = _default;
+export default _default;
 //# sourceMappingURL=random.d.ts.map

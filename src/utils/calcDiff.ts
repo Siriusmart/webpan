@@ -1,4 +1,4 @@
-import procEntries = require("../types/procEntries");
+import type * as procEntries from "../types/procEntries.js";
 
 function calcDiffByEq<K, V>(
     before: Map<K, V>,
@@ -40,7 +40,7 @@ function calcDiff<K, V>(
     return calcDiffByExtractor(before, after, (a) => a);
 }
 
-export = {
+export default {
     calcDiffByEq,
     calcDiffByExtractor,
     calcDiff,

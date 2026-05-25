@@ -1,4 +1,4 @@
-import type fsEntries = require("../types/fsEntries");
+import type * as fsEntries from "../types/fsEntries.js";
 declare function exists(path: string): Promise<boolean>;
 declare function existsFile(path: string): Promise<boolean>;
 declare function existsDir(path: string): Promise<boolean>;
@@ -13,5 +13,5 @@ declare const _default: {
     writeCreate: typeof writeCreate;
     moveCreate: typeof moveCreate;
 };
-export = _default;
+export default _default;
 //# sourceMappingURL=fsUtils.d.ts.map

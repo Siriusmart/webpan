@@ -1,18 +1,18 @@
-import type yargs = require("yargs");
+import type * as yargs from "yargs";
 
-import path = require("path");
-import fs = require("fs/promises");
+import path from "path";
+import fs from "fs/promises";
 
-import WriteEntriesManager = require("../info/writeEntriesManager");
-import BuildInstance = require("../types/buildInstance");
-import findRoot = require("../info/findRoot");
-import buildInfo = require("../info/buildInfo");
-import cleanBuild = require("../actions/cleanBuild");
-import fsUtils = require("../utils/fsUtils");
-import calcHashedEntries = require("../info/calcHashedEntries");
-import calcDiff = require("../utils/calcDiff");
-import buildDiff = require("../actions/buildDiff");
-import wproject = require("../info/wproject");
+import WriteEntriesManager from "../info/writeEntriesManager.js";
+import BuildInstance from "../types/buildInstance.js";
+import findRoot from "../info/findRoot.js";
+import buildInfo from "../info/buildInfo.js";
+import cleanBuild from "../actions/cleanBuild.js";
+import fsUtils from "../utils/fsUtils.js";
+import calcHashedEntries from "../info/calcHashedEntries.js";
+import calcDiff from "../utils/calcDiff.js";
+import buildDiff from "../actions/buildDiff.js";
+import wproject from "../info/wproject.js";
 
 async function cmdBuild(args: yargs.Arguments): Promise<void> {
     const argPath = args.path as string;
@@ -66,4 +66,4 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
     await buildDiff(unwrappedBuildInfo.buildInstance, srcContents, hashedDiff, hashedEntries);
 }
 
-export = cmdBuild;
+export default cmdBuild;

@@ -1,11 +1,11 @@
-import type BuildInstance = require("../types/buildInstance");
-import type WriteEntriesManager = require("../info/writeEntriesManager");
-import type ProcessorHandle = require("../types/processorHandle");
-import type wmanifest = require("../types/wmanifest");
-import type fsEntries = require("../types/fsEntries");
-import type procEntries = require("../types/procEntries");
-import type ruleEntry = require("../types/ruleEntry");
-import type writeEntry = require("../types/writeEntry");
+import type BuildInstance from "../types/buildInstance.js";
+import type WriteEntriesManager from "../info/writeEntriesManager.js";
+import type ProcessorHandle from "../types/processorHandle.js";
+import type * as wmanifest from "../types/wmanifest.js";
+import type * as fsEntries from "../types/fsEntries.js";
+import type * as procEntries from "../types/procEntries.js";
+import type * as ruleEntry from "../types/ruleEntry.js";
+import type * as writeEntry from "../types/writeEntry.js";
 interface BuildResultEntry {
     id: string;
     meta: procEntries.ProcessorMetaEntry;
@@ -39,5 +39,5 @@ declare const _default: {
     wrapBuildInfo: typeof wrapBuildInfo;
     unwrapBuildInfo: typeof unwrapBuildInfo;
 };
-export = _default;
+export default _default;
 //# sourceMappingURL=buildInfo.d.ts.map

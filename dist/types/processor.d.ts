@@ -1,8 +1,8 @@
-import type BuildInstance = require("./buildInstance");
-import type NewFiles = require("./newfiles");
-import type procEntries = require("./procEntries");
-import type processorStates = require("./processorStates");
-import type ProcessorHandle = require("./processorHandle");
+import type BuildInstance from "./buildInstance.js";
+import type NewFiles from "./newfiles.js";
+import type * as procEntries from "./procEntries.js";
+import type * as processorStates from "./processorStates.js";
+import type ProcessorHandle from "./processorHandle.js";
 declare class FileNamedProcOne {
     private parent;
     private proc;
@@ -47,5 +47,5 @@ declare abstract class Processor {
     abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutputRaw>;
     shouldRebuild(newFiles: NewFiles): boolean;
 }
-export = Processor;
+export default Processor;
 //# sourceMappingURL=processor.d.ts.map

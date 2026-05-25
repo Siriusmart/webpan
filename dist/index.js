@@ -1,6 +1,5 @@
-"use strict";
-const processor = require("./types/processor");
-module.exports = {
+import processor from "./types/processor.js";
+export default {
     Processor: processor,
 };
 //# sourceMappingURL=index.js.map

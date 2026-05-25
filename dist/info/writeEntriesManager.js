@@ -1,7 +1,6 @@
-"use strict";
-const writeEntry = require("../types/writeEntry");
-const path = require("path");
-const assert = require("assert");
+import * as writeEntry from "../types/writeEntry.js";
+import path from "path";
+import assert from "assert";
 class WriteEntriesManager {
     state = "disabled";
     outputTargets;
@@ -119,5 +118,5 @@ class WriteEntriesManager {
         this.state = state;
     }
 }
-module.exports = WriteEntriesManager;
+export default WriteEntriesManager;
 //# sourceMappingURL=writeEntriesManager.js.map

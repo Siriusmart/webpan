@@ -1,6 +1,6 @@
-import crypto = require("crypto");
+import crypto from "crypto";
 
-import type fsEntries = require("../types/fsEntries");
+import type * as fsEntries from "../types/fsEntries.js";
 
 function calcHashedEntries(
     fsEntries: fsEntries.FsContentEntries
@@ -27,4 +27,4 @@ function calcHashedEntries(
     return hashedEntries;
 }
 
-export = calcHashedEntries;
+export default calcHashedEntries;

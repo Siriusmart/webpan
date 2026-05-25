@@ -1,5 +1,5 @@
-import type fsEntries = require("./fsEntries");
-import Processor = require("./processor");
+import type * as fsEntries from "./fsEntries.js";
+import Processor from "./processor.js";
 export interface ProcessorOutputEntry {
     buffer: fsEntries.BufferLike;
     priority: number;

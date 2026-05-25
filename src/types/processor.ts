@@ -1,12 +1,12 @@
-import micromatch = require("micromatch");
+import micromatch from "micromatch";
 
-import type BuildInstance = require("./buildInstance");
-import type NewFiles = require("./newfiles");
-import type procEntries = require("./procEntries");
-import type processorStates = require("./processorStates");
+import type BuildInstance from "./buildInstance.js";
+import type NewFiles from "./newfiles.js";
+import type * as procEntries from "./procEntries.js";
+import type * as processorStates from "./processorStates.js";
 
-import type ProcessorHandle = require("./processorHandle");
-import path = require("path");
+import type ProcessorHandle from "./processorHandle.js";
+import path from "path";
 
 class FileNamedProcOne {
     private parent: ProcessorHandle;
@@ -140,7 +140,7 @@ abstract class Processor {
 
         return out;
     }
-    
+
     public settings(): any {
         return this.__handle.meta.settings;
     }
@@ -154,4 +154,4 @@ abstract class Processor {
     }
 }
 
-export = Processor;
+export default Processor;

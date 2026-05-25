@@ -1,6 +1,5 @@
-"use strict";
-const micromatch = require("micromatch");
-const path = require("path");
+import micromatch from "micromatch";
+import path from "path";
 class FileNamedProcOne {
     parent;
     proc;
@@ -104,5 +103,5 @@ class Processor {
         return false;
     }
 }
-module.exports = Processor;
+export default Processor;
 //# sourceMappingURL=processor.js.map

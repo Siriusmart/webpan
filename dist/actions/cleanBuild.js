@@ -1,7 +1,6 @@
-"use strict";
-const path = require("path");
-const fs = require("fs/promises");
-const fsUtils = require("../utils/fsUtils");
+import path from "path";
+import fs from "fs/promises";
+import fsUtils from "../utils/fsUtils.js";
 async function cleanBuild(root) {
     const distPath = path.join(root, "dist");
     if (await fsUtils.exists(distPath)) {
@@ -16,5 +15,5 @@ async function cleanBuild(root) {
         await fs.rm(buildInfoPath);
     }
 }
-module.exports = cleanBuild;
+export default cleanBuild;
 //# sourceMappingURL=cleanBuild.js.map

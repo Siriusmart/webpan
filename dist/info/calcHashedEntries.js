@@ -1,5 +1,4 @@
-"use strict";
-const crypto = require("crypto");
+import crypto from "crypto";
 function calcHashedEntries(fsEntries) {
     let hashedEntries = new Map();
     for (const [childPath, fsContent] of fsEntries.entries()) {
@@ -19,5 +18,5 @@ function calcHashedEntries(fsEntries) {
     }
     return hashedEntries;
 }
-module.exports = calcHashedEntries;
+export default calcHashedEntries;
 //# sourceMappingURL=calcHashedEntries.js.map

@@ -1,4 +1,4 @@
-import type ProcessorHandle = require("./processorHandle");
+import type ProcessorHandle from "./processorHandle.js";
 declare class NewFiles {
     private internal;
     private handle;
@@ -9,5 +9,5 @@ declare class NewFiles {
         exclude?: string | string[];
     }): Set<string>;
 }
-export = NewFiles;
+export default NewFiles;
 //# sourceMappingURL=newfiles.d.ts.map

@@ -1,18 +1,16 @@
-import assert = require("assert");
-import path = require("path");
+import assert from "assert";
+import path from "path";
 
-import type procEntries = require("./procEntries");
-import type Processor = require("./processor");
-import type processorStates = require("./processorStates");
-import BuildInstance = require("../types/buildInstance");
-import type writeEntry = require("../types/writeEntry");
+import type * as procEntries from "./procEntries.js";
+import Processor from "./processor.js";
+import type * as processorStates from "./processorStates.js";
+import BuildInstance from "../types/buildInstance.js";
+import type * as writeEntry from "../types/writeEntry.js";
 
-import calcDiff = require("../utils/calcDiff");
-import random = require("../utils/random");
-import WriteEntriesManager = require("../info/writeEntriesManager");
-import type fsEntries = require("./fsEntries");
-
-export = ProcessorHandle;
+import calcDiff from "../utils/calcDiff.js";
+import random from "../utils/random.js";
+import WriteEntriesManager from "../info/writeEntriesManager.js";
+import type * as fsEntries from "./fsEntries.js";
 
 class ProcessorHandle {
     id: string;
@@ -285,3 +283,5 @@ class ProcessorHandle {
         return this.meta.settings
     }
 }
+
+export default ProcessorHandle;

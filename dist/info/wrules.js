@@ -1,9 +1,8 @@
-"use strict";
-const path = require("path");
-const assert = require("assert");
-const micromatch = require("micromatch");
-const getProcessor = require("./getProcessor");
-const deepEq = require("../utils/deepEq");
+import path from "path";
+import assert from "assert";
+import micromatch from "micromatch";
+import getProcessor from "./getProcessor.js";
+import deepEq from "../utils/deepEq.js";
 function normaliseRawProcessor(proc) {
     switch (typeof proc) {
         case "string":
@@ -173,7 +172,7 @@ async function resolveProcessors(buildInstance, dirCursor, fileName = dirCursor.
     }
     return foundEntries;
 }
-module.exports = {
+export default {
     updateRules,
     resolveProcessors,
 };

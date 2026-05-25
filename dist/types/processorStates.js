@@ -1,4 +1,2 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const Processor = require("./processor");
+import Processor from "./processor.js";
 //# sourceMappingURL=processorStates.js.map

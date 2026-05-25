@@ -1,7 +1,7 @@
-import writeEntry = require("../types/writeEntry");
-import type fsEntries = require("../types/fsEntries")
-import path = require("path");
-import assert = require("assert");
+import * as writeEntry from "../types/writeEntry.js";
+import type * as fsEntries from "../types/fsEntries.js"
+import path from "path";
+import assert from "assert";
 
 interface OutputActions {
     removes: Set<string>,
@@ -159,4 +159,4 @@ class WriteEntriesManager {
     }
 }
 
-export = WriteEntriesManager;
+export default WriteEntriesManager;

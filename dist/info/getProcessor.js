@@ -1,7 +1,6 @@
-"use strict";
-const path = require("path");
-const Processor = require("../types/processor");
-const fsUtils = require("../utils/fsUtils");
+import path from "path";
+import Processor from "../types/processor.js";
+import fsUtils from "../utils/fsUtils.js";
 let cachedProcessorClasses = new Map();
 async function getProcessor(root, ident) {
     const cachedProcessor = cachedProcessorClasses.get(ident);
@@ -19,5 +18,5 @@ async function getProcessor(root, ident) {
     cachedProcessorClasses.set(ident, procClass);
     return procClass;
 }
-module.exports = getProcessor;
+export default getProcessor;
 //# sourceMappingURL=getProcessor.js.map

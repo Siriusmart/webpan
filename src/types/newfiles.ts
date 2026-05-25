@@ -1,7 +1,7 @@
-import path = require("path")
-import micromatch = require("micromatch")
+import path from "path"
+import micromatch from "micromatch"
 
-import type ProcessorHandle = require("./processorHandle")
+import type ProcessorHandle from "./processorHandle.js"
 
 class NewFiles {
     private internal: Set<string>;
@@ -40,4 +40,4 @@ class NewFiles {
     }
 }
 
-export = NewFiles
+export default NewFiles

@@ -1,7 +1,6 @@
-"use strict";
-const yargs = require("yargs");
-const fs = require("fs/promises");
-const path = require("path");
+import yargs from "yargs";
+import fs from "fs/promises";
+import path from "path";
 async function createProjectManifest(root, yargs) {
     const content = await fs.readFile(path.join(root, "wproject.json"), "utf8");
     let wproject;
@@ -31,7 +30,7 @@ async function createProjectManifest(root, yargs) {
         },
     };
 }
-module.exports = {
+export default {
     createProjectManifest,
 };
 //# sourceMappingURL=wproject.js.map

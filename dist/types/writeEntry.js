@@ -1,4 +1,2 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const ProcessorHandle = require("./processorHandle");
+import ProcessorHandle from "./processorHandle.js";
 //# sourceMappingURL=writeEntry.js.map

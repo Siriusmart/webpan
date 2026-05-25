@@ -1,12 +1,13 @@
-import yargs = require("yargs");
-import fs = require("fs/promises");
-import path = require("path");
+import yargs from "yargs";
+import fs from "fs/promises";
+import path from "path";
+import type * as yargsTypes from "yargs";
 
-import type wmanifest = require("../types/wmanifest");
+import type * as wmanifest from "../types/wmanifest.js";
 
 async function createProjectManifest(
     root: string,
-    yargs: yargs.ArgumentsCamelCase<{}>
+    yargs: yargsTypes.ArgumentsCamelCase<{}>
 ): Promise<wmanifest.WManifest> {
     const content = await fs.readFile(path.join(root, "wproject.json"), "utf8");
     let wproject: any;
@@ -41,6 +42,6 @@ async function createProjectManifest(
     };
 }
 
-export = {
+export default {
     createProjectManifest,
 };

@@ -1,9 +1,8 @@
-import type procEntries = require("./procEntries");
-import type Processor = require("./processor");
-import type processorStates = require("./processorStates");
-import BuildInstance = require("../types/buildInstance");
-import WriteEntriesManager = require("../info/writeEntriesManager");
-export = ProcessorHandle;
+import type * as procEntries from "./procEntries.js";
+import Processor from "./processor.js";
+import type * as processorStates from "./processorStates.js";
+import BuildInstance from "../types/buildInstance.js";
+import WriteEntriesManager from "../info/writeEntriesManager.js";
 declare class ProcessorHandle {
     id: string;
     state: processorStates.ProcessorState;
@@ -35,4 +34,5 @@ declare class ProcessorHandle {
     getProcessor(requester: ProcessorHandle): Promise<Processor>;
     getSettings(requester: ProcessorHandle): Record<string, any>;
 }
+export default ProcessorHandle;
 //# sourceMappingURL=processorHandle.d.ts.map

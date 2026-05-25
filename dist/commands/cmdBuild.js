@@ -1,16 +1,15 @@
-"use strict";
-const path = require("path");
-const fs = require("fs/promises");
-const WriteEntriesManager = require("../info/writeEntriesManager");
-const BuildInstance = require("../types/buildInstance");
-const findRoot = require("../info/findRoot");
-const buildInfo = require("../info/buildInfo");
-const cleanBuild = require("../actions/cleanBuild");
-const fsUtils = require("../utils/fsUtils");
-const calcHashedEntries = require("../info/calcHashedEntries");
-const calcDiff = require("../utils/calcDiff");
-const buildDiff = require("../actions/buildDiff");
-const wproject = require("../info/wproject");
+import path from "path";
+import fs from "fs/promises";
+import WriteEntriesManager from "../info/writeEntriesManager.js";
+import BuildInstance from "../types/buildInstance.js";
+import findRoot from "../info/findRoot.js";
+import buildInfo from "../info/buildInfo.js";
+import cleanBuild from "../actions/cleanBuild.js";
+import fsUtils from "../utils/fsUtils.js";
+import calcHashedEntries from "../info/calcHashedEntries.js";
+import calcDiff from "../utils/calcDiff.js";
+import buildDiff from "../actions/buildDiff.js";
+import wproject from "../info/wproject.js";
 async function cmdBuild(args) {
     const argPath = args.path;
     const root = await findRoot(argPath);
@@ -41,5 +40,5 @@ async function cmdBuild(args) {
     await fs.mkdir(path.join(root, "dist"), { recursive: true });
     await buildDiff(unwrappedBuildInfo.buildInstance, srcContents, hashedDiff, hashedEntries);
 }
-module.exports = cmdBuild;
+export default cmdBuild;
 //# sourceMappingURL=cmdBuild.js.map

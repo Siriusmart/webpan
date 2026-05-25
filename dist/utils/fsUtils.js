@@ -1,6 +1,5 @@
-"use strict";
-const fs = require("fs/promises");
-const path = require("path");
+import fs from "fs/promises";
+import path from "path";
 async function exists(path) {
     try {
         await fs.stat(path);
@@ -85,7 +84,7 @@ async function moveCreate(from, to) {
     }
     await fs.rename(from, to);
 }
-module.exports = {
+export default {
     exists,
     existsFile,
     existsDir,

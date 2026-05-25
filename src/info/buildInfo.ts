@@ -1,17 +1,17 @@
-import path = require("path");
-import fs = require("fs/promises");
-import assert = require("assert");
+import path from "path";
+import fs from "fs/promises";
+import assert from "assert";
 
-import type BuildInstance = require("../types/buildInstance");
-import type WriteEntriesManager = require("../info/writeEntriesManager");
-import type ProcessorHandle = require("../types/processorHandle");
-import type wmanifest = require("../types/wmanifest");
-import type fsEntries = require("../types/fsEntries");
-import type procEntries = require("../types/procEntries");
-import type ruleEntry = require("../types/ruleEntry");
-import type writeEntry = require("../types/writeEntry");
+import type BuildInstance from "../types/buildInstance.js";
+import type WriteEntriesManager from "../info/writeEntriesManager.js";
+import type ProcessorHandle from "../types/processorHandle.js";
+import type * as wmanifest from "../types/wmanifest.js";
+import type * as fsEntries from "../types/fsEntries.js";
+import type * as procEntries from "../types/procEntries.js";
+import type * as ruleEntry from "../types/ruleEntry.js";
+import type * as writeEntry from "../types/writeEntry.js";
 
-import fsUtils = require("../utils/fsUtils");
+import fsUtils from "../utils/fsUtils.js";
 
 function replacer(_: string, value: any) {
     if (value instanceof Map) {
@@ -294,7 +294,7 @@ function unwrapBuildInfo(
     };
 }
 
-export = {
+export default {
     readBuildInfo,
     writeBuildInfo,
     wrapBuildInfo,

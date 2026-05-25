@@ -1,13 +1,13 @@
-import path = require("path");
-import assert = require("assert");
-import micromatch = require("micromatch");
+import path from "path";
+import assert from "assert";
+import micromatch from "micromatch";
 
-import type procEntries = require("../types/procEntries");
-import type ruleEntry = require("../types/ruleEntry");
-import type BuildInstance = require("../types/buildInstance");
+import type * as procEntries from "../types/procEntries.js";
+import type * as ruleEntry from "../types/ruleEntry.js";
+import type BuildInstance from "../types/buildInstance.js";
 
-import getProcessor = require("./getProcessor");
-import deepEq = require("../utils/deepEq");
+import getProcessor from "./getProcessor.js";
+import deepEq from "../utils/deepEq.js";
 
 function normaliseRawProcessor(
     proc: ruleEntry.ProcessorType
@@ -250,7 +250,7 @@ async function resolveProcessors(
     return foundEntries;
 }
 
-export = {
+export default {
     updateRules,
     resolveProcessors,
 };

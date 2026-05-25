@@ -1,7 +1,7 @@
-import path = require("path");
-import fs = require("fs/promises");
+import path from "path";
+import fs from "fs/promises";
 
-import fsUtils = require("../utils/fsUtils");
+import fsUtils from "../utils/fsUtils.js";
 
 async function cleanBuild(root: string): Promise<void> {
     const distPath = path.join(root, "dist");
@@ -20,4 +20,4 @@ async function cleanBuild(root: string): Promise<void> {
     }
 }
 
-export = cleanBuild;
+export default cleanBuild;

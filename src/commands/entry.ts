@@ -1,7 +1,7 @@
-import yargs = require("yargs");
-import yargsHelpers = require("yargs/helpers");
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
-import cmdBuild = require("./cmdBuild");
+import cmdBuild from "./cmdBuild.js";
 
 async function main(): Promise<void> {
     await new Promise((res) => setTimeout(res, 100));
@@ -49,7 +49,7 @@ async function main(): Promise<void> {
             }
         )
         .help()
-        .parse(yargsHelpers.hideBin(process.argv));
+        .parse(hideBin(process.argv));
 }
 
 main();

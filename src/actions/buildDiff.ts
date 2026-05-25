@@ -1,14 +1,14 @@
-import path = require("path");
-import assert = require("assert");
-import fs = require("fs/promises");
+import path from "path";
+import assert from "assert";
+import fs from "fs/promises";
 
-import type fsEntries = require("../types/fsEntries");
-import type procEntries = require("../types/procEntries");
-import type BuildInstance = require("../types/buildInstance");
+import type * as fsEntries from "../types/fsEntries.js";
+import type * as procEntries from "../types/procEntries.js";
+import type BuildInstance from "../types/buildInstance.js";
 
-import wrules = require("../info/wrules");
-import fsUtils = require("../utils/fsUtils");
-import NewFiles = require("../types/newfiles");
+import wrules from "../info/wrules.js";
+import fsUtils from "../utils/fsUtils.js";
+import NewFiles from "../types/newfiles.js";
 
 let currentlyBuilding: Promise<void> | null = null;
 let nextBuilding:
@@ -197,4 +197,4 @@ async function buildDiff(
     }
 }
 
-export = buildDiff;
+export default buildDiff;

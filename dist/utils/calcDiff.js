@@ -1,5 +1,3 @@
-"use strict";
-const procEntries = require("../types/procEntries");
 function calcDiffByEq(before, after, eq) {
     let diffs = new Map();
     for (const [key, vBefore] of before.entries()) {
@@ -24,7 +22,7 @@ function calcDiffByExtractor(before, after, extractor) {
 function calcDiff(before, after) {
     return calcDiffByExtractor(before, after, (a) => a);
 }
-module.exports = {
+export default {
     calcDiffByEq,
     calcDiffByExtractor,
     calcDiff,

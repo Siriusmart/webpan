@@ -1,6 +1,6 @@
-import path = require("path");
+import path from "path";
 
-import fsUtils = require("../utils/fsUtils");
+import fsUtils from "../utils/fsUtils.js";
 
 async function findRoot(pathHint: string = "."): Promise<string | null> {
     if (await fsUtils.existsDir(pathHint)) {
@@ -14,4 +14,4 @@ async function findRoot(pathHint: string = "."): Promise<string | null> {
     }
 }
 
-export = findRoot;
+export default findRoot;

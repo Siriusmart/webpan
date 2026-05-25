@@ -1,10 +1,9 @@
-"use strict";
-const path = require("path");
-const assert = require("assert");
-const fs = require("fs/promises");
-const wrules = require("../info/wrules");
-const fsUtils = require("../utils/fsUtils");
-const NewFiles = require("../types/newfiles");
+import path from "path";
+import assert from "assert";
+import fs from "fs/promises";
+import wrules from "../info/wrules.js";
+import fsUtils from "../utils/fsUtils.js";
+import NewFiles from "../types/newfiles.js";
 let currentlyBuilding = null;
 let nextBuilding = null;
 async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff) {
@@ -129,5 +128,5 @@ async function buildDiff(buildInstance, fsContent, diff, hashedEntries) {
         await nextBuilding[0];
     }
 }
-module.exports = buildDiff;
+export default buildDiff;
 //# sourceMappingURL=buildDiff.js.map

@@ -1,5 +1,5 @@
-import type procEntries = require("../types/procEntries");
-import type BuildInstance = require("../types/buildInstance");
+import type * as procEntries from "../types/procEntries.js";
+import type BuildInstance from "../types/buildInstance.js";
 declare function updateRules(buildInstance: BuildInstance): Promise<void>;
 interface FoundProcessorEntry {
     processorClass: procEntries.ProcClass;
@@ -14,5 +14,5 @@ declare const _default: {
     updateRules: typeof updateRules;
     resolveProcessors: typeof resolveProcessors;
 };
-export = _default;
+export default _default;
 //# sourceMappingURL=wrules.d.ts.map
