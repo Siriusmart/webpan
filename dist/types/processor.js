@@ -1,5 +1,6 @@
 import micromatch from "micromatch";
 import path from "path";
+import { createRequire } from "module";
 class FileNamedProcOne {
     parent;
     proc;
@@ -58,7 +59,8 @@ class Processor {
     __handle;
     buildInstance;
     constructor(buildInstance, meta, id) {
-        const ProcessorHandle = require("./processorHandle");
+        const require = createRequire(import.meta.url);
+        const { default: ProcessorHandle } = require("./processorHandle");
         this.buildInstance = buildInstance;
         this.__handle = new ProcessorHandle(buildInstance, meta, this, id);
     }

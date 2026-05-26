@@ -4,8 +4,9 @@ import type * as procEntries from "../types/procEntries.js";
 
 import Processor from "../types/processor.js";
 import fsUtils from "../utils/fsUtils.js";
+import { createRequire } from "module";
 
-let cachedProcessorClasses: Map<string, { new (): Processor }> = new Map();
+let cachedProcessorClasses: Map<string, { new(): Processor }> = new Map();
 
 async function getProcessor(
     root: string,
@@ -22,6 +23,7 @@ async function getProcessor(
         throw new Error(`Processor not found: no directory at ${procPath}`);
     }
 
+    const require = createRequire(import.meta.url)
     const procClass = (require(`wp-${ident}`) ?? {}).default;
     if (typeof procClass !== "function") {
         throw new Error(

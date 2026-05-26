@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs/promises";
 import assert from "assert";
 import fsUtils from "../utils/fsUtils.js";
+import { createRequire } from "module";
 function replacer(_, value) {
     if (value instanceof Map) {
         return {
@@ -98,8 +99,9 @@ function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules, writeManage
         }))))),
     };
 }
+const require = createRequire(import.meta.url);
 function unwrapBuildInfo(root, manifest, buildInfo) {
-    const BuildInstance = require("../types/buildInstance");
+    const { default: BuildInstance } = require("../types/buildInstance");
     let buildInstance = new BuildInstance(root, manifest, buildInfo.writeEntries);
     let cachedProcessors = new Map();
     let cachedProcessorsFlat = new Map();
@@ -170,7 +172,7 @@ function unwrapBuildInfo(root, manifest, buildInfo) {
             return dependency;
         }));
     }
-    const WriteEntriesManager = require("../info/writeEntriesManager");
+    const { default: WriteEntriesManager } = require("../info/writeEntriesManager");
     return {
         hashedEntries: buildInfo.hashedEntries,
         cachedRules: buildInfo.rules,

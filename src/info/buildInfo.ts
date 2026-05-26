@@ -12,6 +12,7 @@ import type * as ruleEntry from "../types/ruleEntry.js";
 import type * as writeEntry from "../types/writeEntry.js";
 
 import fsUtils from "../utils/fsUtils.js";
+import { createRequire } from "module";
 
 function replacer(_: string, value: any) {
     if (value instanceof Map) {
@@ -172,6 +173,8 @@ function wrapBuildInfo(
     };
 }
 
+const require = createRequire(import.meta.url)
+
 function unwrapBuildInfo(
     root: string,
     manifest: wmanifest.WManifest,
@@ -184,7 +187,7 @@ function unwrapBuildInfo(
     writeManager: WriteEntriesManager,
     buildInstance: BuildInstance
 } {
-    const BuildInstance = require("../types/buildInstance");
+    const { default: BuildInstance } = require("../types/buildInstance");
     let buildInstance = new BuildInstance(root, manifest, buildInfo.writeEntries)
     let cachedProcessors: Map<
         string,
@@ -282,7 +285,7 @@ function unwrapBuildInfo(
         );
     }
 
-    const WriteEntriesManager = require("../info/writeEntriesManager");
+    const { default: WriteEntriesManager } = require("../info/writeEntriesManager");
 
     return {
         hashedEntries: buildInfo.hashedEntries,

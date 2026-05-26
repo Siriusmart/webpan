@@ -15,6 +15,9 @@ import wrules from "../info/wrules.js";
 import buildInfo from "../info/buildInfo.js";
 import path from "path";
 import fsUtils from "../utils/fsUtils.js";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url)
 
 class BuildInstance {
     private root: string;
@@ -86,7 +89,7 @@ class BuildInstance {
     }
 
     constructor(root: string, manifest: wmanifest.WManifest, writeEntries: Map<string, writeEntry.OutputTarget>) {
-        const WriteEntriesManager = require("../info/writeEntriesManager");
+        const { default: WriteEntriesManager } = require("../info/writeEntriesManager");
 
         this.root = root;
         this.manifest = manifest;
