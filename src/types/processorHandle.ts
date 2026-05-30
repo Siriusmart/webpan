@@ -46,7 +46,7 @@ class ProcessorHandle {
     }
 
     drop(): void {
-        this.reset();
+        this.resetWithoutRebuild();
         if (!this.buildInstance.getProcById().delete(this.id)) {
             throw new Error("You called drop twice!");
         }
@@ -59,7 +59,7 @@ class ProcessorHandle {
             );
     }
 
-    reset(): void {
+    resetWithoutRebuild(): void {
         if ("result" in this.state) {
             this.state.result.files.forEach((toDelete) =>
                 this.buildInstance
@@ -72,13 +72,39 @@ class ProcessorHandle {
             return;
         }
 
+        this.dependencies.forEach((handle) => handle.dependents.delete(this));
+        this.dependents.forEach((handle) => handle.resetWithoutRebuild());
+        this.dependencies.clear();
+        this.dependents.clear();
+
         this.state = {
             status: "empty",
         };
+    }
+
+    private resetAndRebuildDependentsDuringBuild(): void {
+        if ("result" in this.state) {
+            this.state.result.files.forEach((toDelete) =>
+                this.buildInstance
+                    .getWriteEntriesManager()
+                    .set(toDelete, { processor: this, content: "remove", priority: 0 })
+            );
+        }
+
+        if (this.state.status === "empty") {
+            return;
+        }
+
         this.dependencies.forEach((handle) => handle.dependents.delete(this));
-        this.dependents.forEach((handle) => handle.reset());
         this.dependencies.clear();
         this.dependents.clear();
+        let dependentsBeforeClear = this.dependents;
+        this.dependencies = new Set()
+        dependentsBeforeClear.forEach((handle) => this.buildInstance.addTaskDuringBuild(handle));
+
+        this.state = {
+            status: "empty",
+        };
     }
 
     getIdent(): [string, string] {
@@ -171,6 +197,7 @@ class ProcessorHandle {
         }
     }
 
+    // adds build entry, writes directly into write manager ()
     async buildWithBuffer(
         buildInstance: BuildInstance
     ): Promise<processorStates.ProcessorResult> {
@@ -189,15 +216,10 @@ class ProcessorHandle {
                 break;
         }
 
-        this.reset();
+        this.resetAndRebuildDependentsDuringBuild();
 
+        // this lines modifies state the building
         const { promise, resolve, reject } = this.pendingResultPromise();
-        this.state = {
-            status: "building",
-            pendingResult: promise,
-            reject,
-            resolve,
-        };
 
         try {
             let output = await this.processor.build(content);
@@ -215,6 +237,7 @@ class ProcessorHandle {
                     files: new Set(cleanOutput.files.keys()),
                 },
             };
+
             resolve(this.state.result);
         } catch (err) {
             this.state = {
@@ -222,6 +245,18 @@ class ProcessorHandle {
                 err,
             };
             reject(err);
+
+            err =
+                typeof err === "object" &&
+                    err !== null &&
+                    "stack" in err
+                    ? err.stack
+                    : err;
+            /*
+    console.error(
+        `Build failed at ${this.meta.procName} for ${this.meta.childPath} because ${err}`
+    );
+    */
         }
 
         return this.unwrapPendingResult(await promise);

@@ -15,7 +15,8 @@ declare class ProcessorHandle {
     equals(proc: Processor): boolean;
     drop(): void;
     isOrDependsOn(needle: ProcessorHandle, path?: ProcessorHandle[]): boolean;
-    reset(): void;
+    resetWithoutRebuild(): void;
+    private resetAndRebuildDependentsDuringBuild;
     getIdent(): [string, string];
     hasResult(): boolean;
     hasProcessor(): boolean;

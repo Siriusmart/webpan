@@ -19,6 +19,8 @@ class BuildInstance {
     procByFiles;
     procById;
     rules;
+    additionalBuildingQueue;
+    additionalBuilding;
     static normaliseOutput(output, meta) {
         let writes = new Map();
         if (output.relative !== undefined)
@@ -67,10 +69,21 @@ class BuildInstance {
         this.procByFiles = new Map();
         this.procById = new Map();
         this.rules = new Map();
+        this.additionalBuildingQueue = new Set();
+        this.additionalBuilding = new Map();
+        this.count = 0;
     }
     withHashedEntries(hashedEntries) {
         this.fsHashedEntries = hashedEntries;
         return this;
+    }
+    count;
+    addTaskDuringBuild(handle) {
+        if (this.additionalBuilding.has(handle)) {
+            this.additionalBuildingQueue.add(handle);
+            return;
+        }
+        this.additionalBuilding.set(handle, handle.buildWithBuffer(this));
     }
     async buildOutputAll() {
         let toBuild = new Set();
@@ -140,6 +153,11 @@ class BuildInstance {
                 files: fileKeys,
             });
         }));
+        while (this.additionalBuilding.size !== 0 || this.additionalBuildingQueue.size !== 0) {
+            await Promise.all(this.additionalBuilding.values());
+            this.additionalBuilding.clear();
+            this.additionalBuildingQueue.forEach(handle => this.addTaskDuringBuild(handle));
+        }
         return res;
     }
     async withFsContent(fsContent, hashedEntries, fsDiff) {

@@ -33,6 +33,8 @@ class BuildInstance {
     private procByFiles: procEntries.ProcByFileMap;
     private procById: procEntries.ProcByIdMap;
     private rules: ruleEntry.RuleEntries;
+    private additionalBuildingQueue: Set<ProcessorHandle>
+    private additionalBuilding: Map<ProcessorHandle, Promise<processorStates.ProcessorResult>>
 
     static normaliseOutput(
         output: processorStates.ProcessorOutputRaw,
@@ -102,11 +104,25 @@ class BuildInstance {
         this.procByFiles = new Map();
         this.procById = new Map();
         this.rules = new Map();
+        this.additionalBuildingQueue = new Set();
+        this.additionalBuilding = new Map();
+        this.count = 0
     }
 
     withHashedEntries(hashedEntries: fsEntries.HashedEntries): BuildInstance {
         this.fsHashedEntries = hashedEntries;
         return this;
+    }
+
+    count: number;
+
+    addTaskDuringBuild(handle: ProcessorHandle): void {
+        if (this.additionalBuilding.has(handle)) {
+            this.additionalBuildingQueue.add(handle)
+            return
+        }
+
+        this.additionalBuilding.set(handle, handle.buildWithBuffer(this))
     }
 
     async buildOutputAll(): Promise<
@@ -140,7 +156,6 @@ class BuildInstance {
                 let output: processorStates.ProcessorOutputRaw;
                 let fsEntry = fsContent.get(handle.meta.childPath);
                 assert(fsEntry !== undefined);
-
                 let content: Buffer | "dir";
 
                 try {
@@ -194,6 +209,12 @@ class BuildInstance {
                 });
             })
         );
+
+        while (this.additionalBuilding.size !== 0 || this.additionalBuildingQueue.size !== 0) {
+            await Promise.all(this.additionalBuilding.values())
+            this.additionalBuilding.clear()
+            this.additionalBuildingQueue.forEach(handle => this.addTaskDuringBuild(handle))
+        }
 
         return res;
     }

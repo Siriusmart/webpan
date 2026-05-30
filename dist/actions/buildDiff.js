@@ -14,8 +14,9 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
     let newFiles = new Set(fsDiff.entries().filter(([_, diffType]) => diffType === "created").map(([name, _]) => name));
     if (newFiles.size !== 0)
         buildInstance.getProcById().values().forEach(proc => {
-            if (proc.processor.shouldRebuild(new NewFiles(newFiles, proc)))
-                proc.reset();
+            if (proc.processor.shouldRebuild(new NewFiles(newFiles, proc))) {
+                proc.resetWithoutRebuild();
+            }
         });
     for (const [filePath, diffType] of fsDiff.entries()) {
         // IMPORTANT! update cachedProcessors
@@ -31,9 +32,11 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
                         assert(content !== undefined);
                         // toBuild.push([handle, content[0] === "file" ? content[1] : "dir"])
                     }
-                    handle.reset();
                     if (diffType === "removed") {
                         handle.drop();
+                    }
+                    else {
+                        handle.resetWithoutRebuild();
                     }
                 }));
                 if (diffType === "removed") {

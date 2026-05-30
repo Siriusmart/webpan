@@ -31,7 +31,7 @@ class ProcessorHandle {
         return this.processor === proc;
     }
     drop() {
-        this.reset();
+        this.resetWithoutRebuild();
         if (!this.buildInstance.getProcById().delete(this.id)) {
             throw new Error("You called drop twice!");
         }
@@ -40,7 +40,7 @@ class ProcessorHandle {
         return needle === this || path.includes(this) ||
             Array.from(this.dependencies).some((dependent) => dependent.isOrDependsOn(needle, path.concat([this])));
     }
-    reset() {
+    resetWithoutRebuild() {
         if ("result" in this.state) {
             this.state.result.files.forEach((toDelete) => this.buildInstance
                 .getWriteEntriesManager()
@@ -49,13 +49,32 @@ class ProcessorHandle {
         if (this.state.status === "empty") {
             return;
         }
+        this.dependencies.forEach((handle) => handle.dependents.delete(this));
+        this.dependents.forEach((handle) => handle.resetWithoutRebuild());
+        this.dependencies.clear();
+        this.dependents.clear();
         this.state = {
             status: "empty",
         };
+    }
+    resetAndRebuildDependentsDuringBuild() {
+        if ("result" in this.state) {
+            this.state.result.files.forEach((toDelete) => this.buildInstance
+                .getWriteEntriesManager()
+                .set(toDelete, { processor: this, content: "remove", priority: 0 }));
+        }
+        if (this.state.status === "empty") {
+            return;
+        }
         this.dependencies.forEach((handle) => handle.dependents.delete(this));
-        this.dependents.forEach((handle) => handle.reset());
         this.dependencies.clear();
         this.dependents.clear();
+        let dependentsBeforeClear = this.dependents;
+        this.dependencies = new Set();
+        dependentsBeforeClear.forEach((handle) => this.buildInstance.addTaskDuringBuild(handle));
+        this.state = {
+            status: "empty",
+        };
     }
     getIdent() {
         return [this.meta.childPath, this.meta.procName];
@@ -120,6 +139,7 @@ class ProcessorHandle {
                 throw res[1];
         }
     }
+    // adds build entry, writes directly into write manager ()
     async buildWithBuffer(buildInstance) {
         const contentEntry = buildInstance
             .getFsContent()
@@ -134,14 +154,9 @@ class ProcessorHandle {
                 content = "dir";
                 break;
         }
-        this.reset();
+        this.resetAndRebuildDependentsDuringBuild();
+        // this lines modifies state the building
         const { promise, resolve, reject } = this.pendingResultPromise();
-        this.state = {
-            status: "building",
-            pendingResult: promise,
-            reject,
-            resolve,
-        };
         try {
             let output = await this.processor.build(content);
             let cleanOutput = BuildInstance.normaliseOutput(output, this.meta);
@@ -162,6 +177,17 @@ class ProcessorHandle {
                 err,
             };
             reject(err);
+            err =
+                typeof err === "object" &&
+                    err !== null &&
+                    "stack" in err
+                    ? err.stack
+                    : err;
+            /*
+    console.error(
+        `Build failed at ${this.meta.procName} for ${this.meta.childPath} because ${err}`
+    );
+    */
         }
         return this.unwrapPendingResult(await promise);
     }

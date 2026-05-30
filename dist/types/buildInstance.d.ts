@@ -16,9 +16,13 @@ declare class BuildInstance {
     private procByFiles;
     private procById;
     private rules;
+    private additionalBuildingQueue;
+    private additionalBuilding;
     static normaliseOutput(output: processorStates.ProcessorOutputRaw, meta: procEntries.ProcessorMetaEntry): processorStates.ProcessorOutputClean;
     constructor(root: string, manifest: wmanifest.WManifest, writeEntries: Map<string, writeEntry.OutputTarget>);
     withHashedEntries(hashedEntries: fsEntries.HashedEntries): BuildInstance;
+    count: number;
+    addTaskDuringBuild(handle: ProcessorHandle): void;
     buildOutputAll(): Promise<Set<[ProcessorHandle, processorStates.ProcessorOutputClean]>>;
     withFsContent(fsContent: fsEntries.FsContentEntries, hashedEntries: fsEntries.HashedEntries, fsDiff: procEntries.DiffEntries<string>): Promise<BuildInstance>;
     withProcs(procByFiles: procEntries.ProcByFileMap, procById: procEntries.ProcByIdMap): BuildInstance;
