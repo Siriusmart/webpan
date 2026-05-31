@@ -11,7 +11,7 @@ function deepEq(a, b) {
         return a === b;
     if (a === null)
         return b === null;
-    if (a.constructor.name !== "Object" && a.constructor.name !== "Array")
+    if (a.constructor?.name !== "Object" && a.constructor?.name !== "Array")
         throw new Error("cannot use deepEq on structures other than Object or Array");
     let checkedKeys = new Set();
     for (const [key, value] of Object.entries(a)) {

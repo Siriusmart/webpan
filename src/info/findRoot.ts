@@ -8,6 +8,10 @@ async function findRoot(pathHint: string = "."): Promise<string | null> {
             return pathHint;
         }
 
+        // ../ is /
+        if (path.resolve(pathHint) === path.resolve(path.join(pathHint, "..")))
+            return null;
+
         return await findRoot(path.join(pathHint, ".."));
     } else {
         return null;

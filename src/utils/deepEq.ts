@@ -16,7 +16,7 @@ function deepEq(a: any, b: any): boolean {
     if (a === null)
         return b === null;
 
-    if (a.constructor.name !== "Object" && a.constructor.name !== "Array")
+    if (a.constructor?.name !== "Object" && a.constructor?.name !== "Array")
         throw new Error(
             "cannot use deepEq on structures other than Object or Array"
         );

@@ -334,6 +334,8 @@ class BuildInstance {
             await fsUtils.writeCreate(fullPath, buffer);
         }))
 
+        // no race conditions here, because only move1 only moves from dist to meta/shadowed/
+        // move2 only moves from there into dist
         await Promise.all(Array.from(actions.moves1).map(async ([from, to]) => {
             const fullPathFrom = path.join(
                 this.getRoot(),
