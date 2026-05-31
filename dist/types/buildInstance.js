@@ -83,7 +83,7 @@ class BuildInstance {
             this.additionalBuildingQueue.add(handle);
             return;
         }
-        this.additionalBuilding.set(handle, handle.buildWithBuffer(this));
+        this.additionalBuilding.set(handle, handle.buildWithBuffer());
     }
     async buildOutputAll() {
         let toBuild = new Set();
@@ -153,11 +153,13 @@ class BuildInstance {
                 files: fileKeys,
             });
         }));
-        while (this.additionalBuilding.size !== 0 || this.additionalBuildingQueue.size !== 0) {
+        do {
             await Promise.all(this.additionalBuilding.values());
             this.additionalBuilding.clear();
-            this.additionalBuildingQueue.forEach(handle => this.addTaskDuringBuild(handle));
-        }
+            let currentAdditionalBuildingQueue = this.additionalBuildingQueue;
+            this.additionalBuildingQueue = new Set();
+            currentAdditionalBuildingQueue.forEach(handle => this.addTaskDuringBuild(handle));
+        } while (this.additionalBuilding.size !== 0 || this.additionalBuildingQueue.size !== 0);
         return res;
     }
     async withFsContent(fsContent, hashedEntries, fsDiff) {

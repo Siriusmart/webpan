@@ -30,7 +30,7 @@ declare class ProcessorHandle {
         reject: (err: any) => void;
     };
     unwrapPendingResult(res: ["ok", processorStates.ProcessorResult] | ["err", any]): processorStates.ProcessorResult;
-    buildWithBuffer(buildInstance: BuildInstance): Promise<processorStates.ProcessorResult>;
+    buildWithBuffer(): Promise<processorStates.ProcessorResult>;
     getResult(requester: ProcessorHandle): Promise<processorStates.ProcessorResult>;
     getProcessor(requester: ProcessorHandle): Promise<Processor>;
     getSettings(requester: ProcessorHandle): Record<string, any>;

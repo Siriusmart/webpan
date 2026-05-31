@@ -140,8 +140,8 @@ class ProcessorHandle {
         }
     }
     // adds build entry, writes directly into write manager ()
-    async buildWithBuffer(buildInstance) {
-        const contentEntry = buildInstance
+    async buildWithBuffer() {
+        const contentEntry = this.buildInstance
             .getFsContent()
             .get(this.meta.childPath);
         assert(contentEntry !== undefined);
@@ -218,7 +218,7 @@ class ProcessorHandle {
         requester.dependencies.add(this);
         switch (this.state.status) {
             case "resultonly":
-                await this.buildWithBuffer(this.buildInstance);
+                await this.buildWithBuffer();
                 return this.processor;
             case "empty":
                 throw new Error("processor is not being built and will not be resolved");
