@@ -95,39 +95,54 @@ async function buildDiff(buildInstance, fsContent, diff, hashedEntries) {
         currentlyBuilding = null;
         return;
     }
-    if (nextBuilding === null) {
+    else if (nextBuilding === null) {
+        let { promise, resolve } = Promise.withResolvers();
         nextBuilding = [
-            new Promise(async (res) => {
-                assert(nextBuilding !== null);
-                for (const [entryPath, entryDiff] of diff.entries()) {
-                    switch (entryDiff) {
-                        case "changed":
-                        case "removed":
-                            nextBuilding[1].set(entryPath, entryDiff);
-                            break;
-                        case "created":
-                            if (nextBuilding[1].has(entryPath)) {
-                                nextBuilding[1].set(entryPath, "changed");
-                            }
-                            else {
-                                nextBuilding[1].set(entryPath, entryDiff);
-                            }
-                            break;
-                    }
-                }
-                await currentlyBuilding;
-                currentlyBuilding = buildDiffInternal(buildInstance, nextBuilding[3], nextBuilding[2], nextBuilding[1]);
-                nextBuilding = null;
-                await currentlyBuilding;
-                currentlyBuilding = null;
-                res();
-            }),
+            promise,
             new Map(),
             hashedEntries,
             fsContent,
         ];
+        for (const [entryPath, entryDiff] of diff.entries()) {
+            switch (entryDiff) {
+                case "changed":
+                case "removed":
+                    nextBuilding[1].set(entryPath, entryDiff);
+                    break;
+                case "created":
+                    if (nextBuilding[1].has(entryPath)) {
+                        nextBuilding[1].set(entryPath, "changed");
+                    }
+                    else {
+                        nextBuilding[1].set(entryPath, entryDiff);
+                    }
+                    break;
+            }
+        }
+        await currentlyBuilding;
+        currentlyBuilding = buildDiffInternal(buildInstance, nextBuilding[3], nextBuilding[2], nextBuilding[1]);
+        nextBuilding = null;
+        await currentlyBuilding;
+        currentlyBuilding = null;
+        resolve();
     }
     else {
+        for (const [entryPath, entryDiff] of diff.entries()) {
+            switch (entryDiff) {
+                case "changed":
+                case "removed":
+                    nextBuilding[1].set(entryPath, entryDiff);
+                    break;
+                case "created":
+                    if (nextBuilding[1].has(entryPath)) {
+                        nextBuilding[1].set(entryPath, "changed");
+                    }
+                    else {
+                        nextBuilding[1].set(entryPath, entryDiff);
+                    }
+                    break;
+            }
+        }
         await nextBuilding[0];
     }
 }
