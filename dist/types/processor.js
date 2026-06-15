@@ -1,7 +1,7 @@
 import micromatch from "micromatch";
 import path from "path";
 import { createRequire } from "module";
-class FileNamedProcOne {
+export class FileNamedProcOne {
     parent;
     proc;
     constructor(parent, proc) {
@@ -21,7 +21,7 @@ class FileNamedProcOne {
         return this.proc.processor === other;
     }
 }
-class FileNamedProcs {
+export class FileNamedProcs {
     parent;
     procsSet;
     constructor(parent, procsSet) {
@@ -37,7 +37,7 @@ class FileNamedProcs {
         return new Set(this.values());
     }
 }
-class FileProcs {
+export class FileProcs {
     parent;
     procsMap;
     constructor(parent, procsMap) {
@@ -55,7 +55,7 @@ class FileProcs {
         return out;
     }
 }
-class Processor {
+export default class Processor {
     __handle;
     buildInstance;
     constructor(buildInstance, meta, id) {
@@ -105,5 +105,4 @@ class Processor {
         return false;
     }
 }
-export default Processor;
 //# sourceMappingURL=processor.js.map

@@ -3,7 +3,7 @@ import type NewFiles from "./newfiles.js";
 import type * as procEntries from "./procEntries.js";
 import type * as processorStates from "./processorStates.js";
 import type ProcessorHandle from "./processorHandle.js";
-declare class FileNamedProcOne {
+export declare class FileNamedProcOne {
     private parent;
     private proc;
     constructor(parent: ProcessorHandle, proc: ProcessorHandle);
@@ -12,14 +12,14 @@ declare class FileNamedProcOne {
     getProcessor(): Promise<Processor>;
     equals(other: Processor): boolean;
 }
-declare class FileNamedProcs {
+export declare class FileNamedProcs {
     private parent;
     private procsSet;
     constructor(parent: ProcessorHandle, procsSet: Set<ProcessorHandle>);
     values(): IteratorObject<FileNamedProcOne>;
     toSet(): Set<FileNamedProcOne>;
 }
-declare class FileProcs {
+export declare class FileProcs {
     private parent;
     private procsMap;
     constructor(parent: ProcessorHandle, procsMap: Map<string, Set<ProcessorHandle>>);
@@ -28,7 +28,7 @@ declare class FileProcs {
         exclude?: string | string[];
     }): Map<string, FileNamedProcs>;
 }
-declare abstract class Processor {
+export default abstract class Processor {
     __handle: ProcessorHandle;
     private buildInstance;
     constructor(buildInstance: BuildInstance, meta: procEntries.ProcessorMetaEntry, id?: string);
@@ -47,5 +47,4 @@ declare abstract class Processor {
     abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutputRaw>;
     shouldRebuild(newFiles: NewFiles): boolean;
 }
-export default Processor;
 //# sourceMappingURL=processor.d.ts.map

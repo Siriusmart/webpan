@@ -9,7 +9,7 @@ import type ProcessorHandle from "./processorHandle.js";
 import path from "path";
 import { createRequire } from "module";
 
-class FileNamedProcOne {
+export class FileNamedProcOne {
     private parent: ProcessorHandle;
     private proc: ProcessorHandle;
 
@@ -35,7 +35,7 @@ class FileNamedProcOne {
     }
 }
 
-class FileNamedProcs {
+export class FileNamedProcs {
     private parent: ProcessorHandle;
     private procsSet: Set<ProcessorHandle>;
 
@@ -55,7 +55,7 @@ class FileNamedProcs {
     }
 }
 
-class FileProcs {
+export class FileProcs {
     private parent: ProcessorHandle;
     private procsMap: Map<string, Set<ProcessorHandle>>;
 
@@ -83,7 +83,7 @@ class FileProcs {
     }
 }
 
-abstract class Processor {
+export default abstract class Processor {
     __handle: ProcessorHandle;
     private buildInstance: BuildInstance;
 
@@ -155,5 +155,3 @@ abstract class Processor {
         return false;
     }
 }
-
-export default Processor;
