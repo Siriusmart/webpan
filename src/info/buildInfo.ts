@@ -64,7 +64,7 @@ interface BuildInfo {
 }
 
 async function readBuildInfo(root: string): Promise<BuildInfo> {
-    const buildInfoPath = path.join(root, "meta", "buildInfo.json");
+    const buildInfoPath = path.join(root, "build", "buildInfo.json");
 
     try {
         if (await fsUtils.existsFile(buildInfoPath)) {
@@ -91,7 +91,7 @@ async function writeBuildInfo(
     manifest: wmanifest.WManifest,
     data: BuildInfo
 ): Promise<void> {
-    const buildInfoPath = path.join(root, "meta", "buildInfo.json");
+    const buildInfoPath = path.join(root, "build", "buildInfo.json");
     await fsUtils.writeCreate(
         buildInfoPath,
         JSON.stringify(

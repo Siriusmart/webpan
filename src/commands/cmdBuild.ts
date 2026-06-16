@@ -62,7 +62,7 @@ async function cmdBuild(args: yargs.Arguments): Promise<void> {
         hashedEntries
     );
 
-    await fs.mkdir(path.join(root, "dist"), { recursive: true });
+    await fs.mkdir(path.join(root, "build"), { recursive: true });
     await buildDiff(unwrappedBuildInfo.buildInstance, srcContents, hashedDiff, hashedEntries);
 }
 

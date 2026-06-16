@@ -62,9 +62,9 @@ class WriteEntriesManager {
             for (const [prodId, writeEntry] of targetEntry.newWrites)
                 if (writeEntry.content === "remove") {
                     if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId) {
-                        removes.add(path.join("dist", childPath))
+                        removes.add(path.join("build/dist", childPath))
                         targetEntry.surface = null
-                    } else removes.add(path.join("meta/shadowed", childPath) + `.${prodId}`)
+                    } else removes.add(path.join("build/shadowed", childPath) + `.${prodId}`)
 
                     targetEntry.allOutputs.delete(prodId)
                 }
@@ -75,11 +75,11 @@ class WriteEntriesManager {
             for (const [prodId, writeEntry] of targetEntry.newWrites)
                 if (writeEntry.content !== "remove") {
                     if (targetEntry.surface !== null && writeEntry.processor.id === targetEntry.surface.procId) {
-                        let relPath = path.join("dist", childPath);
+                        let relPath = path.join("build/dist", childPath);
                         if (!removes.has(relPath))
                             writes.push([relPath, writeEntry.content])
                     } else {
-                        let relPath = path.join("meta/shadowed", childPath) + `.${prodId}`;
+                        let relPath = path.join("build/shadowed", childPath) + `.${prodId}`;
                         if (!removes.has(relPath))
                             writes.push([relPath, writeEntry.content])
                     }
@@ -107,10 +107,10 @@ class WriteEntriesManager {
 
             if (targetEntry.surface === null) {
                 targetEntry.surface = { procId: maxPriorityProc, priority: maxPriority }
-                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPriorityProc}`, path.join("dist", childPath)])
+                moves2.push([path.join("build/shadowed", childPath) + `.${maxPriorityProc}`, path.join("build/dist", childPath)])
             } else if (targetEntry.surface.priority < maxPriority) {
-                moves1.push([path.join("dist", childPath), path.join("meta/shadowed", childPath) + `.${targetEntry.surface?.procId}`])
-                moves2.push([path.join("meta/shadowed", childPath) + `.${maxPriorityProc}`, path.join("dist", childPath)])
+                moves1.push([path.join("build/dist", childPath), path.join("build/shadowed", childPath) + `.${targetEntry.surface?.procId}`])
+                moves2.push([path.join("build/shadowed", childPath) + `.${maxPriorityProc}`, path.join("build/dist", childPath)])
                 targetEntry.surface = { priority: maxPriority, procId: maxPriorityProc }
             }
         }

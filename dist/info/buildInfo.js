@@ -30,7 +30,7 @@ function reviver(_, value) {
     return value;
 }
 async function readBuildInfo(root) {
-    const buildInfoPath = path.join(root, "meta", "buildInfo.json");
+    const buildInfoPath = path.join(root, "build", "buildInfo.json");
     try {
         if (await fsUtils.existsFile(buildInfoPath)) {
             const content = await fs.readFile(buildInfoPath, "utf8");
@@ -53,7 +53,7 @@ async function readBuildInfo(root) {
     }
 }
 async function writeBuildInfo(root, manifest, data) {
-    const buildInfoPath = path.join(root, "meta", "buildInfo.json");
+    const buildInfoPath = path.join(root, "build", "buildInfo.json");
     await fsUtils.writeCreate(buildInfoPath, JSON.stringify(data, replacer, manifest.format.buildInfo ? manifest.format.tabSpaces : 0));
 }
 function wrapBuildInfo(hashedEntries, cachedProcessors, cachedRules, writeManager) {

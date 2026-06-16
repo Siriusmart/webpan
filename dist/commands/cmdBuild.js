@@ -37,7 +37,7 @@ async function cmdBuild(args) {
     // this info is contained in srcContents
     // a changed item must be a file, and exists in srcContents
     const hashedDiff = calcDiff.calcDiff(unwrappedBuildInfo.hashedEntries, hashedEntries);
-    await fs.mkdir(path.join(root, "dist"), { recursive: true });
+    await fs.mkdir(path.join(root, "build"), { recursive: true });
     await buildDiff(unwrappedBuildInfo.buildInstance, srcContents, hashedDiff, hashedEntries);
 }
 export default cmdBuild;
