@@ -33,7 +33,12 @@ export async function watchBuild(
     hashedEntries: HashedEntries,
     fsDiff: DiffEntries<string>
 ) {
-    await buildDiff(buildInstance, fsContent, fsDiff, hashedEntries)
+    let start = Date.now();
+    console.log("□ Initial build started")
+    buildDiff(buildInstance, fsContent, fsDiff, hashedEntries)
+        .then(() => {
+            console.log(`■ Initial build completed in ${((Date.now() - start) / 1000).toFixed(2)}s, watching for changes`)
+        })
 
     let debounce: ReturnType<typeof setTimeout> | undefined = undefined
 

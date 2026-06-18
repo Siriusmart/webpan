@@ -4,7 +4,12 @@ import buildDiff from "../actions/buildDiff.js";
 import { calcHash } from "../info/calcHashedEntries.js";
 import chokidar from 'chokidar';
 export async function watchBuild(buildInstance, fsContent, hashedEntries, fsDiff) {
-    await buildDiff(buildInstance, fsContent, fsDiff, hashedEntries);
+    let start = Date.now();
+    console.log("□ Initial build started");
+    buildDiff(buildInstance, fsContent, fsDiff, hashedEntries)
+        .then(() => {
+        console.log(`■ Initial build completed in ${((Date.now() - start) / 1000).toFixed(2)}s, watching for changes`);
+    });
     let debounce = undefined;
     let diff = new Map();
     const watcher = chokidar.watch(".", {
