@@ -1,7 +1,7 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import buildDiff from "../actions/buildDiff.js"
-import type BuildInstance from "webpan/src/types/buildInstance.js"
+import type BuildInstance from "../types/buildInstance.js"
 import type { BufferLike, HashedEntries, FsContentEntries } from "../types/fsEntries.js"
 import type { DiffEntries } from "../types/procEntries.js"
 import { calcHash } from "../info/calcHashedEntries.js"
