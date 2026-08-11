@@ -1,8 +1,8 @@
 import type BuildInstance from "./buildInstance.js";
-import type NewFiles from "./newfiles.js";
 import type * as procEntries from "./procEntries.js";
 import type * as processorStates from "./processorStates.js";
 import type ProcessorHandle from "./processorHandle.js";
+import type NewProcs from "./newProcs.js";
 export declare class FileNamedProcOne {
     private parent;
     private proc;
@@ -45,6 +45,6 @@ export default abstract class Processor {
     }): Map<string, FileProcs>;
     settings(): any;
     abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutputRaw>;
-    shouldRebuild(newFiles: NewFiles): boolean;
+    shouldRebuild(newProcs: NewProcs): boolean;
 }
 //# sourceMappingURL=processor.d.ts.map

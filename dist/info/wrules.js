@@ -38,6 +38,7 @@ async function updateRules(buildInstance) {
     let cachedRules = buildInstance.getRules();
     let fsEntries = buildInstance.getFsContent();
     let diff = buildInstance.getFsDiff();
+    let newProcs = new Map();
     for (const [filePath, diffType] of diff.entries()) {
         if (path.basename(filePath) !== "wrules.json") {
             continue;
@@ -140,12 +141,14 @@ async function updateRules(buildInstance) {
                     fileProcsEditable.set(toAdd.procName, procNamedSet);
                 }
                 procNamedSet.add(procObj.__handle);
+                newProcs.getOrInsert(absFileName, new Set()).add(toAdd.procName);
             }
             if (fileProcsEditable.size === 0) {
                 procCache.delete(absFileName);
             }
         }
     }
+    return newProcs;
 }
 async function resolveProcessors(buildInstance, dirCursor, fileName = dirCursor.endsWith("/") ? "/" : "") {
     const dirRule = buildInstance.getRules().get(dirCursor);

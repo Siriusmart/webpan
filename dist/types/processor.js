@@ -101,7 +101,7 @@ export default class Processor {
     settings() {
         return this.__handle.meta.settings;
     }
-    shouldRebuild(newFiles) {
+    shouldRebuild(newProcs) {
         return false;
     }
 }

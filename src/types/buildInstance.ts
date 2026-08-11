@@ -16,6 +16,8 @@ import buildInfo from "../info/buildInfo.js";
 import path from "path";
 import fsUtils from "../utils/fsUtils.js";
 import { createRequire } from "module";
+import NewProcs from "./newProcs.js";
+import type { NewProcsAbsolute } from "./newProcs.js";
 
 const require = createRequire(import.meta.url)
 
@@ -230,7 +232,8 @@ class BuildInstance {
         this.fsHashedEntries = hashedEntries;
         this.fsDiff = fsDiff;
 
-        await wrules.updateRules(this);
+        const newProcs = await wrules.updateRules(this);
+        this.flushNewProcs(newProcs);
 
         return this;
     }
@@ -363,6 +366,28 @@ class BuildInstance {
 
             await fsUtils.moveCreate(fullPathFrom, fullPathTo)
         }))
+    }
+
+    /**
+     * reset state of procs that needs to be rebuilt
+     */
+    flushNewProcs(newProcs: NewProcsAbsolute): void {
+        let currentNewProcs = newProcs;
+        let freshNewProcs: NewProcsAbsolute = new Map();
+
+        while (currentNewProcs.size !== 0) {
+            this.procById.forEach(proc => {
+                if (proc.state.status === "empty") return;
+
+                if (proc.processor.shouldRebuild(new NewProcs(newProcs, proc))) {
+                    freshNewProcs.getOrInsert(proc.meta.childPath, new Set()).add(proc.meta.procName);
+                    proc.resetWithoutRebuild();
+                }
+            });
+
+            currentNewProcs = freshNewProcs;
+            currentNewProcs = new Map();
+        }
     }
 }
 

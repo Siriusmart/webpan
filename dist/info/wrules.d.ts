@@ -1,6 +1,7 @@
 import type * as procEntries from "../types/procEntries.js";
 import type BuildInstance from "../types/buildInstance.js";
-declare function updateRules(buildInstance: BuildInstance): Promise<void>;
+import type { NewProcsAbsolute } from "../types/newProcs.js";
+declare function updateRules(buildInstance: BuildInstance): Promise<NewProcsAbsolute>;
 interface FoundProcessorEntry {
     processorClass: procEntries.ProcClass;
     settings: any;

@@ -1,13 +1,13 @@
 import micromatch from "micromatch";
 
 import type BuildInstance from "./buildInstance.js";
-import type NewFiles from "./newfiles.js";
 import type * as procEntries from "./procEntries.js";
 import type * as processorStates from "./processorStates.js";
 
 import type ProcessorHandle from "./processorHandle.js";
 import path from "path";
 import { createRequire } from "module";
+import type NewProcs from "./newProcs.js";
 
 export class FileNamedProcOne {
     private parent: ProcessorHandle;
@@ -151,7 +151,7 @@ export default abstract class Processor {
         content: Buffer | "dir"
     ): Promise<processorStates.ProcessorOutputRaw>;
 
-    shouldRebuild(newFiles: NewFiles): boolean {
+    shouldRebuild(newProcs: NewProcs): boolean {
         return false;
     }
 }

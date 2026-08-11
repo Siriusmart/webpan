@@ -3,7 +3,6 @@ import assert from "assert";
 import fs from "fs/promises";
 import wrules from "../info/wrules.js";
 import fsUtils from "../utils/fsUtils.js";
-import NewFiles from "../types/newfiles.js";
 let currentlyBuilding = null;
 let nextBuilding = null;
 async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff) {
@@ -11,13 +10,7 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
         .withBuildCycleState("writable")
         .withFsContent(fsContent, hashedEntries, fsDiff);
     let cachedProcessors = buildInstance.getProcByFiles();
-    let newFiles = new Set(fsDiff.entries().filter(([_, diffType]) => diffType === "created").map(([name, _]) => name));
-    if (newFiles.size !== 0)
-        buildInstance.getProcById().values().forEach(proc => {
-            if (proc.processor.shouldRebuild(new NewFiles(newFiles, proc))) {
-                proc.resetWithoutRebuild();
-            }
-        });
+    let newProcs = new Map();
     for (const [filePath, diffType] of fsDiff.entries()) {
         // IMPORTANT! update cachedProcessors
         switch (diffType) {
@@ -50,6 +43,7 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
             case "created":
                 const resolvedProcessors = await wrules.resolveProcessors(buildInstance, filePath);
                 cachedProcessors.set(filePath, new Map());
+                newProcs.set(filePath, new Set(resolvedProcessors.values().map(procEntry => procEntry.procName)));
                 resolvedProcessors.values().forEach((procEntry) => {
                     const meta = {
                         childPath: filePath,
@@ -82,6 +76,7 @@ async function buildDiffInternal(buildInstance, fsContent, hashedEntries, fsDiff
             // remember to try catch each build so one failed build dont spoil everything
         }
     }
+    buildInstance.flushNewProcs(newProcs);
     const res = await buildInstance.buildOutputAll();
     res.forEach(([handle, output]) => {
         handle.updateWithOutput(output, buildInstance.getWriteEntriesManager());

@@ -8,6 +8,7 @@ import type BuildInstance from "../types/buildInstance.js";
 
 import getProcessor from "./getProcessor.js";
 import deepEq from "../utils/deepEq.js";
+import type { NewProcsAbsolute } from "../types/newProcs.js";
 
 function normaliseRawProcessor(
     proc: ruleEntry.ProcessorType
@@ -49,11 +50,13 @@ function rawToNormalised(
     };
 }
 
-async function updateRules(buildInstance: BuildInstance): Promise<void> {
+async function updateRules(buildInstance: BuildInstance): Promise<NewProcsAbsolute> {
     let procCache = buildInstance.getProcByFiles();
     let cachedRules = buildInstance.getRules();
     let fsEntries = buildInstance.getFsContent();
     let diff = buildInstance.getFsDiff();
+
+    let newProcs: NewProcsAbsolute = new Map();
 
     for (const [filePath, diffType] of diff.entries()) {
         if (path.basename(filePath) !== "wrules.json") {
@@ -191,6 +194,7 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
                 }
 
                 procNamedSet.add(procObj.__handle);
+                newProcs.getOrInsert(absFileName, new Set()).add(toAdd.procName);
             }
 
             if (fileProcsEditable.size === 0) {
@@ -198,6 +202,8 @@ async function updateRules(buildInstance: BuildInstance): Promise<void> {
             }
         }
     }
+
+    return newProcs;
 }
 
 interface FoundProcessorEntry {

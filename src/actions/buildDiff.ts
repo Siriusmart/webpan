@@ -8,7 +8,7 @@ import type BuildInstance from "../types/buildInstance.js";
 
 import wrules from "../info/wrules.js";
 import fsUtils from "../utils/fsUtils.js";
-import NewFiles from "../types/newfiles.js";
+import type { NewProcsAbsolute } from "../types/newProcs.js";
 
 let currentlyBuilding: Promise<void> | null = null;
 let nextBuilding:
@@ -31,17 +31,7 @@ async function buildDiffInternal(
         .withFsContent(fsContent, hashedEntries, fsDiff);
     let cachedProcessors = buildInstance.getProcByFiles();
 
-    let newFiles = new Set(
-        fsDiff.entries().filter(([_, diffType]) => diffType === "created").map(([name, _]) => name)
-    );
-
-
-    if (newFiles.size !== 0)
-        buildInstance.getProcById().values().forEach(proc => {
-            if (proc.processor.shouldRebuild(new NewFiles(newFiles, proc))) {
-                proc.resetWithoutRebuild()
-            }
-        });
+    let newProcs: NewProcsAbsolute = new Map();
 
     for (const [filePath, diffType] of fsDiff.entries()) {
         // IMPORTANT! update cachedProcessors
@@ -81,6 +71,7 @@ async function buildDiffInternal(
                     filePath
                 );
                 cachedProcessors.set(filePath, new Map());
+                newProcs.set(filePath, new Set(resolvedProcessors.values().map(procEntry => procEntry.procName)));
 
                 resolvedProcessors.values().forEach((procEntry) => {
                     const meta: procEntries.ProcessorMetaEntry = {
@@ -124,6 +115,7 @@ async function buildDiffInternal(
         }
     }
 
+    buildInstance.flushNewProcs(newProcs);
     const res = await buildInstance.buildOutputAll();
 
     res.forEach(([handle, output]) => {

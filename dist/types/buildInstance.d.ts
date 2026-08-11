@@ -6,6 +6,7 @@ import type * as ruleEntry from "../types/ruleEntry.js";
 import type * as processorStates from "../types/processorStates.js";
 import type ProcessorHandle from "../types/processorHandle.js";
 import type WriteEntriesManager from "../info/writeEntriesManager.js";
+import type { NewProcsAbsolute } from "./newProcs.js";
 declare class BuildInstance {
     private root;
     private manifest;
@@ -39,6 +40,10 @@ declare class BuildInstance {
     clean(): Promise<void>;
     writeMeta(): Promise<void>;
     flush(): Promise<void>;
+    /**
+     * reset state of procs that needs to be rebuilt
+     */
+    flushNewProcs(newProcs: NewProcsAbsolute): void;
 }
 export default BuildInstance;
 //# sourceMappingURL=buildInstance.d.ts.map
