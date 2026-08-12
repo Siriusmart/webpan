@@ -255,7 +255,7 @@ class BuildInstance {
             this.procById.forEach(proc => {
                 if (proc.state.status === "empty")
                     return;
-                if (proc.processor.shouldRebuild(new NewProcs(newProcs, proc))) {
+                if (proc.processor.onNewProcs(new NewProcs(newProcs, proc)).shouldRebuild) {
                     freshNewProcs.getOrInsert(proc.meta.childPath, new Set()).add(proc.meta.procName);
                     proc.resetWithoutRebuild();
                 }

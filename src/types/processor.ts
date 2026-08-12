@@ -8,6 +8,7 @@ import type ProcessorHandle from "./processorHandle.js";
 import path from "path";
 import { createRequire } from "module";
 import type NewProcs from "./newProcs.js";
+import { pathMatch } from "../utils/pathMatch.js";
 
 export class FileNamedProcOne {
     private parent: ProcessorHandle;
@@ -68,13 +69,13 @@ export class FileProcs {
     }
 
     public procs(
-        options: { include?: string | string[], exclude?: string | string[] } = {}
+        options: { include?: string } = {}
     ): Map<string, FileNamedProcs> {
         let out: Map<string, FileNamedProcs> = new Map();
 
         for (const [name, fileNamedProcs] of this.procsMap.entries()) {
-            if ((options.include === undefined && options.exclude === undefined) ||
-                micromatch.isMatch(name, options.include ?? "**", { ignore: options.exclude })) {
+            if ((options.include === undefined) ||
+                pathMatch(name, options.include ?? "**")) {
                 out.set(name, new FileNamedProcs(this.parent, fileNamedProcs));
             }
         }
@@ -111,7 +112,7 @@ export default abstract class Processor {
     }
 
     public files(
-        options: { include?: string | string[], exclude?: string | string[], absolute?: boolean } = {}
+        options: { include?: string, absolute?: boolean } = {}
     ): Map<string, FileProcs> {
         let dirPath = this.__handle.meta.ruleLocation;
 
@@ -133,8 +134,8 @@ export default abstract class Processor {
             }
 
             if (
-                (options.include === undefined && options.exclude === undefined) ||
-                micromatch.isMatch(relPath, options.include ?? "**", { ignore: options.exclude })
+                (options.include === undefined) ||
+                pathMatch(relPath, options.include ?? "**")
             ) {
                 out.set(relPath, new FileProcs(this.__handle, procsMap));
             }
@@ -151,7 +152,7 @@ export default abstract class Processor {
         content: Buffer | "dir"
     ): Promise<processorStates.ProcessorOutputRaw>;
 
-    shouldRebuild(newProcs: NewProcs): boolean {
-        return false;
+    onNewProcs(newProcs: NewProcs): { shouldRebuild?: boolean } {
+        return {};
     }
 }

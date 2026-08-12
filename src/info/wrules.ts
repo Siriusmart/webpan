@@ -1,6 +1,5 @@
 import path from "path";
 import assert from "assert";
-import micromatch from "micromatch";
 
 import type * as procEntries from "../types/procEntries.js";
 import type * as ruleEntry from "../types/ruleEntry.js";
@@ -9,6 +8,7 @@ import type BuildInstance from "../types/buildInstance.js";
 import getProcessor from "./getProcessor.js";
 import deepEq from "../utils/deepEq.js";
 import type { NewProcsAbsolute } from "../types/newProcs.js";
+import { pathMatch } from "../utils/pathMatch.js";
 
 function normaliseRawProcessor(
     proc: ruleEntry.ProcessorType
@@ -112,7 +112,7 @@ async function updateRules(buildInstance: BuildInstance): Promise<NewProcsAbsolu
                     pattern,
                     procs,
                 ] of previousRules.processors.entries()) {
-                    if (micromatch.isMatch(relFileName, pattern)) {
+                    if (pathMatch(relFileName, pattern)) {
                         procs.forEach((setting) =>
                             fileProcsBefore.add(setting)
                         );
@@ -123,7 +123,7 @@ async function updateRules(buildInstance: BuildInstance): Promise<NewProcsAbsolu
             let fileProcsAfter: Set<ruleEntry.ProcessorSettings> = new Set();
             if (newRules !== undefined) {
                 for (const [pattern, procs] of newRules.processors.entries()) {
-                    if (micromatch.isMatch(relFileName, pattern)) {
+                    if (pathMatch(relFileName, pattern)) {
                         procs.forEach((setting) => fileProcsAfter.add(setting));
                     }
                 }
@@ -226,7 +226,7 @@ async function resolveProcessors(
 
     if (dirRule !== undefined) {
         for (const [pattern, procs] of dirRule.processors.entries()) {
-            if (micromatch.isMatch(fileName, pattern)) {
+            if (pathMatch(fileName, pattern)) {
                 for (const proc of procs) {
                     foundEntries.add({
                         processorClass: await getProcessor(

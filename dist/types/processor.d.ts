@@ -24,8 +24,7 @@ export declare class FileProcs {
     private procsMap;
     constructor(parent: ProcessorHandle, procsMap: Map<string, Set<ProcessorHandle>>);
     procs(options?: {
-        include?: string | string[];
-        exclude?: string | string[];
+        include?: string;
     }): Map<string, FileNamedProcs>;
 }
 export default abstract class Processor {
@@ -39,12 +38,13 @@ export default abstract class Processor {
         absolute?: boolean;
     }): string;
     files(options?: {
-        include?: string | string[];
-        exclude?: string | string[];
+        include?: string;
         absolute?: boolean;
     }): Map<string, FileProcs>;
     settings(): any;
     abstract build(content: Buffer | "dir"): Promise<processorStates.ProcessorOutputRaw>;
-    shouldRebuild(newProcs: NewProcs): boolean;
+    onNewProcs(newProcs: NewProcs): {
+        shouldRebuild?: boolean;
+    };
 }
 //# sourceMappingURL=processor.d.ts.map

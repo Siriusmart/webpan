@@ -1,6 +1,7 @@
 import micromatch from "micromatch";
 import path from "path";
 import { createRequire } from "module";
+import { pathMatch } from "../utils/pathMatch.js";
 export class FileNamedProcOne {
     parent;
     proc;
@@ -47,8 +48,8 @@ export class FileProcs {
     procs(options = {}) {
         let out = new Map();
         for (const [name, fileNamedProcs] of this.procsMap.entries()) {
-            if ((options.include === undefined && options.exclude === undefined) ||
-                micromatch.isMatch(name, options.include ?? "**", { ignore: options.exclude })) {
+            if ((options.include === undefined) ||
+                pathMatch(name, options.include ?? "**")) {
                 out.set(name, new FileNamedProcs(this.parent, fileNamedProcs));
             }
         }
@@ -91,8 +92,8 @@ export default class Processor {
                 }
                 relPath = absPath.substring(dirPath.length - 1);
             }
-            if ((options.include === undefined && options.exclude === undefined) ||
-                micromatch.isMatch(relPath, options.include ?? "**", { ignore: options.exclude })) {
+            if ((options.include === undefined) ||
+                pathMatch(relPath, options.include ?? "**")) {
                 out.set(relPath, new FileProcs(this.__handle, procsMap));
             }
         }
@@ -101,8 +102,8 @@ export default class Processor {
     settings() {
         return this.__handle.meta.settings;
     }
-    shouldRebuild(newProcs) {
-        return false;
+    onNewProcs(newProcs) {
+        return {};
     }
 }
 //# sourceMappingURL=processor.js.map

@@ -1,4 +1,5 @@
 import type * as Stream from "stream";
+import fs from "fs/promises";
 
 export interface OutputEntry {
     path: string;
@@ -14,9 +15,4 @@ export interface FsContentEntry {
 export type HashedEntries = Map<string, string | null>;
 export type OutputEntries = Map<string, OutputEntry>;
 export type FsContentEntries = Map<string, FsContentEntry>;
-export type BufferLike =
-    | string
-    | NodeJS.ArrayBufferView
-    | Iterable<string | NodeJS.ArrayBufferView>
-    | AsyncIterable<string | NodeJS.ArrayBufferView>
-    | Stream;
+export type BufferLike = Parameters<typeof fs.writeFile>[1];

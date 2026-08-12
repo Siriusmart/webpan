@@ -6,8 +6,7 @@ export default class NewProcs {
     constructor(absolute: NewProcsAbsolute, handle: ProcessorHandle);
     files(options?: {
         absolute?: boolean;
-        include?: string | string[];
-        exclude?: string | string[];
+        include?: string;
     }): Map<string, Set<string>>;
 }
 //# sourceMappingURL=newProcs.d.ts.map

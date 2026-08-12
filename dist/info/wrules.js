@@ -1,8 +1,8 @@
 import path from "path";
 import assert from "assert";
-import micromatch from "micromatch";
 import getProcessor from "./getProcessor.js";
 import deepEq from "../utils/deepEq.js";
+import { pathMatch } from "../utils/pathMatch.js";
 function normaliseRawProcessor(proc) {
     switch (typeof proc) {
         case "string":
@@ -79,7 +79,7 @@ async function updateRules(buildInstance) {
             let fileProcsBefore = new Set();
             if (previousRules !== undefined) {
                 for (const [pattern, procs,] of previousRules.processors.entries()) {
-                    if (micromatch.isMatch(relFileName, pattern)) {
+                    if (pathMatch(relFileName, pattern)) {
                         procs.forEach((setting) => fileProcsBefore.add(setting));
                     }
                 }
@@ -87,7 +87,7 @@ async function updateRules(buildInstance) {
             let fileProcsAfter = new Set();
             if (newRules !== undefined) {
                 for (const [pattern, procs] of newRules.processors.entries()) {
-                    if (micromatch.isMatch(relFileName, pattern)) {
+                    if (pathMatch(relFileName, pattern)) {
                         procs.forEach((setting) => fileProcsAfter.add(setting));
                     }
                 }
@@ -155,7 +155,7 @@ async function resolveProcessors(buildInstance, dirCursor, fileName = dirCursor.
     let foundEntries = new Set();
     if (dirRule !== undefined) {
         for (const [pattern, procs] of dirRule.processors.entries()) {
-            if (micromatch.isMatch(fileName, pattern)) {
+            if (pathMatch(fileName, pattern)) {
                 for (const proc of procs) {
                     foundEntries.add({
                         processorClass: await getProcessor(buildInstance.getRoot(), proc.procName),

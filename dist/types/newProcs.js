@@ -1,4 +1,5 @@
 import micromatch from "micromatch";
+import { pathMatch } from "../utils/pathMatch.js";
 export default class NewProcs {
     absolute;
     handle;
@@ -20,8 +21,8 @@ export default class NewProcs {
                 }
                 relPath = absPath.substring(dirPath.length - 1);
             }
-            if ((options.include === undefined && options.exclude === undefined)
-                || micromatch.isMatch(relPath, options.include ?? "**", { ignore: options.exclude })) {
+            if ((options.include === undefined)
+                || pathMatch(relPath, options.include ?? "**")) {
                 out.set(relPath, procsOfPath);
             }
         }
