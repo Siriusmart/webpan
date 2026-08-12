@@ -152,7 +152,9 @@ export default abstract class Processor {
         content: Buffer | "dir"
     ): Promise<processorStates.ProcessorOutputRaw>;
 
-    onNewProcs(newProcs: NewProcs): { shouldRebuild?: boolean } {
+    onNewProcs(newProcs: NewProcs): OnNewProcs {
         return {};
     }
 }
+
+export interface OnNewProcs { shouldRebuild?: boolean }
